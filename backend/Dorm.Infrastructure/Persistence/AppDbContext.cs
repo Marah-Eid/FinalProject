@@ -15,7 +15,7 @@ namespace Dorm.Infrastructure.Persistence;
 /// Conventions used throughout OnModelCreating:
 /// • Enums are stored as strings (HasConversion&lt;string&gt;) so the DB is readable.
 /// • Money columns (FullRent, Amount) are decimal(10,2).
-/// • DateTime columns are stored as timestamptz (Npgsql default) → all UTC.
+/// • DateTime columns are stored as datetime2 (SQL Server default).
 /// • Two relationships to the same parent table use DeleteBehavior.Restrict
 ///   to avoid Postgres "multiple cascade paths" errors.
 /// </summary>
@@ -80,7 +80,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasOne(r => r.ReplacedByToken)
                 .WithMany()
                 .HasForeignKey(r => r.ReplacedByTokenId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         // ─── StudentProfile ──────────────────────────────────────────────────

@@ -38,9 +38,9 @@ public static class DependencyInjection
         var connectionString = config.GetConnectionString("Default")
             ?? throw new InvalidOperationException("ConnectionStrings:Default is not configured.");
 
-        services.AddDbContext<AppDbContext>(o => o.UseNpgsql(connectionString, npg =>
+        services.AddDbContext<AppDbContext>(o => o.UseSqlServer(connectionString, sql =>
         {
-            npg.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
+            sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
         }));
         // Expose the same scoped context behind the Application-layer abstraction.
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Dorm.Infrastructure.Persistence.Migrations
+namespace Dorm.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class Initial : Migration
@@ -15,26 +15,26 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    FullName = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
-                    Email = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: false),
-                    PasswordHash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    PhoneNumber = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
-                    Role = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    Gender = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    IsEmailVerified = table.Column<bool>(type: "boolean", nullable: false),
-                    IsUniversityVerified = table.Column<bool>(type: "boolean", nullable: false),
-                    ProfilePhotoUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    University = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsBanned = table.Column<bool>(type: "boolean", nullable: false),
-                    EmailVerificationTokenHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
-                    EmailVerificationTokenExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    PasswordResetTokenHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
-                    PasswordResetTokenExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    PendingUniversityEmail = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: true),
-                    UniversityVerificationTokenHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
-                    UniversityVerificationTokenExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(120)", maxLength: 120, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(254)", maxLength: 254, nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Gender = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    IsEmailVerified = table.Column<bool>(type: "bit", nullable: false),
+                    IsUniversityVerified = table.Column<bool>(type: "bit", nullable: false),
+                    ProfilePhotoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    University = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsBanned = table.Column<bool>(type: "bit", nullable: false),
+                    EmailVerificationTokenHash = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
+                    EmailVerificationTokenExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    PasswordResetTokenHash = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
+                    PasswordResetTokenExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    PendingUniversityEmail = table.Column<string>(type: "nvarchar(254)", maxLength: 254, nullable: true),
+                    UniversityVerificationTokenHash = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
+                    UniversityVerificationTokenExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -45,29 +45,29 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "Apartments",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "character varying(140)", maxLength: 140, nullable: false),
-                    Description = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false),
-                    City = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    Neighborhood = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
-                    AddressDetail = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    Latitude = table.Column<double>(type: "double precision", nullable: false),
-                    Longitude = table.Column<double>(type: "double precision", nullable: false),
-                    FullRent = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false),
-                    TotalSpots = table.Column<int>(type: "integer", nullable: false),
-                    AvailableSpots = table.Column<int>(type: "integer", nullable: false),
-                    GenderType = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    IsFurnished = table.Column<bool>(type: "boolean", nullable: false),
-                    NearestUniversity = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    DistanceMinutes = table.Column<int>(type: "integer", nullable: false),
-                    SmokingRule = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    GuestsRule = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    IsFeatured = table.Column<bool>(type: "boolean", nullable: false),
-                    FeaturedUntil = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    IsSuspended = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OwnerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(140)", maxLength: 140, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
+                    City = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Neighborhood = table.Column<string>(type: "nvarchar(120)", maxLength: 120, nullable: false),
+                    AddressDetail = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Latitude = table.Column<double>(type: "float", nullable: false),
+                    Longitude = table.Column<double>(type: "float", nullable: false),
+                    FullRent = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: false),
+                    TotalSpots = table.Column<int>(type: "int", nullable: false),
+                    AvailableSpots = table.Column<int>(type: "int", nullable: false),
+                    GenderType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    IsFurnished = table.Column<bool>(type: "bit", nullable: false),
+                    NearestUniversity = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    DistanceMinutes = table.Column<int>(type: "int", nullable: false),
+                    SmokingRule = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    GuestsRule = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    IsFeatured = table.Column<bool>(type: "bit", nullable: false),
+                    FeaturedUntil = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsSuspended = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -84,14 +84,14 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "Notifications",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Type = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
-                    Title = table.Column<string>(type: "character varying(140)", maxLength: 140, nullable: false),
-                    Content = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
-                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
-                    RelatedEntityId = table.Column<Guid>(type: "uuid", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(140)", maxLength: 140, nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    RelatedEntityId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -108,13 +108,13 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "Payments",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false),
-                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    TransactionRef = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    TransactionRef = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -131,13 +131,13 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "RefreshTokens",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TokenHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    RevokedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ReplacedByTokenId = table.Column<Guid>(type: "uuid", nullable: true)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TokenHash = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RevokedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ReplacedByTokenId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -146,8 +146,7 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                         name: "FK_RefreshTokens_RefreshTokens_ReplacedByTokenId",
                         column: x => x.ReplacedByTokenId,
                         principalTable: "RefreshTokens",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_RefreshTokens_Users_UserId",
                         column: x => x.UserId,
@@ -160,12 +159,12 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "StudentProfiles",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Bio = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    Year = table.Column<int>(type: "integer", nullable: false),
-                    Major = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
-                    QuizCompleted = table.Column<bool>(type: "boolean", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Bio = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Year = table.Column<int>(type: "int", nullable: false),
+                    Major = table.Column<string>(type: "nvarchar(120)", maxLength: 120, nullable: false),
+                    QuizCompleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -182,9 +181,9 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "ApartmentAmenities",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ApartmentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    AmenityType = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AmenityType = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -201,10 +200,10 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "ApartmentPhotos",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ApartmentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    PhotoUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    DisplayOrder = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PhotoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -221,14 +220,14 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "Applications",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ApartmentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StudentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Message = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    CompatibilityScore = table.Column<int>(type: "integer", nullable: false),
-                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    RespondedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StudentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    CompatibilityScore = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RespondedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -251,11 +250,11 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "Conversations",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Participant1Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Participant2Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ApartmentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    LastMessageAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Participant1Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Participant2Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LastMessageAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -284,13 +283,13 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "Ratings",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    RaterId = table.Column<Guid>(type: "uuid", nullable: false),
-                    RatedUserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ApartmentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Stars = table.Column<int>(type: "integer", nullable: false),
-                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RaterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RatedUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Stars = table.Column<int>(type: "int", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -319,15 +318,15 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "Reports",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ReporterId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ReportedApartmentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Reason = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ResolvedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ResolvedByAdminId = table.Column<Guid>(type: "uuid", nullable: true)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ReporterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ReportedApartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ResolvedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ResolvedByAdminId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -356,10 +355,10 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "SavedListings",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    StudentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ApartmentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StudentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -382,12 +381,12 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "Tenancies",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ApartmentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StudentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StudentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -410,10 +409,10 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "QuizAnswers",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    StudentProfileId = table.Column<Guid>(type: "uuid", nullable: false),
-                    QuestionKey = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    AnswerValue = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StudentProfileId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    QuestionKey = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    AnswerValue = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -430,12 +429,12 @@ namespace Dorm.Infrastructure.Persistence.Migrations
                 name: "Messages",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ConversationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    SenderId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Content = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false),
-                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
-                    SentAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ConversationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SenderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {

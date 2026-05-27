@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Serilog;
 
 // Bootstrap logger so we capture startup failures before the full config is read.
@@ -110,8 +110,7 @@ try
             Description = "Paste the JWT access token here (Swagger adds the 'Bearer ' prefix).",
         });
 
-        // Apply the Bearer scheme to every operation via a small filter — works around
-        // Microsoft.OpenApi 2.x's removal of OpenApiReference / OpenApiSecuritySchemeReference.
+        // Apply the Bearer scheme to every operation via a small filter.
         options.OperationFilter<Dorm.API.Swagger.BearerSecurityOperationFilter>();
     });
 
