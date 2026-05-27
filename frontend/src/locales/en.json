@@ -1,0 +1,615 @@
+{
+  "app": {
+    "name": "Dorm",
+    "tagline": "Find your campus home and a roommate that fits."
+  },
+  "nav": {
+    "home": "Home",
+    "browse": "Browse",
+    "dashboard": "Dashboard",
+    "login": "Log in",
+    "register": "Sign up",
+    "logout": "Log out",
+    "myAccount": "My account",
+    "myApplications": "My applications",
+    "myListings": "My listings",
+    "ownerApplications": "Applications received",
+    "messages": "Messages",
+    "payments": "Payments",
+    "adminPanel": "Admin panel",
+    "language": "Language",
+    "english": "English",
+    "arabic": "العربية"
+  },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "or": "or",
+    "and": "and",
+    "optional": "optional",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "fields": {
+    "fullName": "Full name",
+    "email": "Email",
+    "password": "Password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "phoneNumber": "Phone number",
+    "role": "I am a…",
+    "gender": "Gender",
+    "university": "University"
+  },
+  "roles": {
+    "student": "Student",
+    "owner": "Apartment owner",
+    "admin": "Administrator"
+  },
+  "gender": {
+    "male": "Male",
+    "female": "Female"
+  },
+  "cities": {
+    "Amman": "Amman",
+    "Irbid": "Irbid",
+    "Zarqa": "Zarqa"
+  },
+  "universities": {
+    "JU": "University of Jordan",
+    "GJU": "German-Jordanian University",
+    "PSUT": "Princess Sumaya University for Technology",
+    "YU": "Yarmouk University",
+    "HU": "Hashemite University",
+    "MU": "Mutah University",
+    "ZU": "Zarqa University",
+    "BAU": "Al-Balqa Applied University",
+    "JUST": "Jordan University of Science and Technology",
+    "AAU": "Amman Arab University"
+  },
+  "amenities": {
+    "WiFi": "Wi-Fi",
+    "AC": "Air conditioning",
+    "Heating": "Heating",
+    "WashingMachine": "Washing machine",
+    "Parking": "Parking",
+    "Furnished": "Furnished",
+    "Elevator": "Elevator",
+    "Balcony": "Balcony",
+    "Kitchen": "Kitchen",
+    "PrivateBathroom": "Private bathroom"
+  },
+  "smokingRules": {
+    "Yes": "Allowed",
+    "No": "Not allowed",
+    "Outside": "Only outside"
+  },
+  "guestsRules": {
+    "Yes": "Allowed",
+    "No": "Not allowed",
+    "Limited": "Allowed with limits"
+  },
+  "match": {
+    "percent": "{{value}}% match",
+    "label": "match",
+    "breakdownTitle": "How you fit with current tenants",
+    "matchedOn": "You match on",
+    "matchedOnEmpty": "No perfect matches yet — but no opposites either.",
+    "differedOn": "You differ on",
+    "differedOnEmpty": "Nothing to clash on — looks compatible.",
+    "noTenantsExplain": "No current tenants — you'd be moving in fresh.",
+    "averageAcross": "Average across {{count}} current tenant(s)."
+  },
+  "apply": {
+    "modalTitle": "Apply for a spot",
+    "submittedTitle": "Application sent",
+    "submittedText": "We've sent your application for {{title}} to the owner. They'll respond shortly.",
+    "viewMyApplications": "View my applications",
+    "intro": "Send a short message to the owner of {{title}}. Tell them a bit about yourself and why you'd be a good fit.",
+    "scoreCalloutTitle": "Your compatibility score is included",
+    "scoreCalloutHint": "The owner sees your snapshot match with current tenants alongside your message.",
+    "messageLabel": "Message to the owner",
+    "messageHint": "20–500 characters. Be friendly and specific.",
+    "placeholder": "Hi! I'm a 3rd-year CS student looking for a quiet spot near campus…",
+    "submit": "Send application",
+    "tooShort": "A bit longer please — at least 20 characters.",
+    "tooLong": "Keep it under 500 characters.",
+    "comingSoon": "Applications open in the next phase — your form is ready, the backend lands soon."
+  },
+  "myApps": {
+    "title": "My applications",
+    "subtitle": "Track the status of apartments you've applied to.",
+    "appliedOn": "Applied {{date}}",
+    "compatibilitySnapshot": "snapshot at submission: {{value}}%",
+    "withdraw": "Withdraw",
+    "empty": {
+      "title": "No applications yet",
+      "description": "Browse apartments and send your first application — they'll show up here.",
+      "comingSoon": "Applications launch in the next phase. You'll see them here as soon as you apply.",
+      "cta": "Browse apartments"
+    },
+    "status": {
+      "Pending": "Pending",
+      "Accepted": "Accepted",
+      "Rejected": "Rejected",
+      "Withdrawn": "Withdrawn"
+    }
+  },
+  "pagination": {
+    "label": "Pagination",
+    "summary": "Page {{page}} of {{totalPages}} · {{total}} results",
+    "prev": "Previous",
+    "next": "Next"
+  },
+  "landing": {
+    "heroEyebrow": "Find your home near campus",
+    "heroTitle": "Find your campus home — and a roommate that fits.",
+    "heroSubtitle": "Compatibility-matched apartments near Jordanian universities.",
+    "heroCtaPrimary": "Browse apartments",
+    "heroCtaSecondary": "How matching works",
+    "featuresTitle": "Why Dorm",
+    "feature1Title": "Lifestyle-matched roommates",
+    "feature1Text": "A short 8-question quiz powers a transparent compatibility score with current tenants.",
+    "feature2Title": "Apartments near your campus",
+    "feature2Text": "Filter by university, neighborhood and walking minutes — see exactly what fits.",
+    "feature3Title": "Verified students, transparent listings",
+    "feature3Text": "University-email badges and real reviews from previous tenants keep things honest."
+  },
+  "auth": {
+    "loginTitle": "Welcome back",
+    "loginSubtitle": "Log in to find your next campus home.",
+    "loginSubmit": "Log in",
+    "registerTitle": "Create your account",
+    "registerSubtitle": "A few details and you're in.",
+    "registerSubmit": "Create account",
+    "alreadyHaveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "logInHere": "Log in",
+    "signUpHere": "Sign up",
+    "forgotPassword": "Forgot your password?",
+    "rememberPassword": "Remembered? Log back in.",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "Enter your email and we'll send you a reset link.",
+    "forgotSubmit": "Send reset link",
+    "forgotSent": "If an account exists for that email, we've sent a reset link.",
+    "resetTitle": "Choose a new password",
+    "resetSubtitle": "Enter a new password to finish resetting.",
+    "resetSubmit": "Update password",
+    "resetSuccessTitle": "Password updated",
+    "resetSuccessText": "You can log in with your new password now.",
+    "verifyEmailVerifying": "Verifying your email…",
+    "verifyEmailSuccess": "Email verified — you're all set.",
+    "verifyEmailFailure": "Verification link is invalid or expired.",
+    "verifyEmailMissingToken": "No verification token in the link.",
+    "selectRole": "Select a role",
+    "selectGender": "Select a gender",
+    "universityHelp": "Select your university (you can change this later)."
+  },
+  "browse": {
+    "title": "Browse apartments",
+    "subtitle": "Filter by university, neighborhood, price and more.",
+    "filters": {
+      "title": "Filters",
+      "clear": "Clear filters",
+      "city": "City",
+      "neighborhood": "Neighborhood",
+      "neighborhoodPh": "e.g. Aljubaiha",
+      "university": "Nearest university",
+      "minPrice": "Min price (JOD)",
+      "maxPrice": "Max price (JOD)",
+      "spots": "Available spots",
+      "spotsValue": "{{count}} spot",
+      "spotsValue_other": "{{count}} spots",
+      "spotsPlus": "4 or more",
+      "furnished": "Furnished",
+      "maxDistance": "Max walking minutes",
+      "amenities": "Amenities",
+      "any": "Any"
+    },
+    "view": {
+      "list": "List",
+      "map": "Map"
+    },
+    "sort": {
+      "label": "Sort",
+      "newest": "Newest first",
+      "price_asc": "Price · low to high",
+      "price_desc": "Price · high to low",
+      "highest_match": "Highest match"
+    },
+    "empty": {
+      "title": "No apartments match your filters",
+      "description": "Try widening the price range or removing a few filters."
+    }
+  },
+  "apartments": {
+    "featured": "Featured",
+    "gender": {
+      "0": "Male only",
+      "1": "Female only",
+      "2": "Mixed"
+    },
+    "spots": "Spots",
+    "spotsAvailable": "{{available}} of {{total}} spots",
+    "walkMin": "{{min}} min walk",
+    "pricePerPerson": "Price per person",
+    "priceValue": "{{value}} JOD",
+    "about": "About this place",
+    "facts": "Quick facts",
+    "nearestUniversity": "Nearest university",
+    "smokingRule": "Smoking",
+    "guestsRule": "Guests",
+    "amenitiesTitle": "Amenities",
+    "currentTenantsTitle": "Current tenants",
+    "noTenantsYet": "No tenants yet — you'd be among the first.",
+    "yearN": "Year {{year}}",
+    "yearUnknown": "Year —",
+    "locationTitle": "Location",
+    "locationApprox": "Approximate area — exact address shared after your application is accepted.",
+    "fullRentLabel": "Full rent",
+    "applyCta": "Apply for a spot",
+    "applyComingSoon": "Applications open in the next phase.",
+    "loginToApply": "Log in to apply",
+    "studentsOnly": "Only students can apply",
+    "save": "Save",
+    "report": "Report",
+    "memberSince": "Owner since {{date}}",
+    "ownerRating": "{{avg}}/5 · {{count}} ratings",
+    "noOwnerRatings": "No ratings yet",
+    "phoneLocked": "Phone number unlocks when your application is accepted",
+    "addressLockedTitle": "Exact address hidden",
+    "addressLockedText": "We show the neighborhood; the street-level address unlocks when the owner accepts your application.",
+    "notFoundTitle": "Apartment not found",
+    "notFoundText": "This listing may have been removed, suspended, or hidden by the visibility rules.",
+    "backToBrowse": "Back to browse"
+  },
+  "quiz": {
+    "eyebrow": "Lifestyle compatibility quiz",
+    "title": "Help us match you",
+    "subtitle": "Eight short questions — your answers stay private and power your match scores.",
+    "progress": "Question {{n}} of {{total}}",
+    "previouslyCompleted": "Editing existing answers",
+    "jumpTo": "Jump to question {{n}}",
+    "submit": "Save my answers",
+    "q": {
+      "SleepSchedule":  { "title": "Sleep schedule",  "help": "When are you usually most awake and active at home?" },
+      "Cleanliness":    { "title": "Cleanliness",     "help": "How tidy do you keep shared spaces?" },
+      "Smoking":        { "title": "Smoking",         "help": "Do you smoke, and where?" },
+      "StudyHabits":    { "title": "Study habits",    "help": "Where do you usually study?" },
+      "SocialStyle":    { "title": "Social style",    "help": "How social are you at home with your roommates?" },
+      "Guests":         { "title": "Guests",          "help": "How often do you have friends over?" },
+      "Cooking":        { "title": "Cooking",         "help": "How much do you cook at home?" },
+      "PetTolerance":   { "title": "Pets",            "help": "How do you feel about living with pets?" }
+    },
+    "opt": {
+      "SleepSchedule":  { "EarlyBird": "Early bird",       "NightOwl": "Night owl",         "Flexible": "Flexible" },
+      "Cleanliness":    { "VeryTidy": "Very tidy",         "Average": "Average",            "Relaxed": "Relaxed" },
+      "Smoking":        { "Yes": "Yes",                    "No": "No",                       "Outside": "Outside only" },
+      "StudyHabits":    { "QuietAtHome": "Quiet at home",  "Library": "Library person",     "GroupAtHome": "Group study at home" },
+      "SocialStyle":    { "Introvert": "Introvert",        "Extrovert": "Extrovert",        "Balanced": "Balanced" },
+      "Guests":         { "Often": "Often",                "Sometimes": "Sometimes",        "Rarely": "Rarely" },
+      "Cooking":        { "CookALot": "I cook a lot",      "CookSometimes": "I cook sometimes", "MostlyEatOut": "Mostly eat out" },
+      "PetTolerance":   { "LovePets": "Love pets",         "Tolerate": "Tolerate them",     "PreferNoPets": "Prefer no pets" }
+    },
+    "optDesc": {
+      "SleepSchedule":  { "EarlyBird": "Asleep early, up early.", "NightOwl": "Most alive after midnight.", "Flexible": "Either, depending on the week." },
+      "Cleanliness":    { "VeryTidy": "Everything in its place.", "Average": "Tidy enough — clean weekly.", "Relaxed": "Lived-in is fine." },
+      "Smoking":        { "Yes": "Indoors is fine.",              "No": "Smoke-free indoors and out.",     "Outside": "Outdoors only, never inside." },
+      "StudyHabits":    { "QuietAtHome": "Headphones, closed door.", "Library": "Out most of the day.",   "GroupAtHome": "Friends over for study sessions." },
+      "SocialStyle":    { "Introvert": "Quiet recharger.",        "Extrovert": "People-energized.",        "Balanced": "Mix of both." },
+      "Guests":         { "Often": "Multiple times a week.",      "Sometimes": "Once a week or so.",       "Rarely": "Almost never." },
+      "Cooking":        { "CookALot": "Daily, full meals.",       "CookSometimes": "A few times a week.",  "MostlyEatOut": "Takeout most days." },
+      "PetTolerance":   { "LovePets": "More the merrier.",        "Tolerate": "OK if they're well-behaved.", "PreferNoPets": "No animals, please." }
+    }
+  },
+  "dashboard": {
+    "title": "Your dashboard",
+    "ownerTitle": "Owner dashboard",
+    "welcome": "Welcome back, {{name}}.",
+    "comingSoon": "More features land each phase. Browse apartments, take the quiz, apply, and message owners — all coming up.",
+    "studentNote": "You're signed in as a Student.",
+    "ownerNote": "You're signed in as an Apartment owner.",
+    "adminNote": "You're signed in as an Admin.",
+    "emailUnverifiedHint": "Click the verification link in your inbox to unlock applying to apartments.",
+    "viewAll": "View all",
+    "atAGlance": "At a glance",
+    "rejectedHint": "{{count}} previous application(s) declined — keep browsing.",
+    "cards": {
+      "quiz": { "label": "Lifestyle quiz", "done": "Complete", "pending": "Not started" },
+      "appsPending": "Pending applications",
+      "appsAccepted": "Accepted",
+      "unreadMessages": "Unread messages"
+    },
+    "quizCta": {
+      "title": "Take the lifestyle quiz",
+      "text": "Eight short questions unlock real compatibility scores — and you need them to apply to apartments.",
+      "button": "Start the quiz"
+    },
+    "recentApps": {
+      "title": "Recent applications",
+      "empty": "You haven't applied to any apartments yet.",
+      "matchSnapshot": "Match: {{value}}%",
+      "appliedOn": "Applied {{date}}"
+    },
+    "badges": { "title": "Badges" },
+    "shortcuts": {
+      "title": "Quick links",
+      "messages": "Messages",
+      "applications": "Applications received"
+    },
+    "ownerCards": {
+      "pendingApps": "Pending applications",
+      "acceptedApps": "Accepted",
+      "rejectedApps": "Rejected",
+      "totalApps": "Total applications",
+      "activeListings": "Listings with applications",
+      "pendingTitle": "Pending applications",
+      "pendingEmpty": "No pending applications right now.",
+      "pendingEmptyHint": "When students apply, you'll review them here."
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "subtitle": "Chat with apartment owners and students.",
+    "placeholder": "Write a message…",
+    "send": "Send",
+    "empty": {
+      "title": "No conversations yet",
+      "description": "Conversations start automatically when you apply to an apartment."
+    },
+    "noMessagesYet": "(no messages yet)",
+    "notFound": "Conversation not found.",
+    "pickOne": "Pick a conversation",
+    "pickOneHint": "Select a chat from the list to view messages.",
+    "startConversation": "Say hi to start the conversation."
+  },
+  "notifications": {
+    "label": "Notifications",
+    "title": "Notifications",
+    "empty": "You're all caught up.",
+    "markAllRead": "Mark all read",
+    "unreadCount": "{{count}} unread"
+  },
+  "ownerApps": {
+    "title": "Applications received",
+    "subtitle": "Review applicants and accept the best fit for each spot.",
+    "filter": { "all": "All", "pending": "Pending", "accepted": "Accepted", "rejected": "Rejected" },
+    "empty": {
+      "title": "Nothing here",
+      "all": "You haven't received any applications yet.",
+      "pending": "No pending applications right now.",
+      "accepted": "You haven't accepted any applications yet.",
+      "rejected": "You haven't rejected any applications."
+    },
+    "viewListing": "View listing",
+    "message": "Message",
+    "accept": "Accept",
+    "reject": "Reject"
+  },
+  "myListings": {
+    "title": "My listings",
+    "subtitle": "Manage the apartments you've listed.",
+    "newListing": "New listing",
+    "view": "View",
+    "edit": "Edit",
+    "empty": {
+      "title": "You haven't listed an apartment yet",
+      "description": "Add your first listing to start receiving applications from compatible students.",
+      "cta": "Create your first listing"
+    }
+  },
+  "newListing": {
+    "title": "New listing",
+    "subtitle": "Tell students about the place. You can add photos right after publishing.",
+    "submit": "Publish listing",
+    "basics": { "title": "Basics", "hint": "Title, description, and where it is." },
+    "location": { "title": "Location", "hint": "Click on the map to set the apartment's pin. The exact street is only visible to accepted applicants." },
+    "pricing": { "title": "Pricing & spots", "hint": "Full monthly rent, total beds in the apartment, and how many are open right now." },
+    "amenities": { "title": "Amenities", "hint": "Pick everything available — it makes the listing easier to find." },
+    "rules": { "title": "House rules", "hint": "Set the gender policy and a few day-to-day rules." },
+    "fields": {
+      "title": "Title",
+      "description": "Description",
+      "city": "City",
+      "neighborhood": "Neighborhood",
+      "addressDetail": "Street-level address",
+      "addressDetailHint": "Only visible to students whose application you've accepted.",
+      "nearestUniversity": "Nearest university",
+      "distanceMinutes": "Walking minutes",
+      "fullRent": "Full monthly rent (JOD)",
+      "totalSpots": "Total spots",
+      "availableSpots": "Available now",
+      "genderType": "Gender policy",
+      "genderTypeHint": "Most listings in Jordan are single-gender. Pick what fits your home.",
+      "smokingRule": "Smoking",
+      "guestsRule": "Guests",
+      "isFurnished": "Furnished"
+    },
+    "errors": {
+      "spotsExceedsTotal": "Available spots can't exceed total spots."
+    }
+  },
+  "editListing": {
+    "title": "Edit listing",
+    "subtitle": "Adjust details or refresh photos.",
+    "currentTitle": "Current title",
+    "placeholderNotice": "Full inline editing comes in the next polish phase. For now you can manage photos or view the listing.",
+    "managePhotos": "Manage photos",
+    "viewListing": "View listing",
+    "fullEditComing": "Field-by-field editing arrives in a later phase."
+  },
+  "photos": {
+    "title": "Photos",
+    "subtitle": "Upload up to 10 photos. The first one shows up on the apartment card.",
+    "count": "{{count}} of {{max}} photos",
+    "delete": "Delete photo",
+    "backToListings": "Back to listings",
+    "viewListing": "View the listing",
+    "dropzone": {
+      "title": "Drop photos here or click to browse",
+      "hint": "JPG, PNG or WebP — up to 5 MB each."
+    },
+    "errors": {
+      "badType": "Skipped {{name}} — only JPG, PNG and WebP are accepted.",
+      "tooMany": "You can only have {{max}} photos."
+    }
+  },
+  "payments": {
+    "title": "Payments",
+    "subtitle": "Match commissions, featured boosts and verified badge — all in one place.",
+    "totalPaid": "Total paid: {{amount}}",
+    "payFee": "Pay {{amount}} match fee",
+    "feePaid": "Match fee paid",
+    "empty": {
+      "title": "No payments yet",
+      "description": "Once you complete a match, boost a listing or buy a verified badge, the receipt will land here."
+    },
+    "types": {
+      "MatchCommission": "Match commission",
+      "FeaturedListing": "Featured listing",
+      "VerifiedBadge": "Verified badge"
+    },
+    "statuses": {
+      "Pending": "Pending",
+      "Completed": "Completed",
+      "Failed": "Failed"
+    }
+  },
+  "admin": {
+    "title": "Admin panel",
+    "subtitle": "Monitor users, listings, reports and revenue across the platform.",
+    "tabs": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "listings": "Listings",
+      "reports": "Reports"
+    },
+    "cards": {
+      "totalUsers": "Total users",
+      "totalStudents": "Students",
+      "totalOwners": "Owners",
+      "activeListings": "Active listings",
+      "suspendedListings": "Suspended listings",
+      "activeTenancies": "Active tenancies",
+      "pendingReports": "Pending reports",
+      "revenueThisMonth": "Revenue this month"
+    },
+    "revenue": {
+      "title": "Revenue by type",
+      "allTime": "All-time total: {{amount}}",
+      "empty": "No revenue recorded yet.",
+      "txnCount": "{{count}} txn"
+    },
+    "users": {
+      "searchPlaceholder": "Search by name or email…",
+      "allRoles": "All roles",
+      "empty": {
+        "title": "No users match",
+        "description": "Try a different search term or role filter."
+      },
+      "banned": "Banned",
+      "joined": "Joined {{date}}",
+      "ban": "Ban",
+      "unban": "Unban"
+    },
+    "listings": {
+      "searchPlaceholder": "Search listings by title…",
+      "all": "All listings",
+      "activeOnly": "Active only",
+      "suspendedOnly": "Suspended only",
+      "empty": {
+        "title": "No listings match",
+        "description": "Try a different search term or status filter."
+      },
+      "activeBadge": "Active",
+      "suspendedBadge": "Suspended",
+      "inactiveBadge": "Inactive",
+      "pendingReports": "{{count}} pending reports",
+      "view": "View",
+      "suspend": "Suspend",
+      "activate": "Activate"
+    },
+    "reports": {
+      "pendingOnly": "Pending only",
+      "empty": {
+        "title": "No reports",
+        "description": "When students flag listings, they show up here."
+      },
+      "reportedBy": "Reported by {{name}}",
+      "viewListing": "View listing",
+      "dismiss": "Dismiss",
+      "resolve": "Resolve & suspend",
+      "statuses": {
+        "Pending": "Pending",
+        "Resolved": "Resolved",
+        "Dismissed": "Dismissed"
+      },
+      "reasons": {
+        "FakeListing": "Fake listing",
+        "MisleadingPhotos": "Misleading photos",
+        "Scam": "Scam",
+        "Inappropriate": "Inappropriate content",
+        "Other": "Other"
+      }
+    }
+  },
+  "report": {
+    "modalTitle": "Report this listing",
+    "thanksTitle": "Report received",
+    "thanksText": "Thanks — our team will review this listing shortly.",
+    "intro": "Help us keep Dorm safe. Why are you reporting \"{{title}}\"?",
+    "reasonLabel": "Reason",
+    "descLabel": "Description (optional)",
+    "descHint": "Add any details that might help our team review faster.",
+    "submit": "Submit report",
+    "reasons": {
+      "FakeListing": "Fake listing",
+      "MisleadingPhotos": "Misleading photos",
+      "Scam": "Scam",
+      "Inappropriate": "Inappropriate content",
+      "Other": "Other"
+    }
+  },
+  "rating": {
+    "modalTitle": "Leave a review",
+    "thanksTitle": "Thanks for your review",
+    "thanksText": "Your feedback helps other students find a great fit.",
+    "intro": "How was your experience with {{name}} at {{apartment}}?",
+    "howMany": "How many stars?",
+    "commentLabel": "Comment (optional)",
+    "commentHint": "Share what stood out — what worked well, what could have been better.",
+    "submit": "Submit review"
+  },
+  "errors": {
+    "generic": "Something didn't quite work — please try again.",
+    "network": "We couldn't reach the server. Check your connection.",
+    "validation": "Please fix the highlighted fields.",
+    "notFoundTitle": "Page not found",
+    "notFoundText": "The page you were looking for isn't here.",
+    "notFoundCta": "Go home",
+    "field": {
+      "required": "This field is required.",
+      "email": "Enter a valid email address.",
+      "passwordTooShort": "Password must be at least 8 characters.",
+      "passwordNeedsLetter": "Password needs at least one letter.",
+      "passwordNeedsDigit": "Password needs at least one digit.",
+      "phone": "Enter a valid phone number.",
+      "tooShort": "Too short.",
+      "tooLong": "Too long."
+    }
+  },
+  "footer": {
+    "tagline": "Dorm — student housing, made compatible.",
+    "rights": "© 2026 Dorm. All rights reserved."
+  },
+  "badges": {
+    "verifiedStudent": "Verified Student",
+    "emailVerified": "Email verified",
+    "emailUnverified": "Email not verified"
+  }
+}

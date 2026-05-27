@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/Dorm.Application.Tests/Dorm.Application.Tests.csproj" />
+  </Folder>
+  <Project Path="Dorm.API/Dorm.API.csproj" />
+  <Project Path="Dorm.Application/Dorm.Application.csproj" />
+  <Project Path="Dorm.Domain/Dorm.Domain.csproj" />
+  <Project Path="Dorm.Infrastructure/Dorm.Infrastructure.csproj" />
+</Solution>

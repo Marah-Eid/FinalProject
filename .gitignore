@@ -1,0 +1,66 @@
+# ===== .NET =====
+bin/
+obj/
+out/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.cache
+.vs/
+*.vspscc
+*.vssscc
+TestResults/
+[Cc]overage*/
+*.coverage
+*.coveragexml
+*.opencover.xml
+
+# Rider / VS / VSCode
+.idea/
+.vscode/
+*.swp
+
+# EF Core dev artifacts kept (migrations are source); ignore generated SQL exports
+*.dacpac
+*.dbmdl
+
+# ===== Node / Frontend =====
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+.eslintcache
+.stylelintcache
+.parcel-cache
+.npm/
+.pnpm-store/
+*.tsbuildinfo
+
+# ===== Environment & secrets =====
+.env
+.env.*
+!.env.example
+appsettings.*.local.json
+secrets.json
+
+# ===== Logs =====
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== Local uploads (dev file storage) =====
+backend/Dorm.API/wwwroot/uploads/*
+!backend/Dorm.API/wwwroot/uploads/.gitkeep
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Claude tooling =====
+.claude/
