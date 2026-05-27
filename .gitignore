@@ -21,6 +21,7 @@ TestResults/
 .idea/
 .vscode/
 *.swp
+*.DotSettings.user
 
 # EF Core dev artifacts kept (migrations are source); ignore generated SQL exports
 *.dacpac
@@ -56,6 +57,10 @@ yarn-error.log*
 # ===== Local uploads (dev file storage) =====
 backend/Dorm.API/wwwroot/uploads/*
 !backend/Dorm.API/wwwroot/uploads/.gitkeep
+
+# ===== Temp output =====
+api_stderr.txt
+api_stdout.txt
 
 # ===== OS =====
 .DS_Store
