@@ -1,3 +1,4 @@
+// Messages page — two-pane chat UI: conversation list (left) + message thread (right), with polling and read receipts
 import { t } from '../i18n.js'
 import { api } from '../api.js'
 import { getUser } from '../auth.js'

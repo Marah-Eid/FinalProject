@@ -1,3 +1,4 @@
+// App entry point — registers all routes and boots the SPA
 import { initLang } from './i18n.js'
 import { initAuth } from './auth.js'
 import { addRoute, initRouter } from './router.js'

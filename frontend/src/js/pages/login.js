@@ -1,3 +1,4 @@
+// Login page — email/password form, calls auth.login(), redirects to dashboard
 import { t } from '../i18n.js'
 import { login } from '../auth.js'
 

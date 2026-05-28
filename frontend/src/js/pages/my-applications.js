@@ -1,3 +1,4 @@
+// My applications page (student) — lists submitted applications with status pills and withdraw button
 import { t } from '../i18n.js'
 import { api } from '../api.js'
 

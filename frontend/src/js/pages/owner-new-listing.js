@@ -1,3 +1,4 @@
+// New listing page (owner) — form with basics, location map, pricing, house rules, and amenities
 import { t } from '../i18n.js'
 import { api } from '../api.js'
 

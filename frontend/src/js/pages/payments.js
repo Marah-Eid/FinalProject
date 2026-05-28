@@ -1,3 +1,4 @@
+// Payments page — shows payment history with type icons, status pills, and total paid summary
 import { t } from '../i18n.js'
 import { api } from '../api.js'
 

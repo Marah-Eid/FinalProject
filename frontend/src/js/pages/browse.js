@@ -1,3 +1,4 @@
+// Browse page — apartment listing with filters (city, university, price, amenities), sort, pagination, and list/map toggle
 import { t } from '../i18n.js'
 import { api } from '../api.js'
 import { getUser } from '../auth.js'

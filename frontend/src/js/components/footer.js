@@ -1,3 +1,4 @@
+// Simple translated footer with tagline and copyright
 import { t } from '../i18n.js'
 
 export function renderFooter() {

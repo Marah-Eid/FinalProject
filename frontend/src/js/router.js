@@ -1,3 +1,4 @@
+// Hash-based SPA router — matches #/path/:param patterns, enforces auth/role/guest guards
 import { getUser } from './auth.js'
 import { t } from './i18n.js'
 

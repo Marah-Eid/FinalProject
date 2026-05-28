@@ -1,3 +1,4 @@
+// Fetch wrapper — handles auth headers, token refresh on 401, and error envelopes
 import { getTokens, setTokens, clearAuth } from './auth.js'
 
 const BASE = '/api'

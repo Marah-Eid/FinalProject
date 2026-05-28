@@ -1,3 +1,4 @@
+// Admin panel — tabbed UI (dashboard stats, users ban/unban, listings suspend/activate, reports dismiss/resolve)
 import { t } from '../i18n.js'
 import { api } from '../api.js'
 import { escapeHtml } from '../utils.js'

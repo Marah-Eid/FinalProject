@@ -1,3 +1,4 @@
+// Dashboard — dispatches by role: student (stats + quiz CTA + recent apps), owner (shortcut cards), admin (redirects to /admin)
 import { t } from '../i18n.js'
 import { getUser } from '../auth.js'
 import { api } from '../api.js'

@@ -1,3 +1,4 @@
+// Owner listings page — shows all apartments owned by the logged-in user with view links
 import { t } from '../i18n.js'
 import { api } from '../api.js'
 

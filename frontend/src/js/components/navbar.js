@@ -1,3 +1,4 @@
+// Glass navbar — role-based menu items, language toggle, and logout handler
 import { t, getLang, setLang } from '../i18n.js'
 import { getUser, logout, onAuthChange } from '../auth.js'
 import { navigate } from '../router.js'

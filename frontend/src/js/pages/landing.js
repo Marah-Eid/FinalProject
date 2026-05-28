@@ -1,3 +1,4 @@
+// Landing page — hero section with CTAs + three feature cards
 import { t } from '../i18n.js'
 
 export function landingPage() {

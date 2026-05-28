@@ -1,3 +1,4 @@
+// Quiz page — 8-step lifestyle quiz (radio cards, dot nav, progress bar), submits answers to power compatibility scores
 import { t } from '../i18n.js'
 import { api } from '../api.js'
 

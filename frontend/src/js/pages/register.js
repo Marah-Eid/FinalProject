@@ -1,3 +1,4 @@
+// Register page — signup form with role, gender, and university selects
 import { t } from '../i18n.js'
 import { register } from '../auth.js'
 

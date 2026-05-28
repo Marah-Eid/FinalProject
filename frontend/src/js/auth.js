@@ -1,3 +1,4 @@
+// Auth state — manages JWT tokens in localStorage, login/register/logout, and user hydration
 import { api } from './api.js'
 
 let currentUser = null

@@ -1,3 +1,4 @@
+// i18n — t(key, params) translates UI strings, setLang() swaps Bootstrap RTL/LTR CSS
 import en from '../locales/en.json'
 import ar from '../locales/ar.json'
 
