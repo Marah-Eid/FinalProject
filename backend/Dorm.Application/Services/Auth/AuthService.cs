@@ -228,6 +228,25 @@ public sealed class AuthService(
         return mapper.Map<UserDto>(user);
     }
 
+    public async Task<UserDto> UpdateProfileAsync(Guid userId, UpdateProfileRequest req, CancellationToken ct)
+    {
+        var user = await db.Users
+            .FirstOrDefaultAsync(u => u.Id == userId, ct)
+            ?? throw new NotFoundException("User not found.");
+
+        if (!string.IsNullOrWhiteSpace(req.FullName))
+            user.FullName = req.FullName.Trim();
+
+        if (req.PhoneNumber is not null)
+            user.PhoneNumber = req.PhoneNumber.Trim();
+
+        if (req.University is not null && user.Role == Domain.Enums.UserRole.Student)
+            user.University = req.University;
+
+        await db.SaveChangesAsync(ct);
+        return mapper.Map<UserDto>(user);
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private async Task<AuthResponse> IssueAuthResponseAsync(User user, CancellationToken ct)

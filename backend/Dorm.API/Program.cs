@@ -84,7 +84,7 @@ try
     });
 
     // ─── MVC + filters ─────────────────────────────────────────────────────
-    builder.Services.AddControllers(o =>
+    builder.Services.AddControllersWithViews(o =>
     {
         o.Filters.Add<ValidationFilter>();
     });
@@ -144,6 +144,9 @@ try
 
     app.UseCors(CorsPolicy);
 
+    // Serve static files from wwwroot (templates, JS, CSS, images).
+    app.UseStaticFiles();
+
     // Serve uploaded files. We point /uploads at the storage root configured in
     // appsettings so this works in dev (wwwroot/uploads) and we can swap to a
     // different root later (or replace LocalFileStorage with a cloud blob impl).
@@ -160,6 +163,14 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.MapControllerRoute(
+        name: "areas",
+        pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+
+    app.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Home}/{action=Index}/{id?}");
 
     app.MapControllers();
 

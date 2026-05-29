@@ -1,0 +1,123 @@
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap gap-2 align-items-center">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="reports-pending" checked onchange="reportsPendingOnly=this.checked;doReportsLoad()" />
+            <label class="form-check-label fw-semibold" for="reports-pending">Pending only</label>
+        </div>
+        <span class="badge bg-light text-dark border ms-auto" id="report-count"></span>
+    </div>
+    <div class="card-body" id="reports-list">
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+var reportsPendingOnly = true
+var REASON_LABELS = {
+    FakeListing: 'Fake Listing',
+    MisleadingPhotos: 'Misleading Photos',
+    Scam: 'Scam',
+    Inappropriate: 'Inappropriate',
+    Other: 'Other'
+}
+var REASON_COLORS = {
+    FakeListing: 'danger',
+    MisleadingPhotos: 'warning',
+    Scam: 'danger',
+    Inappropriate: 'dark',
+    Other: 'secondary'
+}
+var REASON_ICONS = {
+    FakeListing: 'bi-exclamation-triangle-fill',
+    MisleadingPhotos: 'bi-image',
+    Scam: 'bi-shield-exclamation',
+    Inappropriate: 'bi-flag-fill',
+    Other: 'bi-question-circle'
+}
+var STATUS_LABELS = { 0: 'Pending', 1: 'Resolved', 2: 'Dismissed' }
+var STATUS_COLORS = { 0: 'warning', 1: 'success', 2: 'secondary' }
+var STATUS_ICONS = { 0: 'bi-clock', 1: 'bi-check-circle', 2: 'bi-x-circle' }
+
+auth.initAuth().then(function () {
+    var user = auth.getUser()
+    if (!user || user.role !== 2) { window.location.href = '/Dashboard'; return }
+    doReportsLoad()
+})
+
+async function doReportsLoad() {
+    var list = document.getElementById('reports-list')
+    list.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></div>'
+    try {
+        var q = '/admin/reports'
+        if (reportsPendingOnly) q += '?pendingOnly=true'
+        var data = await api.get(q)
+        var items = data.items || data || []
+
+        document.getElementById('report-count').textContent = items.length + ' reports'
+
+        if (items.length === 0) {
+            list.innerHTML = '<div class="text-center py-5">' +
+                '<i class="bi bi-shield-check text-success" style="font-size:3rem"></i>' +
+                '<h5 class="fw-bold mt-3">All clear!</h5>' +
+                '<p class="text-muted">No reports to review right now.</p></div>'
+            return
+        }
+
+        list.innerHTML = items.map(function (r) {
+            var reasonKey = r.reason || r.reportReason || 'Other'
+            var reasonLabel = REASON_LABELS[reasonKey] || reasonKey
+            var reasonColor = REASON_COLORS[reasonKey] || 'secondary'
+            var reasonIcon = REASON_ICONS[reasonKey] || 'bi-flag'
+            var statusLabel = STATUS_LABELS[r.status] || 'Pending'
+            var statusColor = STATUS_COLORS[r.status] || 'secondary'
+            var statusIcon = STATUS_ICONS[r.status] || 'bi-clock'
+            var dateStr = r.createdAt ? new Date(r.createdAt).toLocaleDateString() : ''
+            var isPending = r.status === 0
+
+            return '<div class="border rounded-3 p-3 mb-3' + (isPending ? ' border-start border-4 border-warning' : '') + '" style="' + (isPending ? 'border-left-width:4px!important' : '') + '">' +
+                '<div class="d-flex flex-wrap gap-3">' +
+
+                '<div style="width:48px;height:48px;border-radius:12px;background:' + (isPending ? 'rgba(239,68,68,.1)' : '#f1f5f9') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+                '<i class="bi ' + reasonIcon + '" style="font-size:1.2rem;color:' + (isPending ? '#ef4444' : '#94a3b8') + '"></i></div>' +
+
+                '<div class="flex-grow-1">' +
+                '<div class="d-flex flex-wrap align-items-center gap-2 mb-1">' +
+                '<span class="badge bg-' + reasonColor + '">' + reasonLabel + '</span>' +
+                '<span class="badge bg-' + statusColor + ' bg-opacity-10 text-' + statusColor + '"><i class="bi ' + statusIcon + ' me-1"></i>' + statusLabel + '</span>' +
+                '<span class="text-muted small">' + dateStr + '</span></div>' +
+
+                '<p class="fw-semibold mb-1">' + escapeHtml(r.apartmentTitle || r.listingTitle || '') + '</p>' +
+                '<p class="text-muted small mb-0"><i class="bi bi-person me-1"></i>Reported by ' + escapeHtml(r.reporterName || 'Unknown') + '</p>' +
+                (r.description ? '<p class="small mt-1 mb-0 fst-italic text-muted">"' + escapeHtml(r.description) + '"</p>' : '') +
+                '</div>' +
+
+                '<div class="d-flex flex-column gap-1 align-self-center" style="min-width:120px">' +
+                (r.apartmentId ? '<a href="/Apartment/Detail/' + r.apartmentId + '" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye me-1"></i>View Listing</a>' : '') +
+                (isPending
+                    ? '<button class="btn btn-sm btn-outline-secondary" onclick="dismissReport(' + r.id + ',this)"><i class="bi bi-x-lg me-1"></i>Dismiss</button>' +
+                      '<button class="btn btn-sm btn-danger" onclick="resolveReport(' + r.id + ',this)"><i class="bi bi-slash-circle me-1"></i>Resolve</button>'
+                    : '') +
+                '</div>' +
+
+                '</div></div>'
+        }).join('')
+    } catch (e) {
+        list.innerHTML = '<div class="text-center py-5"><p class="text-danger">Failed to load reports.</p></div>'
+    }
+}
+
+async function dismissReport(id, btn) {
+    btn.disabled = true
+    try { await api.put('/admin/reports/' + id + '/resolve', { body: { action: 'Dismiss' } }); doReportsLoad() } catch (e) { btn.disabled = false }
+}
+async function resolveReport(id, btn) {
+    btn.disabled = true
+    try { await api.put('/admin/reports/' + id + '/resolve', { body: { action: 'Resolve' } }); doReportsLoad() } catch (e) { btn.disabled = false }
+}
+</script>
+}

@@ -17,4 +17,5 @@ public interface IAuthService
     Task ConfirmUniversityVerificationAsync(string token, CancellationToken ct);
 
     Task<UserDto> GetCurrentUserAsync(Guid userId, CancellationToken ct);
+    Task<UserDto> UpdateProfileAsync(Guid userId, UpdateProfileRequest req, CancellationToken ct);
 }

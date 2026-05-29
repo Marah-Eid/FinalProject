@@ -1,0 +1,270 @@
+@{
+    Layout = "_DashboardLayout";
+    ViewData["Title"] = "Dashboard";
+}
+
+@section Styles {
+<style>
+    .welcome-card {
+        border-radius: 14px; padding: 1.5rem; border: none;
+        display: flex; align-items: center; gap: 1rem;
+    }
+    .welcome-card.student-card { background: #0f172a; color: #f8fafc; }
+    .welcome-card.owner-card { background: #0f172a; color: #f8fafc; }
+    .welcome-avatar {
+        width: 48px; height: 48px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; flex-shrink: 0;
+    }
+    .welcome-card h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: .15rem; }
+    .welcome-card p { margin: 0; opacity: .6; font-size: .88rem; }
+
+    .stat-card {
+        background: #fff; border-radius: 12px; border: 1px solid #f1f5f9;
+        padding: 1rem; display: flex; align-items: center; gap: .75rem;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.06); }
+    .stat-icon {
+        width: 44px; height: 44px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; flex-shrink: 0;
+    }
+    .stat-label { font-size: .75rem; color: #94a3b8; font-weight: 500; }
+    .stat-value { font-size: 1.2rem; font-weight: 800; color: #1e293b; }
+
+    .quiz-cta-card {
+        background: #fff; border-radius: 12px; border-left: 4px solid #eab308;
+        padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+    }
+    .quiz-cta-icon {
+        width: 48px; height: 48px; border-radius: 12px; background: rgba(234,179,8,.1);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        font-size: 1.3rem; color: #eab308;
+    }
+    .btn-quiz-cta {
+        background: #F97316; color: #fff; border: none; border-radius: 8px;
+        padding: .55rem 1.2rem; font-weight: 600; font-size: .85rem;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .3rem;
+        transition: all .2s; white-space: nowrap;
+    }
+    .btn-quiz-cta:hover { background: #ea6c10; color: #fff; }
+
+    .section-card {
+        background: #fff; border-radius: 12px; border: 1px solid #f1f5f9;
+        overflow: hidden; height: 100%;
+    }
+    .section-card-header {
+        padding: 1rem 1.25rem; border-bottom: 1px solid #f8fafc;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .section-card-header h6 { font-weight: 700; font-size: .9rem; color: #1e293b; margin: 0; }
+    .btn-view-all {
+        font-size: .78rem; font-weight: 600; color: #F97316;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .2rem;
+    }
+    .btn-view-all:hover { color: #ea6c10; }
+
+    .shortcut-item {
+        display: flex; align-items: center; gap: .75rem; padding: .65rem 1.25rem;
+        text-decoration: none; color: #475569; border-bottom: 1px solid #f8fafc;
+        transition: background .15s;
+    }
+    .shortcut-item:hover { background: #f8fafc; color: #1e293b; }
+    .shortcut-icon {
+        width: 32px; height: 32px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center; font-size: .9rem;
+    }
+    .shortcut-item span { font-weight: 600; font-size: .85rem; }
+    .shortcut-item .bi-chevron-right { margin-left: auto; font-size: .7rem; color: #cbd5e1; }
+
+    .empty-section {
+        text-align: center; padding: 2rem 1rem;
+    }
+    .empty-section i { font-size: 2rem; color: #cbd5e1; }
+    .empty-section p { color: #94a3b8; font-size: .85rem; margin-top: .5rem; }
+
+    .btn-new-listing {
+        background: #F97316; color: #fff; border: none; border-radius: 8px;
+        padding: .5rem 1rem; font-weight: 600; font-size: .85rem;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .3rem;
+        transition: all .2s; margin-left: auto;
+    }
+    .btn-new-listing:hover { background: #ea6c10; color: #fff; }
+</style>
+}
+
+<div id="dash-content">
+    <div class="row">
+        <div class="col-6 col-lg-3 mb-3"><div class="card p-3"><div class="placeholder-glow"><span class="placeholder col-8"></span><br/><span class="placeholder col-5"></span></div></div></div>
+        <div class="col-6 col-lg-3 mb-3"><div class="card p-3"><div class="placeholder-glow"><span class="placeholder col-8"></span><br/><span class="placeholder col-5"></span></div></div></div>
+        <div class="col-6 col-lg-3 mb-3"><div class="card p-3"><div class="placeholder-glow"><span class="placeholder col-8"></span><br/><span class="placeholder col-5"></span></div></div></div>
+        <div class="col-6 col-lg-3 mb-3"><div class="card p-3"><div class="placeholder-glow"><span class="placeholder col-8"></span><br/><span class="placeholder col-5"></span></div></div></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+auth.initAuth().then(function () {
+    var user = auth.getUser()
+    if (!user) { window.location.href = '/Account/Login'; return }
+    if (user.role === 2) { window.location.href = '/Admin'; return }
+    if (user.role === 0) { window.location.href = '/Browse'; return }
+    if (user.role === 1) renderOwnerDashboard(user)
+})
+
+function renderStudentDashboard(user) {
+    var content = document.getElementById('dash-content')
+    content.innerHTML =
+        '<div class="welcome-card student-card mb-4">' +
+        '<div class="welcome-avatar" style="background:rgba(249,115,22,.2);color:#F97316"><i class="bi bi-person-fill"></i></div>' +
+        '<div><h4>Welcome back, ' + escapeHtml(user.fullName) + '</h4>' +
+        '<p>Find your next campus home and compatible roommates.</p></div></div>' +
+
+        '<div class="row g-3 mb-4" id="student-stats"></div>' +
+        '<div id="student-quiz-cta" class="mb-4"></div>' +
+        '<div class="row g-3"><div class="col-lg-8" id="student-recent-apps"></div>' +
+        '<div class="col-lg-4" id="student-shortcuts"></div></div>'
+
+    var stats = document.getElementById('student-stats')
+    stats.innerHTML =
+        buildStat('bi-clipboard-check', user.quizCompleted ? 'Completed' : 'Pending', 'Quiz Status', user.quizCompleted ? '#10b981' : '#eab308', user.quizCompleted ? 'rgba(16,185,129,.1)' : 'rgba(234,179,8,.1)') +
+        buildStat('bi-file-earmark-text', '—', 'Pending Apps', '#3b82f6', 'rgba(59,130,246,.1)') +
+        buildStat('bi-chat-dots', '—', 'Unread Messages', '#8b5cf6', 'rgba(139,92,246,.1)') +
+        buildStat('bi-search', '—', 'Browse', '#475569', '#f1f5f9')
+
+    if (!user.quizCompleted) {
+        document.getElementById('student-quiz-cta').innerHTML =
+            '<div class="quiz-cta-card">' +
+            '<div class="quiz-cta-icon"><i class="bi bi-clipboard2-pulse"></i></div>' +
+            '<div class="flex-grow-1"><h6 class="fw-bold mb-1" style="font-size:.92rem">Complete your lifestyle quiz</h6>' +
+            '<p style="color:#64748b;font-size:.82rem;margin:0">Answer 8 questions so we can match you with compatible roommates.</p></div>' +
+            '<a href="/Quiz" class="btn-quiz-cta">Take Quiz <i class="bi bi-arrow-right"></i></a></div>'
+    }
+
+    document.getElementById('student-shortcuts').innerHTML =
+        '<div class="section-card">' +
+        '<div class="section-card-header"><h6>Quick Links</h6></div>' +
+        buildShortcut('bi-search', 'Browse apartments', '/Browse', '#475569', '#f1f5f9') +
+        buildShortcut('bi-clipboard-check', 'Take the quiz', '/Quiz', '#eab308', 'rgba(234,179,8,.1)') +
+        buildShortcut('bi-file-text', 'My applications', '/StudentApps', '#3b82f6', 'rgba(59,130,246,.1)') +
+        buildShortcut('bi-chat-dots', 'Messages', '/Chat', '#8b5cf6', 'rgba(139,92,246,.1)') +
+        '</div>'
+
+    api.get('/applications/mine').then(function (apps) {
+        apps = apps || []
+        var pending = apps.filter(function (a) { return a.status === 0 }).length
+        stats.children[1].querySelector('.stat-value').textContent = pending
+
+        var container = document.getElementById('student-recent-apps')
+        if (apps.length > 0) {
+            var SK = { 0:'Pending', 1:'Accepted', 2:'Rejected', 3:'Withdrawn' }
+            var SC = { 0:'warning', 1:'success', 2:'danger', 3:'secondary' }
+            var SI = { 0:'bi-clock', 1:'bi-check-circle', 2:'bi-x-circle', 3:'bi-arrow-return-left' }
+            container.innerHTML =
+                '<div class="section-card">' +
+                '<div class="section-card-header"><h6>Recent Applications</h6>' +
+                '<a href="/StudentApps" class="btn-view-all">View all <i class="bi bi-chevron-right"></i></a></div>' +
+                '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><tbody>' +
+                apps.slice(0, 5).map(function (a) {
+                    return '<tr><td><div class="d-flex align-items-center gap-2">' +
+                        '<div style="width:32px;height:32px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center"><i class="bi bi-building" style="color:#94a3b8;font-size:.8rem"></i></div>' +
+                        '<a href="/Apartment/Detail/' + a.apartmentId + '" class="fw-semibold text-decoration-none" style="color:#1e293b;font-size:.85rem">' + escapeHtml(a.apartmentTitle || '') + '</a></div></td>' +
+                        '<td class="text-end"><span class="badge bg-' + (SC[a.status]||'secondary') + ' bg-opacity-10 text-' + (SC[a.status]||'secondary') + '" style="font-size:.72rem"><i class="bi ' + (SI[a.status]||'bi-clock') + ' me-1"></i>' + (SK[a.status]||'Pending') + '</span></td></tr>'
+                }).join('') +
+                '</tbody></table></div></div>'
+        } else {
+            container.innerHTML = '<div class="section-card"><div class="empty-section"><i class="bi bi-inbox"></i><p>No applications yet</p>' +
+                '<a href="/Browse" class="btn-quiz-cta" style="font-size:.8rem;padding:.4rem 1rem">Browse apartments</a></div></div>'
+        }
+    }).catch(function () {})
+
+    api.get('/conversations').then(function (convos) {
+        var unread = (convos || []).reduce(function (n, c) { return n + (c.unreadCount || 0) }, 0)
+        stats.children[2].querySelector('.stat-value').textContent = unread
+    }).catch(function () {})
+}
+
+function renderOwnerDashboard(user) {
+    var content = document.getElementById('dash-content')
+    content.innerHTML =
+        '<div class="welcome-card owner-card mb-4">' +
+        '<div class="welcome-avatar" style="background:rgba(249,115,22,.2);color:#F97316"><i class="bi bi-house-door-fill"></i></div>' +
+        '<div class="flex-grow-1"><h4>Welcome back, ' + escapeHtml(user.fullName) + '</h4>' +
+        '<p>Manage your listings and review applications.</p></div>' +
+        '<a href="/OwnerListings/New" class="btn-new-listing"><i class="bi bi-plus-lg"></i> New listing</a></div>' +
+
+        '<div class="row g-3 mb-4" id="owner-stats"></div>' +
+        '<div class="row g-3"><div class="col-lg-8" id="owner-pending"></div>' +
+        '<div class="col-lg-4" id="owner-shortcuts"></div></div>'
+
+    var stats = document.getElementById('owner-stats')
+    stats.innerHTML =
+        buildStat('bi-building', '—', 'Active Listings', '#475569', '#f1f5f9') +
+        buildStat('bi-clock-history', '—', 'Pending Apps', '#eab308', 'rgba(234,179,8,.1)') +
+        buildStat('bi-check-circle', '—', 'Accepted', '#10b981', 'rgba(16,185,129,.1)') +
+        buildStat('bi-chat-dots', '—', 'Unread', '#8b5cf6', 'rgba(139,92,246,.1)')
+
+    document.getElementById('owner-shortcuts').innerHTML =
+        '<div class="section-card">' +
+        '<div class="section-card-header"><h6>Quick Links</h6></div>' +
+        buildShortcut('bi-plus-circle', 'New listing', '/OwnerListings/New', '#F97316', 'rgba(249,115,22,.1)') +
+        buildShortcut('bi-building', 'My listings', '/OwnerListings', '#475569', '#f1f5f9') +
+        buildShortcut('bi-people', 'Applications', '/OwnerApps', '#eab308', 'rgba(234,179,8,.1)') +
+        buildShortcut('bi-chat-dots', 'Messages', '/Chat', '#8b5cf6', 'rgba(139,92,246,.1)') +
+        buildShortcut('bi-credit-card', 'Payments', '/Payment', '#06B6D4', 'rgba(6,182,212,.1)') +
+        '</div>'
+
+    api.get('/apartments/mine').then(function (data) {
+        var listings = data.items || data || []
+        stats.children[0].querySelector('.stat-value').textContent = listings.length
+    }).catch(function () {})
+
+    api.get('/applications/received').then(function (apps) {
+        apps = apps || []
+        var pending = apps.filter(function (a) { return a.status === 0 })
+        var accepted = apps.filter(function (a) { return a.status === 1 })
+        stats.children[1].querySelector('.stat-value').textContent = pending.length
+        stats.children[2].querySelector('.stat-value').textContent = accepted.length
+
+        var container = document.getElementById('owner-pending')
+        if (pending.length > 0) {
+            container.innerHTML =
+                '<div class="section-card">' +
+                '<div class="section-card-header"><h6>Pending Applications</h6>' +
+                '<a href="/OwnerApps" class="btn-view-all">View all <i class="bi bi-chevron-right"></i></a></div>' +
+                '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><tbody>' +
+                pending.slice(0, 5).map(function (a) {
+                    var init = (a.studentName || a.applicantName || 'U').split(' ').map(function(n){return n[0]}).join('').substring(0,2).toUpperCase()
+                    return '<tr><td><div class="d-flex align-items-center gap-2">' +
+                        '<div style="width:32px;height:32px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.7rem;color:#64748b">' + init + '</div>' +
+                        '<div><span class="fw-semibold" style="font-size:.85rem">' + escapeHtml(a.studentName || a.applicantName || '') + '</span>' +
+                        '<br/><span style="color:#94a3b8;font-size:.75rem">' + escapeHtml(a.apartmentTitle || '') + '</span></div></div></td>' +
+                        '<td class="text-end"><span class="badge bg-warning bg-opacity-10 text-warning" style="font-size:.72rem"><i class="bi bi-clock me-1"></i>Pending</span></td></tr>'
+                }).join('') +
+                '</tbody></table></div></div>'
+        } else {
+            container.innerHTML = '<div class="section-card"><div class="empty-section"><i class="bi bi-inbox"></i><p>No pending applications</p></div></div>'
+        }
+    }).catch(function () {})
+
+    api.get('/conversations').then(function (convos) {
+        var unread = (convos || []).reduce(function (n, c) { return n + (c.unreadCount || 0) }, 0)
+        stats.children[3].querySelector('.stat-value').textContent = unread
+    }).catch(function () {})
+}
+
+function buildStat(icon, value, label, color, bg) {
+    return '<div class="col-6 col-lg-3"><div class="stat-card">' +
+        '<div class="stat-icon" style="background:' + bg + ';color:' + color + '"><i class="bi ' + icon + '"></i></div>' +
+        '<div><div class="stat-label">' + label + '</div>' +
+        '<div class="stat-value">' + value + '</div></div></div></div>'
+}
+
+function buildShortcut(icon, label, href, color, bg) {
+    return '<a href="' + href + '" class="shortcut-item">' +
+        '<div class="shortcut-icon" style="background:' + bg + ';color:' + color + '"><i class="bi ' + icon + '"></i></div>' +
+        '<span>' + label + '</span><i class="bi bi-chevron-right"></i></a>'
+}
+</script>
+}

@@ -24,6 +24,9 @@ public interface IApartmentService
     Task<CompatibilityBreakdownDto> GetCompatibilityForStudentAsync(
         Guid apartmentId, Guid studentUserId, CancellationToken ct);
 
+    /// <summary>True if the owner must pay a ListingFee before creating another apartment (first listing is free).</summary>
+    Task<bool> RequiresListingFeeAsync(Guid ownerId, CancellationToken ct);
+
     Task<ApartmentDetailDto> CreateAsync(Guid ownerId, CreateApartmentRequest req, CancellationToken ct);
 
     Task<ApartmentDetailDto> UpdateAsync(Guid id, Guid ownerId, UpdateApartmentRequest req, CancellationToken ct);

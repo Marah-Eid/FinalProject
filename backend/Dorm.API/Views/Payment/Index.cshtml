@@ -1,0 +1,102 @@
+@{
+    Layout = "_BrowseLayout";
+    ViewData["Title"] = "Payments";
+}
+
+@section Styles {
+<style>
+    .pay-header h3 { font-size: 1.4rem; font-weight: 800; color: #1e293b; }
+    .pay-header p { color: #64748b; font-size: .9rem; }
+
+    .pay-summary {
+        background: #0f172a; border-radius: 14px; padding: 1.25rem 1.5rem;
+        display: flex; align-items: center; gap: 1rem; color: #f8fafc; margin-bottom: 1.25rem;
+    }
+    .pay-summary-icon {
+        width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,.1);
+        display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+    }
+    .pay-summary .label { font-size: .82rem; opacity: .6; }
+    .pay-summary .amount { font-size: 1.5rem; font-weight: 800; }
+
+    .pay-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .pay-type-icon {
+        width: 36px; height: 36px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center; font-size: .9rem;
+    }
+</style>
+}
+
+<div class="container" style="max-width:960px;padding:2.5rem 1rem">
+    <div class="pay-header mb-4">
+        <h3>Payments</h3>
+        <p>Match commissions, featured boosts and verified badge.</p>
+    </div>
+    <div>
+        <div id="pay-summary"></div>
+        <div class="pay-card">
+            <div id="payments-list">
+                <div class="text-center py-5"><div class="spinner-border" style="color:#94a3b8"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+var TYPE_LABELS = { 0: 'Match Commission', 1: 'Listing Fee', 2: 'Verified Badge' }
+var TYPE_ICONS = { 0: 'bi-people-fill', 1: 'bi-building', 2: 'bi-patch-check-fill' }
+var TYPE_COLORS = { 0: '#3b82f6', 1: '#8B5CF6', 2: '#06B6D4' }
+var TYPE_BG = { 0: 'rgba(59,130,246,.1)', 1: 'rgba(139,92,246,.1)', 2: 'rgba(6,182,212,.1)' }
+var STATUS_LABELS = { 0: 'Pending', 1: 'Completed', 2: 'Failed' }
+var STATUS_COLORS = { 0: 'warning', 1: 'success', 2: 'danger' }
+var STATUS_ICONS = { 0: 'bi-clock', 1: 'bi-check-circle', 2: 'bi-x-circle' }
+
+auth.initAuth().then(loadPayments)
+
+async function loadPayments() {
+    var container = document.getElementById('payments-list')
+    try {
+        var data = await api.get('/payments/history')
+        var items = data.items || data || []
+
+        if (items.length === 0) {
+            container.innerHTML = '<div class="text-center py-5"><i class="bi bi-credit-card" style="font-size:2.5rem;color:#cbd5e1"></i>' +
+                '<h5 class="fw-bold mt-3" style="color:#1e293b">No payments yet</h5>' +
+                '<p style="color:#94a3b8;font-size:.88rem">Your payment history will appear here.</p></div>'
+            return
+        }
+
+        var total = items.filter(function (p) { return p.status === 1 }).reduce(function (s, p) { return s + (p.amount || 0) }, 0)
+        if (total > 0) {
+            document.getElementById('pay-summary').innerHTML =
+                '<div class="pay-summary">' +
+                '<div class="pay-summary-icon"><i class="bi bi-wallet2"></i></div>' +
+                '<div><div class="label">Total Paid</div><div class="amount">' + total + ' JOD</div></div></div>'
+        }
+
+        container.innerHTML = '<div class="table-responsive"><table class="table table-hover align-middle mb-0">' +
+            '<thead><tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">' +
+            '<th>Type</th><th>Date</th><th>Reference</th><th class="text-center">Status</th><th class="text-end">Amount</th>' +
+            '</tr></thead><tbody>' +
+            items.map(function (p) {
+                var icon = TYPE_ICONS[p.type] || 'bi-credit-card'
+                var color = TYPE_COLORS[p.type] || '#64748b'
+                var bg = TYPE_BG[p.type] || '#f1f5f9'
+                var dateStr = p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''
+                return '<tr>' +
+                    '<td><div class="d-flex align-items-center gap-2">' +
+                    '<div class="pay-type-icon" style="background:' + bg + ';color:' + color + '"><i class="bi ' + icon + '"></i></div>' +
+                    '<span class="fw-semibold" style="font-size:.88rem">' + (TYPE_LABELS[p.type]||'Payment') + '</span></div></td>' +
+                    '<td style="color:#94a3b8;font-size:.82rem">' + dateStr + '</td>' +
+                    '<td style="color:#94a3b8;font-size:.82rem;font-family:monospace">' + (p.transactionRef || '—') + '</td>' +
+                    '<td class="text-center"><span class="badge bg-' + (STATUS_COLORS[p.status]||'secondary') + ' bg-opacity-10 text-' + (STATUS_COLORS[p.status]||'secondary') + '" style="font-size:.72rem"><i class="bi ' + (STATUS_ICONS[p.status]||'bi-clock') + ' me-1"></i>' + (STATUS_LABELS[p.status]||'Pending') + '</span></td>' +
+                    '<td class="text-end"><span class="fw-bold" style="font-size:.92rem;color:#1e293b">' + p.amount + ' JOD</span></td></tr>'
+            }).join('') +
+            '</tbody></table></div>'
+    } catch (e) {
+        container.innerHTML = '<div class="text-center py-5"><p style="color:#ef4444">Failed to load payments.</p></div>'
+    }
+}
+</script>
+}

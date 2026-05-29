@@ -28,6 +28,7 @@ public interface IAppDbContext
     DbSet<Report> Reports { get; }
     DbSet<Payment> Payments { get; }
     DbSet<Notification> Notifications { get; }
+    DbSet<Testimonial> Testimonials { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

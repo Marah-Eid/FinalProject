@@ -1,0 +1,136 @@
+@{
+    Layout = "_BrowseLayout";
+    ViewData["Title"] = "Saved Apartments";
+}
+
+@section Styles {
+<style>
+    .saved-hero {
+        background: #0f172a; padding: 5rem 0 3rem; color: #fff;
+    }
+    .saved-hero h1 { font-size: 2rem; font-weight: 800; letter-spacing: -.02em; }
+    .saved-hero p { color: #64748b; font-size: 1rem; }
+
+    .saved-body { background: #f8fafc; padding: 2rem 0 4rem; }
+
+    .saved-card {
+        background: #fff; border-radius: 14px; overflow: hidden;
+        border: 1px solid #e2e8f0;
+        transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s;
+        height: 100%; display: flex; flex-direction: column;
+    }
+    .saved-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,0,0,.08);
+        border-color: transparent;
+    }
+    .saved-card-img { width: 100%; height: 180px; object-fit: cover; display: block; }
+    .saved-card-body { padding: 1rem 1.1rem; flex: 1; display: flex; flex-direction: column; }
+    .saved-card-title { font-size: .95rem; font-weight: 700; color: #1e293b; margin-bottom: .25rem; text-decoration: none; }
+    .saved-card-title:hover { color: #F97316; }
+    .saved-card-loc { font-size: .78rem; color: #94a3b8; display: flex; align-items: center; gap: .25rem; margin-bottom: .6rem; }
+    .saved-card-pills { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .75rem; }
+    .saved-pill { font-size: .68rem; font-weight: 600; padding: .2rem .5rem; border-radius: 5px; background: #f1f5f9; color: #64748b; }
+    .saved-card-footer {
+        display: flex; justify-content: space-between; align-items: center;
+        border-top: 1px solid #f1f5f9; padding-top: .75rem; margin-top: auto;
+    }
+    .saved-price { font-size: 1.05rem; font-weight: 800; color: #1e293b; }
+    .saved-price span { font-size: .72rem; font-weight: 400; color: #94a3b8; }
+
+    .btn-unsave {
+        background: rgba(239,68,68,.08); color: #ef4444; border: none;
+        border-radius: 8px; padding: .4rem .7rem; font-size: .78rem; font-weight: 600;
+        cursor: pointer; transition: all .15s;
+        display: inline-flex; align-items: center; gap: .3rem;
+    }
+    .btn-unsave:hover { background: rgba(239,68,68,.15); }
+
+    .empty-state { text-align: center; padding: 4rem 1rem; }
+    .empty-state i { font-size: 3rem; color: #cbd5e1; }
+    .empty-state h5 { font-weight: 700; color: #1e293b; margin-top: 1rem; }
+    .empty-state p { color: #94a3b8; }
+</style>
+}
+
+<div class="saved-hero">
+    <div class="container">
+        <h1><i class="bi bi-heart-fill me-2" style="color:#ef4444"></i>Saved Apartments</h1>
+        <p>Apartments you've bookmarked for later.</p>
+    </div>
+</div>
+
+<div class="saved-body">
+    <div class="container">
+        <div class="row g-3" id="saved-list">
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border" style="color:#94a3b8" role="status"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+var GENDER_LABELS = { 0: 'Male Only', 1: 'Female Only', 2: 'Mixed' }
+
+auth.initAuth().then(function () {
+    var user = auth.getUser()
+    if (!user) { window.location.href = '/Account/Login'; return }
+    loadSaved()
+})
+
+function loadSaved() {
+    var container = document.getElementById('saved-list')
+    api.get('/saved').then(function (items) {
+        if (!items || items.length === 0) {
+            container.innerHTML = '<div class="col-12"><div class="empty-state">' +
+                '<i class="bi bi-heart"></i>' +
+                '<h5>No saved apartments yet</h5>' +
+                '<p>Browse apartments and tap the heart icon to save them here.</p>' +
+                '<a href="/Browse" style="background:#0f172a;color:#fff;border:none;border-radius:8px;padding:.55rem 1.2rem;font-weight:600;font-size:.85rem;text-decoration:none;display:inline-flex;align-items:center;gap:.3rem;margin-top:.75rem">' +
+                '<i class="bi bi-search"></i> Browse Apartments</a></div></div>'
+            return
+        }
+
+        container.innerHTML = items.map(function (apt, idx) {
+            var photo = apt.mainPhotoUrl || '/property/images/img_' + ((idx % 8) + 1) + '.jpg'
+            return '<div class="col-md-6 col-xl-4" id="saved-' + apt.apartmentId + '">' +
+                '<div class="saved-card">' +
+                '<a href="/Apartment/Detail/' + apt.apartmentId + '">' +
+                '<img src="' + photo + '" alt="' + escapeHtml(apt.title) + '" class="saved-card-img" /></a>' +
+                '<div class="saved-card-body">' +
+                '<a href="/Apartment/Detail/' + apt.apartmentId + '" class="saved-card-title">' + escapeHtml(apt.title) + '</a>' +
+                '<div class="saved-card-loc"><i class="bi bi-geo-alt-fill"></i> ' + escapeHtml(apt.neighborhood || '') + '</div>' +
+                '<div class="saved-card-pills">' +
+                '<span class="saved-pill">' + (GENDER_LABELS[apt.genderType] || '') + '</span>' +
+                '<span class="saved-pill">' + apt.availableSpots + ' of ' + apt.totalSpots + ' spots</span>' +
+                (apt.isFurnished ? '<span class="saved-pill">Furnished</span>' : '') +
+                '</div>' +
+                '<div class="saved-card-footer">' +
+                '<div class="saved-price">' + apt.fullRent + ' <span>JOD/mo</span></div>' +
+                '<button class="btn-unsave" onclick="unsave(\'' + apt.apartmentId + '\')">' +
+                '<i class="bi bi-heart-fill"></i> Remove</button>' +
+                '</div></div></div></div>'
+        }).join('')
+    }).catch(function () {
+        container.innerHTML = '<div class="col-12"><div class="empty-state"><i class="bi bi-exclamation-circle"></i><h5>Something went wrong</h5><p>Failed to load saved apartments.</p></div></div>'
+    })
+}
+
+function unsave(id) {
+    api.post('/saved/' + id).then(function () {
+        var el = document.getElementById('saved-' + id)
+        if (el) {
+            el.style.transition = 'opacity .3s, transform .3s'
+            el.style.opacity = '0'
+            el.style.transform = 'scale(.95)'
+            setTimeout(function () {
+                el.remove()
+                if (document.querySelectorAll('[id^="saved-"]').length === 0) loadSaved()
+            }, 300)
+        }
+    }).catch(function () {})
+}
+</script>
+}

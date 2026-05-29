@@ -53,9 +53,7 @@ public sealed class ApartmentService(
         if (q.MaxPrice is { } maxP) query = query.Where(a => a.FullRent / a.TotalSpots <= maxP);
         if (q.SpotsAvailable is { } spots)
         {
-            query = spots >= 4
-                ? query.Where(a => a.AvailableSpots >= 4)
-                : query.Where(a => a.AvailableSpots == spots);
+            query = query.Where(a => a.AvailableSpots >= spots);
         }
         if (q.Furnished is { } furn) query = query.Where(a => a.IsFurnished == furn);
         if (q.MaxDistance is { } maxDist) query = query.Where(a => a.DistanceMinutes <= maxDist);
@@ -298,9 +296,41 @@ public sealed class ApartmentService(
             tenantAnswers ?? Array.Empty<IReadOnlyDictionary<QuizQuestionKey, string>>());
     }
 
+    // ── Listing fee ──────────────────────────────────────────────────────────
+    public async Task<bool> RequiresListingFeeAsync(Guid ownerId, CancellationToken ct)
+    {
+        var existingCount = await db.Apartments.CountAsync(a => a.OwnerId == ownerId, ct);
+        if (existingCount == 0) return false;
+
+        var hasUnusedPayment = await db.Payments.AnyAsync(p =>
+            p.UserId == ownerId &&
+            p.Type == PaymentType.ListingFee &&
+            p.Status == PaymentStatus.Completed &&
+            p.RelatedEntityId == null, ct);
+
+        return !hasUnusedPayment;
+    }
+
     // ── Create ──────────────────────────────────────────────────────────────
     public async Task<ApartmentDetailDto> CreateAsync(Guid ownerId, CreateApartmentRequest req, CancellationToken ct)
     {
+        Payment? listingPayment = null;
+        var existingCount = await db.Apartments.CountAsync(a => a.OwnerId == ownerId, ct);
+        if (existingCount > 0)
+        {
+            listingPayment = await db.Payments
+                .Where(p => p.UserId == ownerId &&
+                            p.Type == PaymentType.ListingFee &&
+                            p.Status == PaymentStatus.Completed &&
+                            p.RelatedEntityId == null)
+                .OrderByDescending(p => p.CreatedAt)
+                .FirstOrDefaultAsync(ct);
+
+            if (listingPayment is null)
+                throw new BadRequestException(
+                    "You must pay the 10 JOD listing fee before creating another apartment. Your first listing was free.");
+        }
+
         var apartment = new Apartment
         {
             Id = Guid.NewGuid(),
@@ -335,6 +365,10 @@ public sealed class ApartmentService(
         }
 
         db.Apartments.Add(apartment);
+
+        if (listingPayment is not null)
+            listingPayment.RelatedEntityId = apartment.Id;
+
         await db.SaveChangesAsync(ct);
 
         return await GetByIdAsync(apartment.Id, ct);

@@ -1,0 +1,166 @@
+@{
+    Layout = "_BrowseLayout";
+    ViewData["Title"] = "Contact Us";
+}
+
+@section Styles {
+<style>
+    .contact-hero {
+        background: #0f172a; padding: 5rem 0 3rem; color: #fff;
+    }
+    .contact-hero h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -.02em; }
+    .contact-hero p { color: #64748b; font-size: 1.05rem; }
+
+    .contact-body { padding: 3rem 0 4rem; }
+
+    .contact-card {
+        background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+        padding: 2rem;
+    }
+
+    .contact-info-item {
+        display: flex; align-items: flex-start; gap: .85rem; margin-bottom: 1.5rem;
+    }
+    .contact-info-icon {
+        width: 44px; height: 44px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; flex-shrink: 0;
+    }
+    .contact-info-item h6 { font-weight: 700; font-size: .9rem; color: #1e293b; margin-bottom: .15rem; }
+    .contact-info-item p { font-size: .85rem; color: #64748b; margin: 0; }
+    .contact-info-item a { color: #F97316; text-decoration: none; font-weight: 500; }
+    .contact-info-item a:hover { text-decoration: underline; }
+
+    .contact-form label {
+        font-size: .82rem; font-weight: 600; color: #475569; margin-bottom: .3rem;
+    }
+    .contact-form .form-control, .contact-form .form-select {
+        padding: .65rem .9rem; border-radius: 8px; font-size: .9rem;
+    }
+    .btn-send-msg {
+        background: #0f172a; color: #fff; border: none; border-radius: 8px;
+        padding: .65rem 1.5rem; font-weight: 600; font-size: .88rem;
+        display: inline-flex; align-items: center; gap: .4rem;
+        transition: all .2s;
+    }
+    .btn-send-msg:hover { background: #1e293b; }
+</style>
+}
+
+<div class="contact-hero">
+    <div class="container">
+        <h1>Contact Us</h1>
+        <p>Have a question, feedback, or need help? We'd love to hear from you.</p>
+    </div>
+</div>
+
+<div class="contact-body">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="contact-card h-100">
+                    <h4 style="font-weight:700;font-size:1.1rem;color:#1e293b;margin-bottom:1.5rem">Get in Touch</h4>
+
+                    <div class="contact-info-item">
+                        <div class="contact-info-icon" style="background:rgba(249,115,22,.1);color:#F97316"><i class="bi bi-envelope-fill"></i></div>
+                        <div>
+                            <h6>Email</h6>
+                            <p><a href="mailto:support@dorm.jo">support@dorm.jo</a></p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-item">
+                        <div class="contact-info-icon" style="background:rgba(59,130,246,.1);color:#3b82f6"><i class="bi bi-telephone-fill"></i></div>
+                        <div>
+                            <h6>Phone</h6>
+                            <p>+962 6 000 0000</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-item">
+                        <div class="contact-info-icon" style="background:rgba(16,185,129,.1);color:#10b981"><i class="bi bi-geo-alt-fill"></i></div>
+                        <div>
+                            <h6>Location</h6>
+                            <p>Amman, Jordan</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-item">
+                        <div class="contact-info-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6"><i class="bi bi-clock-fill"></i></div>
+                        <div>
+                            <h6>Working Hours</h6>
+                            <p>Sunday – Thursday, 9 AM – 5 PM</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="contact-card">
+                    <h4 style="font-weight:700;font-size:1.1rem;color:#1e293b;margin-bottom:1.25rem">Send a Message</h4>
+
+                    <div class="alert alert-success d-none" id="contact-success" style="border-radius:8px;font-size:.88rem">
+                        <i class="bi bi-check-circle-fill me-1"></i> Your message has been sent. We'll get back to you soon!
+                    </div>
+
+                    <form class="contact-form" id="contact-form" novalidate>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Your Name</label>
+                                <input type="text" class="form-control" id="cf-name" placeholder="Full name" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="cf-email" placeholder="you@example.com" required />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Subject</label>
+                            <select class="form-select" id="cf-subject">
+                                <option value="general">General Inquiry</option>
+                                <option value="support">Technical Support</option>
+                                <option value="feedback">Feedback</option>
+                                <option value="report">Report an Issue</option>
+                                <option value="partnership">Partnership</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-control" id="cf-message" rows="5" placeholder="How can we help?" required style="resize:none"></textarea>
+                        </div>
+                        <button type="submit" class="btn-send-msg" id="cf-btn">
+                            <i class="bi bi-send"></i> Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+auth.initAuth().then(function () {
+    var user = auth.getUser()
+    if (user) {
+        document.getElementById('cf-name').value = user.fullName || ''
+        document.getElementById('cf-email').value = user.email || ''
+    }
+})
+
+document.getElementById('contact-form').addEventListener('submit', function (e) {
+    e.preventDefault()
+    var btn = document.getElementById('cf-btn')
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending...'
+    // Simulate send (no backend endpoint for contact form)
+    setTimeout(function () {
+        document.getElementById('contact-form').reset()
+        document.getElementById('contact-success').classList.remove('d-none')
+        btn.disabled = false
+        btn.innerHTML = '<i class="bi bi-send"></i> Send Message'
+        setTimeout(function () { document.getElementById('contact-success').classList.add('d-none') }, 5000)
+    }, 1000)
+})
+</script>
+}

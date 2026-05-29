@@ -1,0 +1,188 @@
+@{
+    Layout = "_DashboardLayout";
+    ViewData["Title"] = "New Listing";
+}
+
+@section Styles {
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    .nl-header h3 { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: .15rem; }
+    .nl-header p { color: #64748b; font-size: .9rem; }
+
+    .nl-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 1.5rem; }
+    .nl-section { font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin-bottom: 1rem; padding-bottom: .5rem; border-bottom: 1px solid #f1f5f9; }
+
+    .nl-card .form-label { font-size: .82rem; font-weight: 600; color: #475569; }
+    .nl-card .form-control, .nl-card .form-select {
+        border-radius: 8px; border-color: #e2e8f0; font-size: .88rem;
+    }
+    .nl-card .form-control:focus, .nl-card .form-select:focus {
+        border-color: #F97316; box-shadow: 0 0 0 3px rgba(249,115,22,.08);
+    }
+    .nl-card .form-check-input:checked { background-color: #F97316; border-color: #F97316; }
+
+    .amenity-chip {
+        display: inline-flex; align-items: center; gap: .3rem;
+        padding: .4rem .8rem; border-radius: 8px; font-size: .82rem; font-weight: 500;
+        border: 1px solid #e2e8f0; background: #fff; color: #64748b;
+        cursor: pointer; transition: all .15s;
+    }
+    .amenity-chip.selected { background: #0f172a; color: #fff; border-color: #0f172a; }
+
+    .btn-publish {
+        background: #F97316; color: #fff; border: none; border-radius: 10px;
+        font-weight: 600; font-size: .95rem; padding: .75rem;
+        transition: all .2s;
+    }
+    .btn-publish:hover { background: #ea6c10; color: #fff; }
+
+    #nl-map { border-radius: 12px; }
+</style>
+}
+
+<div class="nl-header mb-4">
+    <h3>New Listing</h3>
+    <p>Tell students about the place.</p>
+</div>
+<div>
+    <div class="nl-card">
+        <div class="alert alert-danger d-none" id="nl-error" style="border-radius:8px"></div>
+        <form id="nl-form" novalidate>
+            <h6 class="nl-section">Basics</h6>
+            <div class="mb-3"><label class="form-label">Title</label><input type="text" class="form-control" id="nl-title" required /></div>
+            <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" id="nl-description" rows="3"></textarea></div>
+            <div class="row g-3 mb-4">
+                <div class="col-sm-4"><label class="form-label">City</label>
+                    <select class="form-select" id="nl-city" required><option value="">—</option><option value="0">Amman</option><option value="1">Irbid</option><option value="2">Zarqa</option></select></div>
+                <div class="col-sm-4"><label class="form-label">Neighborhood</label><input type="text" class="form-control" id="nl-neighborhood" required /></div>
+                <div class="col-sm-4"><label class="form-label">Address Detail</label><input type="text" class="form-control" id="nl-address" /></div>
+            </div>
+
+            <h6 class="nl-section">Location</h6>
+            <div class="row g-3 mb-3">
+                <div class="col-sm-6"><label class="form-label">Nearest University</label>
+                    <select class="form-select" id="nl-university">
+                        <option value="">—</option>
+                        <option value="0">JU</option><option value="1">GJU</option><option value="2">PSUT</option>
+                        <option value="3">YU</option><option value="4">HU</option><option value="5">MU</option>
+                        <option value="6">ZU</option><option value="7">BAU</option><option value="8">JUST</option><option value="9">AAU</option>
+                    </select></div>
+                <div class="col-sm-6"><label class="form-label">Walking Minutes</label><input type="number" class="form-control" id="nl-distance" min="1" /></div>
+            </div>
+            <div id="nl-map" style="height:200px;background:#f1f5f9" class="mb-4"></div>
+            <input type="hidden" id="nl-lat" /><input type="hidden" id="nl-lng" />
+
+            <h6 class="nl-section">Pricing & Spots</h6>
+            <div class="row g-3 mb-4">
+                <div class="col-sm-4"><label class="form-label">Full Rent (JOD)</label><input type="number" class="form-control" id="nl-rent" min="0" required /></div>
+                <div class="col-sm-4"><label class="form-label">Total Spots</label><input type="number" class="form-control" id="nl-totalSpots" min="1" required /></div>
+                <div class="col-sm-4"><label class="form-label">Available</label><input type="number" class="form-control" id="nl-availableSpots" min="0" required /></div>
+            </div>
+
+            <h6 class="nl-section">House Rules</h6>
+            <div class="row g-3 mb-3">
+                <div class="col-sm-4"><label class="form-label">Gender Policy</label>
+                    <select class="form-select" id="nl-gender" required><option value="0">Male Only</option><option value="1">Female Only</option><option value="2">Mixed</option></select></div>
+                <div class="col-sm-4"><label class="form-label">Smoking</label>
+                    <select class="form-select" id="nl-smoking"><option value="0">Yes</option><option value="1">No</option><option value="2">Outside Only</option></select></div>
+                <div class="col-sm-4"><label class="form-label">Guests</label>
+                    <select class="form-select" id="nl-guests"><option value="0">Yes</option><option value="1">No</option><option value="2">Limited</option></select></div>
+            </div>
+            <div class="form-check mb-4">
+                <input type="checkbox" class="form-check-input" id="nl-furnished" />
+                <label class="form-check-label" for="nl-furnished" style="font-size:.88rem">Furnished</label>
+            </div>
+
+            <h6 class="nl-section">Amenities</h6>
+            <div class="d-flex flex-wrap gap-2 mb-4" id="nl-amenities"></div>
+
+            <button type="submit" class="btn-publish w-100" id="nl-submit">Publish Listing</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var AMENITIES = [
+    { key:'WiFi', label:'WiFi' }, { key:'AC', label:'AC' }, { key:'Heating', label:'Heating' },
+    { key:'WashingMachine', label:'Washing Machine' }, { key:'Parking', label:'Parking' },
+    { key:'Furnished', label:'Furnished' }, { key:'Elevator', label:'Elevator' },
+    { key:'Balcony', label:'Balcony' }, { key:'Kitchen', label:'Kitchen' },
+    { key:'PrivateBathroom', label:'Private Bathroom' }
+]
+
+var amenDiv = document.getElementById('nl-amenities')
+amenDiv.innerHTML = AMENITIES.map(function (a) {
+    return '<div class="amenity-chip" data-key="' + a.key + '" onclick="toggleAmenity(this)">' + a.label + '</div>'
+}).join('')
+
+function toggleAmenity(el) { el.classList.toggle('selected') }
+
+setTimeout(function () {
+    var el = document.getElementById('nl-map')
+    if (!el || !window.L) return
+    var mapInstance = L.map(el).setView([31.95, 35.93], 10)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(mapInstance)
+    var marker = null
+    mapInstance.on('click', function (e) {
+        if (marker) mapInstance.removeLayer(marker)
+        marker = L.marker(e.latlng).addTo(mapInstance)
+        document.getElementById('nl-lat').value = e.latlng.lat
+        document.getElementById('nl-lng').value = e.latlng.lng
+    })
+}, 300)
+
+document.getElementById('nl-form').addEventListener('submit', async function (e) {
+    e.preventDefault()
+    var errBox = document.getElementById('nl-error')
+    errBox.classList.add('d-none')
+
+    var body = {
+        title: document.getElementById('nl-title').value.trim(),
+        description: document.getElementById('nl-description').value.trim(),
+        city: parseInt(document.getElementById('nl-city').value),
+        neighborhood: document.getElementById('nl-neighborhood').value.trim(),
+        addressDetail: document.getElementById('nl-address').value.trim(),
+        fullRent: parseFloat(document.getElementById('nl-rent').value),
+        totalSpots: parseInt(document.getElementById('nl-totalSpots').value),
+        availableSpots: parseInt(document.getElementById('nl-availableSpots').value),
+        genderType: parseInt(document.getElementById('nl-gender').value),
+        smokingRule: parseInt(document.getElementById('nl-smoking').value),
+        guestsRule: parseInt(document.getElementById('nl-guests').value),
+        isFurnished: document.getElementById('nl-furnished').checked,
+        amenities: []
+    }
+
+    document.querySelectorAll('.amenity-chip.selected').forEach(function (el) { body.amenities.push(el.dataset.key) })
+
+    var uni = document.getElementById('nl-university').value
+    if (uni) body.nearestUniversity = parseInt(uni)
+    var dist = document.getElementById('nl-distance').value
+    if (dist) body.distanceMinutes = parseInt(dist)
+    var lat = document.getElementById('nl-lat').value
+    var lng = document.getElementById('nl-lng').value
+    if (lat && lng) { body.latitude = parseFloat(lat); body.longitude = parseFloat(lng) }
+
+    if (!body.title || isNaN(body.city) || !body.neighborhood || isNaN(body.fullRent) || isNaN(body.totalSpots) || isNaN(body.availableSpots)) {
+        errBox.textContent = 'Please fill in all required fields.'
+        errBox.classList.remove('d-none')
+        return
+    }
+
+    var btn = document.getElementById('nl-submit')
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publishing...'
+
+    try {
+        var result = await api.post('/apartments', { body: body })
+        window.location.href = '/Apartment/Detail/' + result.id
+    } catch (err) {
+        errBox.textContent = err.message || 'Something went wrong. Please try again.'
+        errBox.classList.remove('d-none')
+        btn.disabled = false
+        btn.textContent = 'Publish Listing'
+    }
+})
+</script>
+}

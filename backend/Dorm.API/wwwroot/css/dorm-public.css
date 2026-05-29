@@ -1,0 +1,89 @@
+/* Dorm — public page overrides on top of Property template */
+:root {
+  --dorm-orange: #F97316;
+  --dorm-orange-hover: #ea6c10;
+  --dorm-orange-rgb: 249, 115, 22;
+  --bs-primary: #F97316;
+  --bs-primary-rgb: 249, 115, 22;
+}
+
+/* Buttons */
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: var(--dorm-orange) !important;
+  border-color: var(--dorm-orange) !important;
+}
+.btn-primary:hover { background-color: var(--dorm-orange-hover) !important; border-color: var(--dorm-orange-hover) !important; }
+.btn-dorm { background-color: var(--dorm-orange); border-color: var(--dorm-orange); color: #fff; }
+.btn-dorm:hover { background-color: var(--dorm-orange-hover); border-color: var(--dorm-orange-hover); color: #fff; }
+.btn-outline-primary { color: var(--dorm-orange); border-color: var(--dorm-orange); }
+.btn-outline-primary:hover { background-color: var(--dorm-orange); border-color: var(--dorm-orange); color: #fff; }
+
+/* Text & backgrounds */
+.text-primary { color: var(--dorm-orange) !important; }
+.bg-primary { background-color: var(--dorm-orange) !important; }
+a { color: var(--dorm-orange); }
+a:hover { color: var(--dorm-orange-hover); }
+
+/* Form focus */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--dorm-orange);
+  box-shadow: 0 0 0 0.2rem rgba(var(--dorm-orange-rgb), 0.25);
+}
+
+/* Navbar brand */
+a.logo { font-size: 1.5rem; font-weight: 700; color: var(--dorm-orange) !important; }
+.site-nav .site-navigation .site-menu > li > a:hover,
+.site-nav .site-navigation .site-menu > li.active > a {
+  color: var(--dorm-orange) !important;
+}
+
+/* Property hero section */
+.hero-section { position: relative; }
+.hero-section .hero-slide-item::before {
+  background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(249,115,22,0.3));
+}
+
+/* Cards */
+.card { border-radius: 1rem; border: none; box-shadow: 0 2px 16px rgba(0,0,0,.06); }
+
+/* Pagination */
+.page-link { color: var(--dorm-orange); }
+.page-item.active .page-link { background-color: var(--dorm-orange); border-color: var(--dorm-orange); }
+
+/* Footer */
+.site-footer { background: #1e293b; }
+.site-footer h3 { color: var(--dorm-orange); }
+
+/* RTL adjustments for Property template */
+[dir="rtl"] .site-navigation .logo { float: right !important; }
+[dir="rtl"] .site-navigation .site-menu { float: left !important; }
+[dir="rtl"] .float-start { float: right !important; }
+[dir="rtl"] .float-end { float: left !important; }
+[dir="rtl"] .me-1 { margin-right: 0 !important; margin-left: 0.25rem !important; }
+[dir="rtl"] .me-2 { margin-right: 0 !important; margin-left: 0.5rem !important; }
+[dir="rtl"] .me-3 { margin-right: 0 !important; margin-left: 1rem !important; }
+[dir="rtl"] .ms-2 { margin-left: 0 !important; margin-right: 0.5rem !important; }
+[dir="rtl"] .ms-3 { margin-left: 0 !important; margin-right: 1rem !important; }
+[dir="rtl"] .ps-3 { padding-left: 0 !important; padding-right: 1rem !important; }
+[dir="rtl"] .pe-3 { padding-right: 0 !important; padding-left: 1rem !important; }
+[dir="rtl"] .text-start { text-align: right !important; }
+[dir="rtl"] .text-end { text-align: left !important; }
+[dir="rtl"] .border-start { border-left: 0 !important; border-right: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color) !important; }
+
+/* Fonts */
+body { font-family: 'Inter', 'Work Sans', sans-serif; }
+
+/* Navbar tweaks — cleaner look on dark hero */
+.site-nav .menu-bg-wrap {
+  border-radius: 10px !important;
+  backdrop-filter: blur(12px);
+}
+a.logo {
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -.02em;
+}

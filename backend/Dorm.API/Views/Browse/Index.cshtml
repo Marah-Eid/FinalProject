@@ -1,0 +1,334 @@
+@{
+    Layout = "_BrowseLayout";
+    ViewData["Title"] = "Browse";
+}
+
+@section Styles {
+<style>
+    .browse-hero {
+        background: #0f172a; padding: 6rem 0 3rem; color: #fff;
+    }
+    .browse-hero h1 { font-size: 2rem; font-weight: 800; letter-spacing: -.02em; }
+    .browse-hero p { color: #64748b; font-size: 1rem; }
+
+    .browse-body { background: #f8fafc; padding: 2rem 0 4rem; }
+
+    .filter-panel {
+        background: #fff; border-radius: 14px; padding: 1.5rem;
+        border: 1px solid #e2e8f0; position: sticky; top: 100px;
+    }
+    .filter-panel h5 { font-size: .95rem; font-weight: 700; color: #1e293b; }
+    .filter-panel label { font-size: .8rem; font-weight: 600; color: #475569; }
+    .filter-panel .form-control,
+    .filter-panel .form-select {
+        font-size: .85rem; border-color: #e2e8f0; border-radius: 8px;
+    }
+    .filter-panel .form-control:focus,
+    .filter-panel .form-select:focus {
+        border-color: #F97316; box-shadow: 0 0 0 3px rgba(249,115,22,.1);
+    }
+    .filter-panel .form-check-input:checked { background-color: #F97316; border-color: #F97316; }
+    .btn-filter {
+        background: #0f172a; color: #fff; border: none; border-radius: 8px;
+        font-weight: 600; font-size: .85rem; padding: .55rem 1rem;
+        transition: all .2s;
+    }
+    .btn-filter:hover { background: #1e293b; color: #fff; }
+
+    .sort-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+    .sort-bar .results-text { font-size: .85rem; color: #64748b; font-weight: 500; }
+    .sort-bar .form-select { width: auto; font-size: .82rem; border-radius: 8px; border-color: #e2e8f0; }
+
+    /* apartment cards — matching hero mock */
+    .apt-card {
+        background: #fff; border-radius: 14px; overflow: hidden;
+        border: 1px solid #e2e8f0;
+        transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s;
+        height: 100%;
+        display: flex; flex-direction: column;
+    }
+    .apt-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,0,0,.08);
+        border-color: transparent;
+    }
+    .apt-card-img {
+        width: 100%; height: 180px; object-fit: cover; display: block;
+    }
+    .apt-card-body { padding: 1rem 1.1rem; flex: 1; display: flex; flex-direction: column; }
+    .apt-card-title {
+        font-size: .95rem; font-weight: 700; color: #1e293b; margin-bottom: .25rem;
+        text-decoration: none;
+    }
+    .apt-card-title:hover { color: #F97316; }
+    .apt-card-loc {
+        font-size: .78rem; color: #94a3b8; display: flex; align-items: center; gap: .25rem;
+        margin-bottom: .6rem;
+    }
+    .apt-card-pills { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .75rem; }
+    .apt-pill {
+        font-size: .68rem; font-weight: 600; padding: .2rem .5rem; border-radius: 5px;
+        background: #f1f5f9; color: #64748b;
+    }
+    .apt-card-footer {
+        display: flex; justify-content: space-between; align-items: center;
+        border-top: 1px solid #f1f5f9; padding-top: .75rem; margin-top: auto;
+    }
+    .apt-price { font-size: 1.05rem; font-weight: 800; color: #1e293b; }
+    .apt-price span { font-size: .72rem; font-weight: 400; color: #94a3b8; }
+    .apt-match {
+        width: 42px; height: 42px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .68rem; font-weight: 800;
+    }
+    .match-high { border: 2.5px solid #10b981; color: #10b981; background: rgba(16,185,129,.06); }
+    .match-mid  { border: 2.5px solid #eab308; color: #eab308; background: rgba(234,179,8,.06); }
+    .match-low  { border: 2.5px solid #94a3b8; color: #94a3b8; background: rgba(148,163,184,.06); }
+
+    .pagination .page-link { border-radius: 8px; font-size: .85rem; font-weight: 500; border: 1px solid #e2e8f0; color: #475569; margin: 0 2px; }
+    .pagination .page-item.active .page-link { background: #0f172a; border-color: #0f172a; color: #fff; }
+
+    .empty-state { text-align: center; padding: 4rem 1rem; }
+    .empty-state i { font-size: 3rem; color: #cbd5e1; }
+    .empty-state h5 { font-weight: 700; color: #1e293b; margin-top: 1rem; }
+    .empty-state p { color: #94a3b8; }
+
+    /* heart button */
+    .apt-card-img-wrap { position: relative; }
+    .btn-heart {
+        position: absolute; top: .6rem; right: .6rem;
+        width: 34px; height: 34px; border-radius: 50%;
+        background: rgba(255,255,255,.85); border: none;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; color: #cbd5e1; cursor: pointer;
+        transition: all .2s; backdrop-filter: blur(4px);
+        z-index: 2;
+    }
+    .btn-heart:hover { background: #fff; transform: scale(1.1); }
+    .btn-heart.saved { color: #ef4444; }
+
+    /* animate cards in */
+    .apt-card { opacity: 0; transform: translateY(20px); animation: cardIn .5s forwards; }
+    @@keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+</style>
+}
+
+<div class="browse-hero">
+    <div class="container">
+        <h1>Browse Apartments</h1>
+        <p>Find your next home near campus. Filter by university, price, and more.</p>
+    </div>
+</div>
+
+<div class="browse-body">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3 mb-4">
+                <div class="filter-panel">
+                    <h5 class="mb-3"><i class="bi bi-sliders2 me-2"></i>Filters</h5>
+                    <div class="mb-3">
+                        <label class="form-label">City</label>
+                        <select class="form-select" id="f-city">
+                            <option value="">Any</option>
+                            <option value="0">Amman</option>
+                            <option value="1">Irbid</option>
+                            <option value="2">Zarqa</option>
+                            <option value="3">Madaba</option>
+                            <option value="4">Salt</option>
+                            <option value="5">Karak</option>
+                            <option value="6">Mafraq</option>
+                            <option value="7">Aqaba</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nearest University</label>
+                        <select class="form-select" id="f-university">
+                            <option value="">Any</option>
+                            <option value="0">JU</option>
+                            <option value="1">GJU</option>
+                            <option value="2">PSUT</option>
+                            <option value="3">YU</option>
+                            <option value="4">HU</option>
+                            <option value="5">MU</option>
+                            <option value="6">ZU</option>
+                            <option value="7">BAU</option>
+                            <option value="8">JUST</option>
+                            <option value="9">AAU</option>
+                            <option value="10">AABU</option>
+                            <option value="11">UOP</option>
+                            <option value="12">MEU</option>
+                            <option value="13">ASU</option>
+                            <option value="14">WISE</option>
+                            <option value="15">PU</option>
+                            <option value="16">Isra</option>
+                            <option value="17">Jadara</option>
+                            <option value="18">Tafila</option>
+                            <option value="19">AHU</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Min (JOD)</label>
+                            <input type="number" class="form-control" id="f-minPrice" min="0" placeholder="0" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Max (JOD)</label>
+                            <input type="number" class="form-control" id="f-maxPrice" min="0" placeholder="Any" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Spots Available</label>
+                        <select class="form-select" id="f-spots">
+                            <option value="">Any</option>
+                            <option value="1">1+</option>
+                            <option value="2">2+</option>
+                            <option value="3">3+</option>
+                        </select>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="f-furnished" />
+                        <label class="form-check-label" for="f-furnished" style="font-size:.85rem">Furnished only</label>
+                    </div>
+                    <button class="btn btn-filter w-100" onclick="loadApartments()">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-9">
+                <div class="sort-bar">
+                    <span class="results-text" id="results-count"></span>
+                    <select class="form-select" id="f-sort">
+                        <option value="newest">Newest first</option>
+                        <option value="price_asc">Price: low to high</option>
+                        <option value="price_desc">Price: high to low</option>
+                    </select>
+                </div>
+                <div id="apartments-list" class="row g-3">
+                    <div class="col-12 text-center py-5">
+                        <div class="spinner-border" style="color:#94a3b8" role="status"></div>
+                    </div>
+                </div>
+                <nav id="pagination-wrap" class="d-none mt-4">
+                    <ul class="pagination justify-content-center" id="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+var currentPage = 1
+var GENDER_LABELS = { 0: 'Male Only', 1: 'Female Only', 2: 'Mixed' }
+var savedIds = []
+var isLoggedIn = false
+
+auth.initAuth().then(function () {
+    var user = auth.getUser()
+    isLoggedIn = !!user
+    var p = isLoggedIn ? api.get('/saved/ids').then(function (ids) { savedIds = ids || [] }).catch(function(){}) : Promise.resolve()
+    p.then(function () { loadApartments() })
+})
+
+function toggleSave(e, aptId) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isLoggedIn) { window.location.href = '/Account/Login'; return }
+    var btn = e.currentTarget
+    api.post('/saved/' + aptId).then(function (res) {
+        if (res.saved) {
+            savedIds.push(aptId)
+            btn.classList.add('saved')
+            btn.innerHTML = '<i class="bi bi-heart-fill"></i>'
+        } else {
+            savedIds = savedIds.filter(function (id) { return id !== aptId })
+            btn.classList.remove('saved')
+            btn.innerHTML = '<i class="bi bi-heart"></i>'
+        }
+    }).catch(function () {})
+}
+
+function loadApartments() {
+    var query = { page: currentPage, pageSize: 12, sort: document.getElementById('f-sort').value }
+    var city = document.getElementById('f-city').value
+    if (city) query.city = city
+    var uni = document.getElementById('f-university').value
+    if (uni) query.university = uni
+    var minP = document.getElementById('f-minPrice').value
+    if (minP) query.minPrice = minP
+    var maxP = document.getElementById('f-maxPrice').value
+    if (maxP) query.maxPrice = maxP
+    var spots = document.getElementById('f-spots').value
+    if (spots) query.spotsAvailable = spots
+    if (document.getElementById('f-furnished').checked) query.furnished = true
+
+    var container = document.getElementById('apartments-list')
+    container.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border" style="color:#94a3b8"></div></div>'
+
+    api.get('/apartments', { query: query }).then(function (data) {
+        var items = data.items || data || []
+        var total = data.totalCount || items.length
+        document.getElementById('results-count').textContent = total + ' apartment' + (total !== 1 ? 's' : '') + ' found'
+
+        if (items.length === 0) {
+            container.innerHTML = '<div class="col-12"><div class="empty-state"><i class="bi bi-building"></i><h5>No apartments found</h5><p>Try adjusting your filters to see more results.</p></div></div>'
+            document.getElementById('pagination-wrap').classList.add('d-none')
+            return
+        }
+
+        container.innerHTML = items.map(function (apt, idx) {
+            var photo = apt.mainPhotoUrl || '/property/images/img_' + ((idx % 8) + 1) + '.jpg'
+            var matchHtml = ''
+            if (apt.compatibilityScore != null) {
+                var cls = apt.compatibilityScore >= 75 ? 'match-high' : apt.compatibilityScore >= 50 ? 'match-mid' : 'match-low'
+                matchHtml = '<div class="text-center" style="line-height:1"><div class="apt-match ' + cls + '">' + apt.compatibilityScore + '%</div>' +
+                    '<span style="font-size:.6rem;color:#94a3b8;font-weight:500">Match</span></div>'
+            }
+            var isSaved = savedIds.indexOf(apt.id) !== -1
+            var heartBtn = '<button class="btn-heart' + (isSaved ? ' saved' : '') + '" onclick="toggleSave(event,\'' + apt.id + '\')">' +
+                '<i class="bi ' + (isSaved ? 'bi-heart-fill' : 'bi-heart') + '"></i></button>'
+
+            return '<div class="col-md-6 col-xl-4" style="animation-delay:' + (idx * .07) + 's">' +
+                '<a href="/Apartment/Detail/' + apt.id + '" class="text-decoration-none">' +
+                '<div class="apt-card">' +
+                '<div class="apt-card-img-wrap">' +
+                '<img src="' + photo + '" alt="' + escapeHtml(apt.title) + '" class="apt-card-img" />' +
+                heartBtn + '</div>' +
+                '<div class="apt-card-body">' +
+                '<div class="apt-card-title">' + escapeHtml(apt.title) + '</div>' +
+                '<div class="apt-card-loc"><i class="bi bi-geo-alt-fill"></i> ' + escapeHtml(apt.neighborhood || '') + '</div>' +
+                '<div class="apt-card-pills">' +
+                '<span class="apt-pill">' + (GENDER_LABELS[apt.genderType] || '') + '</span>' +
+                '<span class="apt-pill">' + apt.availableSpots + ' of ' + apt.totalSpots + ' spots</span>' +
+                (apt.isFurnished ? '<span class="apt-pill">Furnished</span>' : '') +
+                '</div>' +
+                '<div class="apt-card-footer">' +
+                '<div class="apt-price">' + apt.fullRent + ' <span>JOD/mo</span></div>' +
+                matchHtml +
+                '</div></div></div></a></div>'
+        }).join('')
+
+        var totalPages = data.totalPages || Math.ceil(total / 12)
+        if (totalPages > 1) {
+            document.getElementById('pagination-wrap').classList.remove('d-none')
+            var pag = document.getElementById('pagination')
+            var html = ''
+            if (currentPage > 1) html += '<li class="page-item"><a class="page-link" href="#" onclick="goPage(' + (currentPage-1) + ');return false;"><i class="bi bi-chevron-left"></i></a></li>'
+            for (var p = 1; p <= totalPages; p++) {
+                html += '<li class="page-item ' + (p === currentPage ? 'active' : '') + '"><a class="page-link" href="#" onclick="goPage(' + p + ');return false;">' + p + '</a></li>'
+            }
+            if (currentPage < totalPages) html += '<li class="page-item"><a class="page-link" href="#" onclick="goPage(' + (currentPage+1) + ');return false;"><i class="bi bi-chevron-right"></i></a></li>'
+            pag.innerHTML = html
+        } else {
+            document.getElementById('pagination-wrap').classList.add('d-none')
+        }
+    }).catch(function () {
+        container.innerHTML = '<div class="col-12"><div class="empty-state"><i class="bi bi-exclamation-circle"></i><h5>Something went wrong</h5><p>Failed to load apartments. Please try again.</p></div></div>'
+    })
+}
+
+function goPage(p) { currentPage = p; loadApartments(); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+document.getElementById('f-sort').addEventListener('change', function () { currentPage = 1; loadApartments() })
+</script>
+}

@@ -337,6 +337,9 @@ namespace Dorm.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("RelatedEntityId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -598,6 +601,36 @@ namespace Dorm.Infrastructure.Migrations
                     b.HasIndex("StudentId", "Status");
 
                     b.ToTable("Tenancies");
+                });
+
+            modelBuilder.Entity("Dorm.Domain.Entities.Testimonial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Stars")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Testimonials");
                 });
 
             modelBuilder.Entity("Dorm.Domain.Entities.User", b =>
@@ -938,6 +971,17 @@ namespace Dorm.Infrastructure.Migrations
                     b.Navigation("Apartment");
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Dorm.Domain.Entities.Testimonial", b =>
+                {
+                    b.HasOne("Dorm.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Dorm.Domain.Entities.Apartment", b =>

@@ -1,0 +1,109 @@
+@{
+    Layout = "_DashboardLayout";
+    ViewData["Title"] = "My Listings";
+}
+
+@section Styles {
+<style>
+    .ol-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .ol-header h3 { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: .15rem; }
+    .ol-header p { color: #64748b; font-size: .9rem; margin: 0; }
+    .btn-new {
+        background: #F97316; color: #fff; border: none; border-radius: 8px;
+        padding: .55rem 1.1rem; font-weight: 600; font-size: .85rem;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .3rem;
+        transition: all .2s;
+    }
+    .btn-new:hover { background: #ea6c10; color: #fff; }
+
+    .ol-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .listing-thumb {
+        width: 52px; height: 52px; border-radius: 10px; background: #f1f5f9;
+        overflow: hidden; flex-shrink: 0;
+    }
+    .listing-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .listing-thumb-placeholder {
+        width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    }
+    .spots-badge { font-size: .78rem; font-weight: 600; padding: .2rem .5rem; border-radius: 5px; }
+    .spots-open { background: rgba(16,185,129,.1); color: #10b981; }
+    .spots-full { background: #f1f5f9; color: #94a3b8; }
+    .gender-badge { font-size: .75rem; font-weight: 500; padding: .2rem .5rem; border-radius: 5px; background: #f1f5f9; color: #64748b; }
+
+    .btn-view {
+        background: #fff; color: #475569; border: 1px solid #e2e8f0; border-radius: 6px;
+        padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
+        text-decoration: none; transition: all .15s;
+    }
+    .btn-view:hover { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
+
+    .empty-ol { text-align: center; padding: 3.5rem 1rem; }
+    .empty-ol i { font-size: 2.5rem; color: #cbd5e1; }
+    .empty-ol h5 { font-weight: 700; color: #1e293b; margin-top: .75rem; }
+    .empty-ol p { color: #94a3b8; font-size: .88rem; }
+</style>
+}
+
+<div class="ol-header">
+    <div>
+        <h3>My Listings</h3>
+        <p>Manage the apartments you've listed.</p>
+    </div>
+    <a href="/OwnerListings/New" class="btn-new"><i class="bi bi-plus-lg"></i> New Listing</a>
+</div>
+<div>
+    <div class="ol-card">
+        <div id="listings-container">
+            <div class="text-center py-5"><div class="spinner-border" style="color:#94a3b8"></div></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+var GENDER_LABELS = { 0: 'Male Only', 1: 'Female Only', 2: 'Mixed' }
+
+auth.initAuth().then(loadListings)
+
+async function loadListings() {
+    var container = document.getElementById('listings-container')
+    try {
+        var data = await api.get('/apartments/mine')
+        var listings = data.items || data || []
+
+        if (listings.length === 0) {
+            container.innerHTML = '<div class="empty-ol"><i class="bi bi-building"></i><h5>No listings yet</h5>' +
+                '<p>List your first apartment to start receiving applications.</p>' +
+                '<a href="/OwnerListings/New" class="btn-new"><i class="bi bi-plus-lg"></i> New Listing</a></div>'
+            return
+        }
+
+        container.innerHTML = '<div class="table-responsive"><table class="table table-hover align-middle mb-0">' +
+            '<thead><tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">' +
+            '<th>Apartment</th><th>Location</th><th class="text-center">Rent</th><th class="text-center">Spots</th><th class="text-center">Gender</th><th class="text-end">Actions</th>' +
+            '</tr></thead><tbody>' +
+            listings.map(function (apt) {
+                var photo = apt.photos && apt.photos[0]
+                var photoUrl = photo ? '/uploads/' + (photo.filePath || photo) : ''
+                var spotsOpen = apt.availableSpots > 0
+
+                return '<tr><td><div class="d-flex align-items-center gap-3">' +
+                    '<div class="listing-thumb">' +
+                    (photoUrl
+                        ? '<img src="' + photoUrl + '" alt="" />'
+                        : '<div class="listing-thumb-placeholder"><i class="bi bi-building" style="color:#94a3b8"></i></div>') +
+                    '</div>' +
+                    '<span class="fw-semibold" style="font-size:.88rem">' + escapeHtml(apt.title) + '</span></div></td>' +
+                    '<td style="color:#94a3b8;font-size:.82rem">' + escapeHtml(apt.neighborhood || '') + '</td>' +
+                    '<td class="text-center"><span class="fw-bold" style="font-size:.92rem;color:#1e293b">' + apt.fullRent + ' JOD</span></td>' +
+                    '<td class="text-center"><span class="spots-badge ' + (spotsOpen ? 'spots-open' : 'spots-full') + '">' + apt.availableSpots + ' / ' + apt.totalSpots + '</span></td>' +
+                    '<td class="text-center"><span class="gender-badge">' + (GENDER_LABELS[apt.genderType] || '') + '</span></td>' +
+                    '<td class="text-end"><a href="/Apartment/Detail/' + apt.id + '" class="btn-view"><i class="bi bi-eye me-1"></i>View</a></td></tr>'
+            }).join('') +
+            '</tbody></table></div>'
+    } catch (e) {
+        container.innerHTML = '<div class="text-center py-5"><p style="color:#ef4444">Failed to load listings.</p></div>'
+    }
+}
+</script>
+}

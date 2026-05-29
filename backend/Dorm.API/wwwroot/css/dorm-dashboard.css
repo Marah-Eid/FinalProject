@@ -1,0 +1,95 @@
+/* Dorm — dashboard overrides on top of Mazer template */
+:root {
+  --dorm-orange: #F97316;
+  --dorm-orange-hover: #ea6c10;
+  --dorm-orange-rgb: 249, 115, 22;
+  --bs-primary: #F97316;
+  --bs-primary-rgb: 249, 115, 22;
+}
+
+/* Sidebar branding */
+.sidebar-wrapper .sidebar-header a span { color: var(--dorm-orange) !important; }
+.sidebar-wrapper .menu .sidebar-item.active > .sidebar-link,
+.sidebar-wrapper .menu .sidebar-link:hover {
+  background-color: rgba(var(--dorm-orange-rgb), 0.1);
+  color: var(--dorm-orange);
+}
+.sidebar-wrapper .menu .sidebar-item.active > .sidebar-link i,
+.sidebar-wrapper .menu .sidebar-link:hover i {
+  color: var(--dorm-orange);
+}
+.sidebar-wrapper .menu .sidebar-item.active > .sidebar-link span,
+.sidebar-wrapper .menu .sidebar-link:hover span {
+  color: var(--dorm-orange);
+}
+
+/* Buttons */
+.btn-primary { background-color: var(--dorm-orange); border-color: var(--dorm-orange); }
+.btn-primary:hover { background-color: var(--dorm-orange-hover); border-color: var(--dorm-orange-hover); }
+.btn-dorm { background-color: var(--dorm-orange); border-color: var(--dorm-orange); color: #fff; }
+.btn-dorm:hover { background-color: var(--dorm-orange-hover); border-color: var(--dorm-orange-hover); color: #fff; }
+.btn-outline-primary { color: var(--dorm-orange); border-color: var(--dorm-orange); }
+.btn-outline-primary:hover { background-color: var(--dorm-orange); border-color: var(--dorm-orange); color: #fff; }
+
+/* Text & backgrounds */
+.text-primary { color: var(--dorm-orange) !important; }
+.bg-primary { background-color: var(--dorm-orange) !important; }
+a { color: var(--dorm-orange); }
+a:hover { color: var(--dorm-orange-hover); }
+
+/* Form focus */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--dorm-orange);
+  box-shadow: 0 0 0 0.2rem rgba(var(--dorm-orange-rgb), 0.25);
+}
+.form-check-input:checked {
+  background-color: var(--dorm-orange);
+  border-color: var(--dorm-orange);
+}
+
+/* Badges */
+.badge.bg-primary { background-color: var(--dorm-orange) !important; }
+
+/* Progress bars */
+.progress-bar { background-color: var(--dorm-orange); }
+
+/* Nav tabs */
+.nav-tabs .nav-link.active { color: var(--dorm-orange); border-bottom-color: var(--dorm-orange); }
+.nav-tabs .nav-link:hover { color: var(--dorm-orange-hover); }
+
+/* Cards */
+.card {
+  border-radius: 1rem;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+/* Stat cards */
+.stat-card { padding: 1.25rem; }
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem;
+}
+
+/* Spinner */
+.spinner-border.text-primary { color: var(--dorm-orange) !important; }
+
+/* Page heading */
+.page-heading h3 { font-weight: 700; color: #1e293b; }
+.page-heading p { color: #64748b; }
+
+/* RTL adjustments */
+[dir="rtl"] .me-2 { margin-right: 0 !important; margin-left: 0.5rem !important; }
+[dir="rtl"] .me-3 { margin-right: 0 !important; margin-left: 1rem !important; }
+[dir="rtl"] .ms-2 { margin-left: 0 !important; margin-right: 0.5rem !important; }
+[dir="rtl"] .float-start { float: right !important; }
+[dir="rtl"] .float-end { float: left !important; }
+[dir="rtl"] .text-start { text-align: right !important; }
+[dir="rtl"] .text-end { text-align: left !important; }
+[dir="rtl"] .border-start { border-left: 0 !important; border-right: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color) !important; }
+
+/* Fonts */
+body { font-family: 'Nunito', 'Tajawal', sans-serif; }
+[dir="rtl"] body { font-family: 'Tajawal', 'Nunito', sans-serif; }

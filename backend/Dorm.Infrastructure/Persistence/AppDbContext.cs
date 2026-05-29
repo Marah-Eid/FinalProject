@@ -37,6 +37,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Report> Reports => Set<Report>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Testimonial> Testimonials => Set<Testimonial>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -343,6 +344,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasOne(n => n.User)
                 .WithMany()
                 .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ─── Testimonial ────────────────────────────────────────────────────
+        b.Entity<Testimonial>(e =>
+        {
+            e.HasKey(t => t.Id);
+            e.Property(t => t.Text).HasMaxLength(500).IsRequired();
+            e.Property(t => t.Stars).IsRequired();
+
+            e.HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

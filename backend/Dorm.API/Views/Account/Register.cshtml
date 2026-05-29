@@ -1,0 +1,125 @@
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Register";
+}
+
+<h1 class="auth-title">Create your account</h1>
+<p class="auth-subtitle mb-4">A few details and you're in.</p>
+
+<div class="alert alert-danger d-none" id="reg-error" style="border-radius:8px"></div>
+
+<form id="reg-form" novalidate>
+    <div class="mb-3">
+        <label class="form-label" style="font-size:.85rem;font-weight:600;color:#475569">Full Name</label>
+        <input type="text" class="form-control" placeholder="Your full name" id="reg-name" required style="padding:.7rem .9rem;border-radius:8px" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label" style="font-size:.85rem;font-weight:600;color:#475569">Email</label>
+        <input type="email" class="form-control" placeholder="you@example.com" id="reg-email" required style="padding:.7rem .9rem;border-radius:8px" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label" style="font-size:.85rem;font-weight:600;color:#475569">Password</label>
+        <input type="password" class="form-control" placeholder="Create a password" id="reg-password" required style="padding:.7rem .9rem;border-radius:8px" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label" style="font-size:.85rem;font-weight:600;color:#475569">Phone Number</label>
+        <input type="tel" class="form-control" placeholder="Optional" id="reg-phone" style="padding:.7rem .9rem;border-radius:8px" />
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-6">
+            <label class="form-label" style="font-size:.85rem;font-weight:600;color:#475569">I am a...</label>
+            <select class="form-select" id="reg-role" required style="padding:.7rem .9rem;border-radius:8px">
+                <option value="">Select</option>
+                <option value="0">Student</option>
+                <option value="1">Apartment Owner</option>
+            </select>
+        </div>
+        <div class="col-6">
+            <label class="form-label" style="font-size:.85rem;font-weight:600;color:#475569">Gender</label>
+            <select class="form-select" id="reg-gender" required style="padding:.7rem .9rem;border-radius:8px">
+                <option value="">Select</option>
+                <option value="0">Male</option>
+                <option value="1">Female</option>
+            </select>
+        </div>
+    </div>
+    <div class="mb-3 d-none" id="reg-uni-wrap">
+        <label class="form-label" style="font-size:.85rem;font-weight:600;color:#475569">University</label>
+        <select class="form-select" id="reg-university" style="padding:.7rem .9rem;border-radius:8px">
+            <option value="">Select university</option>
+            <option value="0">University of Jordan (JU)</option>
+            <option value="1">German Jordanian University (GJU)</option>
+            <option value="2">Princess Sumaya University (PSUT)</option>
+            <option value="3">Yarmouk University (YU)</option>
+            <option value="4">Hashemite University (HU)</option>
+            <option value="5">Mutah University (MU)</option>
+            <option value="6">Zarqa University (ZU)</option>
+            <option value="7">Al-Balqa Applied University (BAU)</option>
+            <option value="8">Jordan University of Science & Technology (JUST)</option>
+            <option value="9">Amman Arab University (AAU)</option>
+            <option value="10">Al-Ahliyya Amman University (AABU)</option>
+            <option value="11">University of Petra (UOP)</option>
+            <option value="12">Middle East University (MEU)</option>
+            <option value="13">Applied Science University (ASU)</option>
+            <option value="14">World Islamic Sciences University (WISE)</option>
+            <option value="15">Philadelphia University (PU)</option>
+            <option value="16">Isra University</option>
+            <option value="17">Jadara University</option>
+            <option value="18">Tafila Technical University</option>
+            <option value="19">Al-Hussein Bin Talal University (AHU)</option>
+        </select>
+    </div>
+    <button class="btn btn-primary w-100 mt-2" type="submit" id="reg-btn" style="padding:.7rem;border-radius:8px;font-weight:600">Create account</button>
+</form>
+
+<div class="text-center mt-4">
+    <p style="color:#64748b;font-size:.9rem">Already have an account? <a href="/Account/Login">Log in</a></p>
+</div>
+
+@section Scripts {
+<script>
+document.getElementById('reg-role').addEventListener('change', function () {
+    document.getElementById('reg-uni-wrap').classList.toggle('d-none', this.value !== '0')
+})
+
+document.getElementById('reg-form').addEventListener('submit', async function (e) {
+    e.preventDefault()
+    var errBox = document.getElementById('reg-error')
+    errBox.classList.add('d-none')
+
+    var payload = {
+        fullName: document.getElementById('reg-name').value.trim(),
+        email: document.getElementById('reg-email').value.trim(),
+        password: document.getElementById('reg-password').value,
+        phoneNumber: document.getElementById('reg-phone').value.trim() || undefined,
+        role: parseInt(document.getElementById('reg-role').value),
+        gender: parseInt(document.getElementById('reg-gender').value),
+    }
+
+    var uni = document.getElementById('reg-university').value
+    if (uni && payload.role === 0) payload.university = parseInt(uni)
+
+    if (!payload.fullName || !payload.email || !payload.password || isNaN(payload.role) || isNaN(payload.gender)) {
+        errBox.textContent = 'Please fill in all required fields.'
+        errBox.classList.remove('d-none')
+        return
+    }
+
+    var btn = document.getElementById('reg-btn')
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account...'
+
+    try {
+        var user = await auth.register(payload)
+        if (user.role === 2) window.location.href = '/Admin'
+        else if (user.role === 0) window.location.href = '/'
+        else window.location.href = '/Dashboard'
+    } catch (err) {
+        errBox.textContent = err.message || 'Something went wrong. Please try again.'
+        errBox.classList.remove('d-none')
+        btn.disabled = false
+        btn.textContent = 'Create account'
+    }
+})
+</script>
+}

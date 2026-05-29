@@ -1,0 +1,40 @@
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Verify Email";
+    var token = ViewData["Token"] as string;
+}
+
+<div class="text-center">
+    <div class="spinner-border text-primary mb-3" id="verify-spinner" role="status"></div>
+    <h1 class="auth-title" id="verify-title">Verifying your email…</h1>
+    <p class="auth-subtitle" id="verify-text"></p>
+    <a href="/Dashboard" class="btn btn-primary mt-3 d-none" id="verify-btn">Go to dashboard</a>
+</div>
+
+@section Scripts {
+<script>
+(async function () {
+    var token = '@Html.Raw(token ?? "")'
+    var spinner = document.getElementById('verify-spinner')
+    var title = document.getElementById('verify-title')
+    var btn = document.getElementById('verify-btn')
+
+    if (!token) {
+        spinner.classList.add('d-none')
+        title.textContent = 'Missing verification token.'
+        return
+    }
+
+    try {
+        await api.post('/auth/verify-email', { body: { token: token } })
+        spinner.classList.add('d-none')
+        title.textContent = 'Email verified successfully!'
+        btn.classList.remove('d-none')
+        auth.fetchMe()
+    } catch (err) {
+        spinner.classList.add('d-none')
+        title.textContent = 'Verification failed. The link may have expired.'
+    }
+})()
+</script>
+}

@@ -1,0 +1,154 @@
+@{
+    Layout = "_BrowseLayout";
+    ViewData["Title"] = "My Applications";
+}
+
+@section Styles {
+<style>
+    .apps-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .apps-header h3 { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: .15rem; }
+    .apps-header p { color: #64748b; font-size: .9rem; margin: 0; }
+    .btn-browse-sm {
+        background: #0f172a; color: #fff; border: none; border-radius: 8px;
+        padding: .5rem 1rem; font-weight: 600; font-size: .82rem;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .3rem;
+        transition: all .2s;
+    }
+    .btn-browse-sm:hover { background: #1e293b; color: #fff; }
+
+    .apps-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .filter-tabs { padding: 1rem 1.25rem; border-bottom: 1px solid #f8fafc; }
+    .filter-tab {
+        padding: .35rem .8rem; border-radius: 6px; font-size: .78rem; font-weight: 600;
+        border: 1px solid #e2e8f0; background: #fff; color: #64748b;
+        cursor: pointer; transition: all .15s;
+    }
+    .filter-tab:hover { border-color: #cbd5e1; color: #1e293b; }
+    .filter-tab.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+
+    .match-ring {
+        width: 38px; height: 38px; border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: .7rem; font-weight: 800;
+    }
+    .match-ring.high { border: 2.5px solid #10b981; color: #10b981; background: rgba(16,185,129,.06); }
+    .match-ring.mid  { border: 2.5px solid #eab308; color: #eab308; background: rgba(234,179,8,.06); }
+    .match-ring.low  { border: 2.5px solid #94a3b8; color: #94a3b8; background: rgba(148,163,184,.06); }
+
+    .btn-withdraw {
+        background: #fff; color: #ef4444; border: 1px solid #fecaca; border-radius: 6px;
+        padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
+        transition: all .15s;
+    }
+    .btn-withdraw:hover { background: #fef2f2; border-color: #ef4444; }
+    .btn-msg {
+        background: #fff; color: #3b82f6; border: 1px solid #bfdbfe; border-radius: 6px;
+        padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
+        text-decoration: none; transition: all .15s;
+    }
+    .btn-msg:hover { background: #eff6ff; border-color: #3b82f6; }
+
+    .empty-apps { text-align: center; padding: 3.5rem 1rem; }
+    .empty-apps i { font-size: 2.5rem; color: #cbd5e1; }
+    .empty-apps h5 { font-weight: 700; color: #1e293b; margin-top: .75rem; }
+    .empty-apps p { color: #94a3b8; font-size: .88rem; }
+</style>
+}
+
+<div class="container" style="max-width:960px;padding:2.5rem 1rem">
+    <div class="apps-header">
+        <div>
+            <h3>My Applications</h3>
+            <p>Track the status of apartments you've applied to.</p>
+        </div>
+        <a href="/Browse" class="btn-browse-sm"><i class="bi bi-search"></i> Browse</a>
+    </div>
+    <div>
+        <div class="apps-card">
+            <div class="filter-tabs d-flex flex-wrap gap-2" id="status-btns">
+                <button class="filter-tab active" onclick="filterApps('all',this)">All</button>
+                <button class="filter-tab" onclick="filterApps('pending',this)">Pending</button>
+                <button class="filter-tab" onclick="filterApps('accepted',this)">Accepted</button>
+                <button class="filter-tab" onclick="filterApps('rejected',this)">Rejected</button>
+            </div>
+            <div id="apps-list">
+                <div class="text-center py-5"><div class="spinner-border" style="color:#94a3b8"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+var allApps = []
+var currentFilter = 'all'
+var STATUS_KEYS = { 0: 'Pending', 1: 'Accepted', 2: 'Rejected', 3: 'Withdrawn' }
+var STATUS_COLORS = { 0: 'warning', 1: 'success', 2: 'danger', 3: 'secondary' }
+var STATUS_ICONS = { 0: 'bi-clock', 1: 'bi-check-circle-fill', 2: 'bi-x-circle-fill', 3: 'bi-arrow-return-left' }
+
+auth.initAuth().then(loadApps)
+
+function filterApps(f, btn) {
+    currentFilter = f
+    document.querySelectorAll('#status-btns .filter-tab').forEach(function (b) { b.classList.remove('active') })
+    btn.classList.add('active')
+    renderApps()
+}
+
+async function loadApps() {
+    try {
+        allApps = await api.get('/applications/mine')
+        allApps = allApps || []
+        renderApps()
+    } catch (e) {
+        document.getElementById('apps-list').innerHTML = '<div class="text-center py-5"><p style="color:#ef4444">Failed to load applications.</p></div>'
+    }
+}
+
+function renderApps() {
+    var statusMap = { 0: 'pending', 1: 'accepted', 2: 'rejected', 3: 'withdrawn' }
+    var items = currentFilter === 'all' ? allApps : allApps.filter(function (a) { return statusMap[a.status] === currentFilter })
+    var container = document.getElementById('apps-list')
+
+    if (items.length === 0) {
+        container.innerHTML = '<div class="empty-apps"><i class="bi bi-inbox"></i><h5>No applications</h5>' +
+            '<p>Browse apartments and apply to get started.</p>' +
+            '<a href="/Browse" class="btn-browse-sm">Browse apartments</a></div>'
+        return
+    }
+
+    container.innerHTML = '<div class="table-responsive"><table class="table table-hover align-middle mb-0">' +
+        '<thead><tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">' +
+        '<th>Apartment</th><th>Date</th><th class="text-center">Match</th><th class="text-center">Status</th><th class="text-end">Actions</th>' +
+        '</tr></thead><tbody>' +
+        items.map(function (app) {
+            var dateStr = app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : ''
+            var matchHtml = '—'
+            if (app.compatibilityScore != null) {
+                var cls = app.compatibilityScore >= 75 ? 'high' : app.compatibilityScore >= 50 ? 'mid' : 'low'
+                matchHtml = '<div class="match-ring ' + cls + '">' + app.compatibilityScore + '%</div>'
+            }
+            return '<tr><td><div class="d-flex align-items-center gap-2">' +
+                '<div style="width:36px;height:36px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center"><i class="bi bi-building" style="color:#94a3b8;font-size:.85rem"></i></div>' +
+                '<div><a href="/Apartment/Detail/' + app.apartmentId + '" class="fw-semibold text-decoration-none" style="color:#1e293b;font-size:.88rem">' + escapeHtml(app.apartmentTitle || '') + '</a>' +
+                (app.message ? '<br/><span style="color:#94a3b8;font-size:.75rem;font-style:italic">"' + escapeHtml(app.message.substring(0,50)) + (app.message.length>50?'…':'') + '"</span>' : '') +
+                '</div></div></td>' +
+                '<td style="color:#94a3b8;font-size:.82rem">' + dateStr + '</td>' +
+                '<td class="text-center">' + matchHtml + '</td>' +
+                '<td class="text-center"><span class="badge bg-' + (STATUS_COLORS[app.status]||'secondary') + ' bg-opacity-10 text-' + (STATUS_COLORS[app.status]||'secondary') + '" style="font-size:.72rem"><i class="bi ' + (STATUS_ICONS[app.status]||'bi-clock') + ' me-1"></i>' + (STATUS_KEYS[app.status]||'Pending') + '</span></td>' +
+                '<td class="text-end">' +
+                (app.status === 0 ? '<button class="btn-withdraw" onclick="withdrawApp(' + app.id + ',this)"><i class="bi bi-x-lg me-1"></i>Withdraw</button>' : '') +
+                (app.status === 1 ? '<a href="/Chat" class="btn-msg"><i class="bi bi-chat-dots me-1"></i>Message</a>' : '') +
+                '</td></tr>'
+        }).join('') +
+        '</tbody></table></div>'
+}
+
+async function withdrawApp(id, btn) {
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'
+    try { await api.delete('/applications/' + id); loadApps() }
+    catch (e) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-x-lg me-1"></i>Withdraw' }
+}
+</script>
+}

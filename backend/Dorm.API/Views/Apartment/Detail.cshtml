@@ -1,0 +1,339 @@
+@{
+    Layout = "_BrowseLayout";
+    ViewData["Title"] = "Apartment";
+    var apartmentId = ViewData["ApartmentId"];
+}
+
+@section Styles {
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    .detail-hero { background: #0f172a; padding: 5rem 0 0; }
+    .detail-body { background: #f8fafc; padding: 2rem 0 4rem; margin-top: -2rem; position: relative; z-index: 2; }
+
+    .gallery-wrap { border-radius: 16px; overflow: hidden; background: #1e293b; }
+    .gallery-main { width: 100%; height: 360px; object-fit: cover; display: block; cursor: pointer; transition: transform .3s; }
+    .gallery-main:hover { transform: scale(1.02); }
+    .gallery-thumbs { display: flex; gap: 4px; margin-top: 4px; }
+    .gallery-thumb {
+        flex: 1; height: 80px; object-fit: cover; cursor: pointer; opacity: .6;
+        transition: opacity .2s;
+    }
+    .gallery-thumb:hover, .gallery-thumb.active { opacity: 1; }
+
+    .detail-card {
+        background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+        padding: 1.5rem; margin-bottom: 1.25rem;
+    }
+    .detail-card h5 {
+        font-size: .85rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .06em; color: #94a3b8; margin-bottom: 1rem;
+    }
+
+    .detail-title { font-size: 1.6rem; font-weight: 800; color: #1e293b; margin-bottom: .25rem; }
+    .detail-loc { font-size: .9rem; color: #64748b; display: flex; align-items: center; gap: .3rem; margin-bottom: 1rem; }
+    .detail-desc { font-size: .92rem; color: #475569; line-height: 1.7; }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .info-item { display: flex; align-items: center; gap: .6rem; font-size: .88rem; color: #475569; }
+    .info-item .ii-icon {
+        width: 36px; height: 36px; border-radius: 8px; background: #f1f5f9;
+        display: flex; align-items: center; justify-content: center;
+        color: #64748b; font-size: .9rem; flex-shrink: 0;
+    }
+    .info-item strong { color: #1e293b; font-weight: 600; }
+
+    .amenity-badge {
+        display: inline-flex; align-items: center; gap: .3rem;
+        background: #f1f5f9; color: #475569; border-radius: 8px;
+        padding: .4rem .7rem; font-size: .8rem; font-weight: 500;
+    }
+
+    .tenant-row {
+        display: flex; align-items: center; gap: .6rem;
+        padding: .6rem 0; border-bottom: 1px solid #f8fafc;
+    }
+    .tenant-avatar {
+        width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: .75rem; color: #64748b; flex-shrink: 0;
+    }
+    .tenant-name { font-weight: 600; color: #1e293b; font-size: .88rem; }
+    .tenant-info { font-size: .78rem; color: #94a3b8; }
+
+    /* sidebar sticky card */
+    .price-card {
+        background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+        padding: 1.5rem; position: sticky; top: 100px;
+    }
+    .price-card .price { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
+    .price-card .price span { font-size: .85rem; font-weight: 400; color: #94a3b8; }
+    .price-card .gender-tag {
+        display: inline-flex; align-items: center; gap: .3rem;
+        background: #f1f5f9; color: #475569; border-radius: 6px;
+        padding: .3rem .6rem; font-size: .78rem; font-weight: 600;
+    }
+
+    .compat-ring {
+        width: 80px; height: 80px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 1rem auto; font-size: 1.2rem; font-weight: 800;
+    }
+    .compat-high { border: 4px solid #10b981; color: #10b981; background: rgba(16,185,129,.06); }
+    .compat-mid  { border: 4px solid #eab308; color: #eab308; background: rgba(234,179,8,.06); }
+    .compat-low  { border: 4px solid #94a3b8; color: #94a3b8; background: rgba(148,163,184,.06); }
+
+    .btn-apply {
+        background: #F97316; color: #fff; border: none; border-radius: 10px;
+        font-weight: 600; font-size: .95rem; padding: .75rem; width: 100%;
+        transition: all .2s; position: relative; overflow: hidden;
+    }
+    .btn-apply:hover { background: #ea6c10; color: #fff; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(249,115,22,.25); }
+
+    .btn-back {
+        color: #94a3b8; text-decoration: none; font-size: .85rem; font-weight: 500;
+        display: inline-flex; align-items: center; gap: .3rem;
+        transition: color .2s;
+    }
+    .btn-back:hover { color: #fff; }
+
+    .btn-save-detail {
+        display: inline-flex; align-items: center; gap: .4rem;
+        background: rgba(239,68,68,.06); color: #94a3b8; border: 1px solid #e2e8f0;
+        border-radius: 8px; padding: .45rem .9rem; font-size: .82rem; font-weight: 600;
+        cursor: pointer; transition: all .2s;
+    }
+    .btn-save-detail:hover { border-color: #ef4444; color: #ef4444; }
+    .btn-save-detail.saved { background: rgba(239,68,68,.08); color: #ef4444; border-color: #ef4444; }
+
+    .not-found { text-align: center; padding: 5rem 1rem; }
+    .not-found i { font-size: 3.5rem; color: #cbd5e1; }
+    .not-found h4 { font-weight: 700; color: #1e293b; margin-top: 1rem; }
+    .not-found p { color: #94a3b8; }
+
+    #apt-map { border-radius: 12px; }
+
+    @@keyframes fadeUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
+    .fade-up { animation: fadeUp .5s both; }
+    .fade-up-d1 { animation-delay: .1s; }
+    .fade-up-d2 { animation-delay: .2s; }
+</style>
+}
+
+<div class="detail-hero">
+    <div class="container">
+        <a href="/Browse" class="btn-back"><i class="bi bi-arrow-left"></i> Back to Browse</a>
+    </div>
+</div>
+
+<div class="detail-body">
+    <div class="container" id="apt-container">
+        <div class="text-center py-5">
+            <div class="spinner-border" style="color:#94a3b8" role="status"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var aptId = '@apartmentId';
+var GENDER_LABELS = { 0: 'Male Only', 1: 'Female Only', 2: 'Mixed' }
+var SMOKING_LABELS = { 0: 'Yes', 1: 'No', 2: 'Outside Only' }
+var GUESTS_LABELS = { 0: 'Yes', 1: 'No', 2: 'Limited' }
+var UNI_LABELS = ['JU','GJU','PSUT','YU','HU','MU','ZU','BAU','JUST','AAU']
+var AMENITY_LABELS = {
+    WiFi:'WiFi', AC:'AC', Heating:'Heating', WashingMachine:'Washing Machine',
+    Parking:'Parking', Furnished:'Furnished', Elevator:'Elevator',
+    Balcony:'Balcony', Kitchen:'Kitchen', PrivateBathroom:'Private Bathroom'
+}
+var AMENITY_ICONS = {
+    WiFi:'bi-wifi', AC:'bi-snow', Heating:'bi-thermometer-sun', WashingMachine:'bi-droplet',
+    Parking:'bi-car-front', Furnished:'bi-lamp', Elevator:'bi-arrow-up-square', Balcony:'bi-sun',
+    Kitchen:'bi-cup-hot', PrivateBathroom:'bi-droplet-half'
+}
+
+auth.initAuth().then(loadApartment)
+
+function loadApartment() {
+    var container = document.getElementById('apt-container')
+
+    api.get('/apartments/' + aptId).then(function (apt) {
+        var user = auth.getUser()
+        var photos = apt.photos || []
+
+        // gallery
+        var mainPhoto = photos.length > 0 ? '/uploads/' + (photos[0].filePath || photos[0]) : '/property/images/img_1.jpg'
+        var galleryHtml = '<div class="gallery-wrap fade-up">' +
+            '<img src="' + mainPhoto + '" alt="' + escapeHtml(apt.title) + '" class="gallery-main" id="gallery-main" />'
+        if (photos.length > 1) {
+            galleryHtml += '<div class="gallery-thumbs">' +
+                photos.map(function (p, i) {
+                    var url = '/uploads/' + (p.filePath || p)
+                    return '<img src="' + url + '" alt="" class="gallery-thumb' + (i===0?' active':'') + '" onclick="switchPhoto(this,\'' + url + '\')" />'
+                }).join('') + '</div>'
+        }
+        galleryHtml += '</div>'
+
+        // amenities
+        var amenitiesHtml = (apt.amenities || []).map(function (a) {
+            return '<span class="amenity-badge"><i class="bi ' + (AMENITY_ICONS[a]||'bi-check') + '"></i> ' + (AMENITY_LABELS[a]||a) + '</span>'
+        }).join(' ')
+
+        // tenants
+        var tenantsHtml = ''
+        if (apt.currentTenants && apt.currentTenants.length > 0) {
+            tenantsHtml = apt.currentTenants.map(function (tn) {
+                var init = (tn.firstName || 'U').charAt(0).toUpperCase()
+                return '<div class="tenant-row">' +
+                    '<div class="tenant-avatar">' + init + '</div>' +
+                    '<div><div class="tenant-name">' + escapeHtml(tn.firstName) + '</div>' +
+                    '<div class="tenant-info">' + (tn.major || '') + (tn.year ? ' · Year ' + tn.year : '') + '</div></div></div>'
+            }).join('')
+        } else {
+            tenantsHtml = '<p style="color:#94a3b8;font-size:.88rem">No tenants yet — be the first!</p>'
+        }
+
+        container.innerHTML =
+            '<div class="row g-4">' +
+            '<div class="col-lg-8">' +
+            galleryHtml +
+            '<div class="mt-4 fade-up fade-up-d1">' +
+            '<h1 class="detail-title">' + escapeHtml(apt.title) + '</h1>' +
+            '<div class="detail-loc"><i class="bi bi-geo-alt-fill"></i> ' + escapeHtml(apt.neighborhood || '') + '</div>' +
+            (apt.description ? '<p class="detail-desc">' + escapeHtml(apt.description) + '</p>' : '') +
+            '</div>' +
+
+            '<div class="detail-card fade-up fade-up-d2"><h5>Details</h5>' +
+            '<div class="info-grid">' +
+            '<div class="info-item"><div class="ii-icon"><i class="bi bi-door-open"></i></div><div><strong>' + apt.availableSpots + ' / ' + apt.totalSpots + '</strong> spots</div></div>' +
+            '<div class="info-item"><div class="ii-icon"><i class="bi bi-gender-ambiguous"></i></div><div><strong>' + (GENDER_LABELS[apt.genderType]||'') + '</strong></div></div>' +
+            '<div class="info-item"><div class="ii-icon"><i class="bi bi-wind"></i></div><div>Smoking: <strong>' + (SMOKING_LABELS[apt.smokingRule]||'No') + '</strong></div></div>' +
+            '<div class="info-item"><div class="ii-icon"><i class="bi bi-people"></i></div><div>Guests: <strong>' + (GUESTS_LABELS[apt.guestsRule]||'No') + '</strong></div></div>' +
+            (apt.nearestUniversity != null ? '<div class="info-item"><div class="ii-icon"><i class="bi bi-mortarboard"></i></div><div>Near: <strong>' + (UNI_LABELS[apt.nearestUniversity]||'') + '</strong></div></div>' : '') +
+            (apt.distanceMinutes ? '<div class="info-item"><div class="ii-icon"><i class="bi bi-signpost-2"></i></div><div><strong>' + apt.distanceMinutes + ' min</strong> walk</div></div>' : '') +
+            '</div></div>' +
+
+            '<div class="detail-card fade-up fade-up-d2"><h5>Amenities</h5>' +
+            '<div class="d-flex flex-wrap gap-2">' + (amenitiesHtml || '<span style="color:#94a3b8;font-size:.88rem">None listed</span>') + '</div></div>' +
+
+            '<div class="detail-card fade-up fade-up-d2"><h5>Current Tenants</h5>' + tenantsHtml + '</div>' +
+
+            '<div class="detail-card fade-up fade-up-d2"><h5>Location</h5>' +
+            '<p style="color:#94a3b8;font-size:.8rem;margin-bottom:.75rem">Approximate location shown for privacy.</p>' +
+            '<div id="apt-map" style="height:240px"></div></div>' +
+
+            '</div>' +
+
+            '<div class="col-lg-4">' +
+            '<div class="price-card fade-up fade-up-d1">' +
+            '<div class="price">' + apt.fullRent + ' <span>JOD / month</span></div>' +
+            '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">' +
+            '<span class="gender-tag"><i class="bi bi-person"></i> ' + (GENDER_LABELS[apt.genderType]||'') + '</span>' +
+            '<button class="btn-save-detail" id="save-btn" onclick="toggleDetailSave()"><i class="bi bi-heart"></i> Save</button></div>' +
+            '<div id="compatibility-area" class="mb-3"></div>' +
+            '<div id="apply-area"></div>' +
+            '</div></div></div>'
+
+        // Apply button logic
+        var applyArea = document.getElementById('apply-area')
+        if (!user) {
+            applyArea.innerHTML = '<a href="/Account/Login" class="btn-apply d-block text-center text-decoration-none"><i class="bi bi-box-arrow-in-right me-1"></i> Log in to Apply</a>'
+        } else if (user.role === 0) {
+            applyArea.innerHTML =
+                '<div id="apply-form-wrap">' +
+                '<textarea class="form-control mb-2" id="apply-msg" rows="3" placeholder="Write a short message to the owner (20–500 chars)..." style="border-radius:10px;font-size:.88rem;resize:none"></textarea>' +
+                '<div class="d-flex justify-content-between align-items-center mb-2"><span style="font-size:.75rem;color:#94a3b8" id="apply-chars">0 / 500</span></div>' +
+                '<button class="btn-apply" id="apply-btn" onclick="applyNow()"><i class="bi bi-send me-1"></i> Apply Now</button>' +
+                '</div>' +
+                '<div id="apply-success" class="d-none text-center" style="padding:1rem 0">' +
+                '<i class="bi bi-check-circle-fill" style="font-size:2rem;color:#10b981"></i>' +
+                '<p class="fw-bold mt-2 mb-1" style="color:#1e293b">Application Sent!</p>' +
+                '<p style="font-size:.85rem;color:#94a3b8">The owner will review your request.</p>' +
+                '<a href="/StudentApps" style="color:#F97316;font-weight:600;font-size:.85rem">View my applications</a></div>'
+            document.getElementById('apply-msg').addEventListener('input', function () {
+                document.getElementById('apply-chars').textContent = this.value.length + ' / 500'
+            })
+        } else if (user.role === 1) {
+            applyArea.innerHTML = '<p class="text-center" style="font-size:.85rem;color:#94a3b8;margin:0">Owners cannot apply to apartments.</p>'
+        }
+
+        if (apt.latitude && apt.longitude) {
+            setTimeout(function () {
+                var map = L.map('apt-map').setView([apt.latitude, apt.longitude], 14)
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map)
+                L.marker([apt.latitude, apt.longitude]).addTo(map)
+            }, 200)
+        }
+
+        // Check saved state
+        if (user) {
+            api.get('/saved/ids').then(function (ids) {
+                if ((ids || []).indexOf(aptId) !== -1) {
+                    var sb = document.getElementById('save-btn')
+                    if (sb) { sb.classList.add('saved'); sb.innerHTML = '<i class="bi bi-heart-fill"></i> Saved' }
+                }
+            }).catch(function(){})
+        }
+
+        if (user && user.role === 0 && user.quizCompleted) {
+            api.get('/apartments/' + aptId + '/compatibility').then(function (c) {
+                var cls = c.score >= 75 ? 'compat-high' : c.score >= 50 ? 'compat-mid' : 'compat-low'
+                document.getElementById('compatibility-area').innerHTML =
+                    '<div class="text-center">' +
+                    '<div class="compat-ring ' + cls + '">' + c.score + '%</div>' +
+                    '<p style="font-size:.82rem;color:#64748b;margin:0">Compatibility Match</p></div>'
+            }).catch(function () {})
+        }
+    }).catch(function () {
+        container.innerHTML = '<div class="not-found"><i class="bi bi-building-x"></i><h4>Apartment not found</h4>' +
+            '<p>This listing may have been removed or you don\'t have access.</p>' +
+            '<a href="/Browse" class="btn-apply" style="width:auto;display:inline-block;padding:.6rem 1.5rem;border-radius:8px">Back to Browse</a></div>'
+    })
+}
+
+function switchPhoto(thumb, url) {
+    document.getElementById('gallery-main').src = url
+    document.querySelectorAll('.gallery-thumb').forEach(function(t) { t.classList.remove('active') })
+    thumb.classList.add('active')
+}
+
+function toggleDetailSave() {
+    var user = auth.getUser()
+    if (!user) { window.location.href = '/Account/Login'; return }
+    var btn = document.getElementById('save-btn')
+    api.post('/saved/' + aptId).then(function (res) {
+        if (res.saved) {
+            btn.classList.add('saved')
+            btn.innerHTML = '<i class="bi bi-heart-fill"></i> Saved'
+        } else {
+            btn.classList.remove('saved')
+            btn.innerHTML = '<i class="bi bi-heart"></i> Save'
+        }
+    }).catch(function () {})
+}
+
+async function applyNow() {
+    var msg = document.getElementById('apply-msg').value.trim()
+    if (msg.length < 20) {
+        alert('Please write at least 20 characters.')
+        return
+    }
+    if (msg.length > 500) {
+        alert('Message must be 500 characters or fewer.')
+        return
+    }
+    var btn = document.getElementById('apply-btn')
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending...'
+    try {
+        await api.post('/apartments/' + aptId + '/apply', { body: { message: msg } })
+        document.getElementById('apply-form-wrap').classList.add('d-none')
+        document.getElementById('apply-success').classList.remove('d-none')
+    } catch (err) {
+        btn.disabled = false
+        btn.innerHTML = '<i class="bi bi-send me-1"></i> Apply Now'
+        alert(err.message || 'Failed to apply. You may have already applied to this apartment.')
+    }
+}
+</script>
+}

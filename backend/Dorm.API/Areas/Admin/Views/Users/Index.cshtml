@@ -1,0 +1,124 @@
+@{
+    ViewData["Title"] = "Users";
+}
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap gap-2 align-items-center">
+        <div class="position-relative flex-grow-1" style="max-width:360px">
+            <i class="bi bi-search position-absolute" style="top:50%;transform:translateY(-50%);left:12px;color:#94a3b8"></i>
+            <input type="text" class="form-control form-control-sm" placeholder="Search by name or email…" id="user-search" style="padding-left:2.2rem" />
+        </div>
+        <div class="btn-group btn-group-sm" id="role-btns">
+            <button class="btn btn-dorm active" onclick="setRoleFilter('',this)">All</button>
+            <button class="btn btn-outline-secondary" onclick="setRoleFilter('Student',this)">Student</button>
+            <button class="btn btn-outline-secondary" onclick="setRoleFilter('Owner',this)">Owner</button>
+            <button class="btn btn-outline-secondary" onclick="setRoleFilter('Admin',this)">Admin</button>
+        </div>
+        <span class="badge bg-light text-dark border ms-auto" id="user-count"></span>
+    </div>
+    <div class="card-body p-0" id="users-list">
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+var usersSearch = ''
+var usersRoleFilter = ''
+var ROLE_LABELS = { 0: 'Student', 1: 'Owner', 2: 'Admin' }
+var ROLE_COLORS = { 0: 'info', 1: 'warning', 2: 'danger' }
+var ROLE_ICONS = { 0: 'bi-mortarboard', 1: 'bi-house-door', 2: 'bi-shield-check' }
+
+auth.initAuth().then(function () {
+    var user = auth.getUser()
+    if (!user || user.role !== 2) { window.location.href = '/Dashboard'; return }
+    doUserSearch()
+})
+
+document.getElementById('user-search').addEventListener('input', debounce(function (e) {
+    usersSearch = e.target.value
+    doUserSearch()
+}, 400))
+
+function setRoleFilter(role, btn) {
+    usersRoleFilter = role
+    document.querySelectorAll('#role-btns .btn').forEach(function (b) {
+        b.className = 'btn btn-sm ' + (b === btn ? 'btn-dorm active' : 'btn-outline-secondary')
+    })
+    doUserSearch()
+}
+
+async function doUserSearch() {
+    var list = document.getElementById('users-list')
+    list.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></div>'
+    try {
+        var q = '/admin/users?'
+        if (usersSearch) q += 'search=' + encodeURIComponent(usersSearch) + '&'
+        if (usersRoleFilter) q += 'role=' + encodeURIComponent(usersRoleFilter)
+        var data = await api.get(q)
+        var users = data.items || data || []
+
+        document.getElementById('user-count').textContent = users.length + ' users'
+
+        if (users.length === 0) {
+            list.innerHTML = '<div class="text-center py-5"><i class="bi bi-person-slash text-muted" style="font-size:2.5rem"></i>' +
+                '<h5 class="fw-bold mt-3">No users found</h5>' +
+                '<p class="text-muted">Try adjusting your search or filter.</p></div>'
+            return
+        }
+
+        list.innerHTML = '<div class="table-responsive"><table class="table table-hover align-middle mb-0">' +
+            '<thead class="table-light"><tr>' +
+            '<th style="width:50px"></th>' +
+            '<th>Name</th>' +
+            '<th>Email</th>' +
+            '<th>Role</th>' +
+            '<th class="text-center">Status</th>' +
+            '<th class="text-end">Actions</th>' +
+            '</tr></thead><tbody>' +
+            users.map(function (u) {
+                var initials = (u.fullName || 'U').split(' ').map(function(n){return n[0]}).join('').substring(0,2).toUpperCase()
+                var roleLabel = ROLE_LABELS[u.role] || 'Student'
+                var roleColor = ROLE_COLORS[u.role] || 'secondary'
+                var roleIcon = ROLE_ICONS[u.role] || 'bi-person'
+                return '<tr>' +
+                    '<td><div style="width:40px;height:40px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#64748b">' + initials + '</div></td>' +
+                    '<td><span class="fw-semibold">' + escapeHtml(u.fullName || '') + '</span></td>' +
+                    '<td class="text-muted small">' + escapeHtml(u.email || '') + '</td>' +
+                    '<td><span class="badge bg-' + roleColor + ' bg-opacity-10 text-' + roleColor + '"><i class="bi ' + roleIcon + ' me-1"></i>' + roleLabel + '</span></td>' +
+                    '<td class="text-center">' +
+                    (u.isBanned
+                        ? '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Banned</span>'
+                        : '<span class="badge bg-success bg-opacity-10 text-success"><i class="bi bi-check-circle me-1"></i>Active</span>') +
+                    '</td>' +
+                    '<td class="text-end">' +
+                    (u.isBanned
+                        ? '<button class="btn btn-sm btn-success" onclick="unbanUser(' + u.id + ',this)"><i class="bi bi-unlock me-1"></i>Unban</button>'
+                        : '<button class="btn btn-sm btn-outline-danger" onclick="banUser(' + u.id + ',this)"><i class="bi bi-ban me-1"></i>Ban</button>') +
+                    '</td></tr>'
+            }).join('') +
+            '</tbody></table></div>'
+    } catch (e) {
+        list.innerHTML = '<div class="text-center py-5"><p class="text-danger">Failed to load users.</p></div>'
+    }
+}
+
+async function banUser(id, btn) {
+    btn.disabled = true
+    try { await api.put('/admin/users/' + id + '/ban'); doUserSearch() } catch (e) { btn.disabled = false }
+}
+async function unbanUser(id, btn) {
+    btn.disabled = true
+    try { await api.put('/admin/users/' + id + '/unban'); doUserSearch() } catch (e) { btn.disabled = false }
+}
+
+function debounce(fn, ms) {
+    var timer
+    return function () {
+        var ctx = this, args = arguments
+        clearTimeout(timer)
+        timer = setTimeout(function () { fn.apply(ctx, args) }, ms)
+    }
+}
+</script>
+}

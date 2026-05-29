@@ -16,6 +16,8 @@ public class Payment
     public PaymentType Type { get; set; }
     public decimal Amount { get; set; }
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
+    /// <summary>Optional link to the entity this payment covers (e.g. apartment ID for ListingFee).</summary>
+    public Guid? RelatedEntityId { get; set; }
     /// <summary>External transaction reference (mock value for now).</summary>
     public string? TransactionRef { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

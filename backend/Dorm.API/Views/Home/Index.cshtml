@@ -1,0 +1,794 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+@section Styles {
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+<style>
+    /* ---- override Property template nav for this page ---- */
+    .site-nav { background: transparent !important; }
+    .site-nav .menu-bg-wrap { background: transparent !important; box-shadow: none !important; }
+
+    /* ---- Animations ---- */
+    @@keyframes fadeUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    @@keyframes slideInLeft {
+        from { opacity: 0; transform: translateX(-40px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+    @@keyframes slideInRight {
+        from { opacity: 0; transform: translateX(40px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+    @@keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50%      { transform: translateY(-10px); }
+    }
+    @@keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%      { opacity: .6; transform: scale(1.4); }
+    }
+    @@keyframes shimmer {
+        0%   { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    @@keyframes scaleIn {
+        from { opacity: 0; transform: scale(.85); }
+        to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* scroll-reveal base */
+    .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1);
+    }
+    .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .reveal-left {
+        opacity: 0;
+        transform: translateX(-40px);
+        transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1);
+    }
+    .reveal-left.visible { opacity: 1; transform: translateX(0); }
+    .reveal-right {
+        opacity: 0;
+        transform: translateX(40px);
+        transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1);
+    }
+    .reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+    .delay-1 { transition-delay: .1s; }
+    .delay-2 { transition-delay: .2s; }
+    .delay-3 { transition-delay: .3s; }
+    .delay-4 { transition-delay: .4s; }
+    .delay-5 { transition-delay: .5s; }
+
+    /* ---- Hero ---- */
+    .dorm-hero {
+        position: relative;
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        background: #0f172a;
+        overflow: hidden;
+    }
+    .dorm-hero::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background:
+            radial-gradient(ellipse 60% 50% at 70% 50%, rgba(30,41,59,.0) 0%, transparent 70%),
+            radial-gradient(ellipse 40% 60% at 10% 80%, rgba(249,115,22,.04) 0%, transparent 60%);
+        pointer-events: none;
+    }
+    .hero-inner { position: relative; z-index: 2; }
+
+    .hero-tag {
+        display: inline-flex; align-items: center; gap: .4rem;
+        background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+        color: #94a3b8; padding: .35rem .9rem; border-radius: 50px;
+        font-size: .78rem; font-weight: 500; letter-spacing: .02em;
+        margin-bottom: 1.5rem;
+        animation: fadeIn .8s .2s both;
+    }
+    .hero-tag .dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #F97316;
+        animation: pulse-dot 2s infinite;
+    }
+
+    .hero-heading {
+        font-size: 3.4rem; font-weight: 800; color: #f8fafc;
+        line-height: 1.12; margin-bottom: 1.2rem; letter-spacing: -.02em;
+        animation: slideInLeft .8s .3s both cubic-bezier(.22,1,.36,1);
+    }
+    .hero-heading .accent { color: #F97316; }
+
+    .hero-desc {
+        font-size: 1.08rem; color: #64748b; line-height: 1.75;
+        margin-bottom: 2.2rem; max-width: 480px;
+        animation: slideInLeft .8s .45s both cubic-bezier(.22,1,.36,1);
+    }
+
+    .hero-actions {
+        display: flex; flex-wrap: wrap; gap: .75rem;
+        animation: fadeUp .8s .6s both cubic-bezier(.22,1,.36,1);
+    }
+    .btn-hero-primary {
+        background: #F97316; color: #fff; border: none;
+        padding: .8rem 1.8rem; border-radius: 10px;
+        font-weight: 600; font-size: .95rem;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .45rem;
+        transition: all .25s cubic-bezier(.22,1,.36,1);
+        position: relative; overflow: hidden;
+    }
+    .btn-hero-primary::after {
+        content: '';
+        position: absolute; top: 50%; left: 50%;
+        width: 0; height: 0; border-radius: 50%;
+        background: rgba(255,255,255,.15);
+        transform: translate(-50%,-50%);
+        transition: width .4s, height .4s;
+    }
+    .btn-hero-primary:hover::after { width: 300px; height: 300px; }
+    .btn-hero-primary:hover { background: #ea6c10; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(249,115,22,.3); }
+
+    .btn-hero-ghost {
+        background: transparent; color: #cbd5e1;
+        border: 1px solid rgba(255,255,255,.12);
+        padding: .8rem 1.8rem; border-radius: 10px;
+        font-weight: 600; font-size: .95rem;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .45rem;
+        transition: all .25s cubic-bezier(.22,1,.36,1);
+    }
+    .btn-hero-ghost:hover { background: rgba(255,255,255,.08); color: #fff; transform: translateY(-2px); border-color: rgba(255,255,255,.25); }
+
+    /* hero visual — mock UI cards */
+    .hero-visual-col { display: flex; justify-content: center; align-items: center; }
+    .hero-visual {
+        position: relative; width: 400px; height: 420px;
+        animation: scaleIn .9s .5s both cubic-bezier(.22,1,.36,1);
+    }
+
+    /* back card (peeking) */
+    .mock-card-back {
+        position: absolute; top: 20px; left: 30px; right: -10px;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 16px; height: 340px;
+        transform: rotate(3deg);
+        animation: fadeIn 1s .7s both;
+    }
+
+    /* main apartment card */
+    .mock-card {
+        position: absolute; top: 30px; left: 0; right: 20px;
+        background: #1e293b;
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 16px; overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0,0,0,.3);
+        animation: slideInRight .8s .6s both cubic-bezier(.22,1,.36,1);
+        transition: transform .4s cubic-bezier(.22,1,.36,1);
+    }
+    .mock-card:hover { transform: translateY(-4px); }
+
+    .mock-card-img {
+        width: 100%; height: 160px; object-fit: cover;
+        display: block;
+    }
+    .mock-card-body { padding: 1.1rem 1.2rem; }
+    .mock-card-title {
+        font-size: .95rem; font-weight: 700; color: #f1f5f9;
+        margin-bottom: .3rem;
+    }
+    .mock-card-loc {
+        font-size: .75rem; color: #64748b;
+        display: flex; align-items: center; gap: .3rem;
+        margin-bottom: .8rem;
+    }
+    .mock-card-meta {
+        display: flex; gap: .6rem; margin-bottom: .9rem;
+    }
+    .mock-pill {
+        font-size: .68rem; font-weight: 600;
+        padding: .25rem .6rem; border-radius: 6px;
+        background: rgba(255,255,255,.06); color: #94a3b8;
+    }
+    .mock-card-footer {
+        display: flex; justify-content: space-between; align-items: center;
+        border-top: 1px solid rgba(255,255,255,.06);
+        padding-top: .8rem;
+    }
+    .mock-price { font-size: 1rem; font-weight: 800; color: #f8fafc; }
+    .mock-price span { font-size: .72rem; font-weight: 400; color: #64748b; }
+
+    /* match score circle on the card */
+    .mock-match {
+        width: 46px; height: 46px; border-radius: 50%;
+        border: 3px solid #10b981;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .7rem; font-weight: 800; color: #10b981;
+        background: rgba(16,185,129,.08);
+    }
+
+    /* floating elements */
+    .hero-float-badge {
+        position: absolute; background: #fff; border-radius: 10px;
+        padding: .5rem .8rem; box-shadow: 0 8px 24px rgba(0,0,0,.18);
+        display: flex; align-items: center; gap: .45rem;
+        font-size: .78rem; color: #1e293b; z-index: 4;
+    }
+    .hero-float-badge .fb-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+    }
+    .float-badge-1 {
+        bottom: 30px; left: -20px;
+        animation: float 3.5s ease-in-out infinite, fadeUp .8s .9s both;
+    }
+    .float-badge-2 {
+        top: 0; right: 0;
+        animation: float 4s .3s ease-in-out infinite, fadeUp .8s 1.1s both;
+    }
+
+    /* ---- Stats ---- */
+    .stats-section {
+        background: #fff; border-bottom: 1px solid #f1f5f9;
+        padding: 3rem 0;
+    }
+    .stat-block { text-align: center; }
+    .stat-block .num {
+        font-size: 1.8rem; font-weight: 800; color: #1e293b;
+    }
+    .stat-block .label {
+        font-size: .82rem; color: #94a3b8; font-weight: 500; margin-top: .15rem;
+    }
+    .stat-divider {
+        width: 1px; background: #e2e8f0; align-self: stretch;
+    }
+
+    /* ---- Features ---- */
+    .features-section { padding: 5rem 0; background: #f8fafc; }
+    .section-label {
+        display: inline-flex; align-items: center; gap: .4rem;
+        font-size: .78rem; font-weight: 600; text-transform: uppercase;
+        letter-spacing: .08em; color: #F97316; margin-bottom: .6rem;
+    }
+    .section-title {
+        font-size: 1.9rem; font-weight: 800; color: #0f172a;
+        margin-bottom: .5rem;
+    }
+    .section-subtitle {
+        font-size: 1rem; color: #64748b; max-width: 460px;
+        margin: 0 auto .5rem;
+    }
+    .feat-card {
+        background: #fff; border-radius: 14px; padding: 1.8rem;
+        border: 1px solid #e2e8f0; height: 100%;
+        transition: box-shadow .3s cubic-bezier(.22,1,.36,1), transform .3s cubic-bezier(.22,1,.36,1), border-color .3s;
+        cursor: default;
+    }
+    .feat-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 40px rgba(0,0,0,.08);
+        border-color: transparent;
+    }
+    .feat-icon {
+        width: 48px; height: 48px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.25rem; margin-bottom: 1rem;
+        transition: transform .3s cubic-bezier(.22,1,.36,1);
+    }
+    .feat-card:hover .feat-icon { transform: scale(1.1) rotate(-4deg); }
+    .feat-card h4 { font-size: 1.05rem; font-weight: 700; color: #1e293b; margin-bottom: .4rem; }
+    .feat-card p { font-size: .88rem; color: #64748b; line-height: 1.65; margin: 0; }
+
+    /* ---- How it works ---- */
+    .how-section { padding: 5rem 0; background: #fff; }
+    .step-card {
+        text-align: center; padding: 1.5rem 1rem;
+        transition: transform .3s cubic-bezier(.22,1,.36,1);
+    }
+    .step-card:hover { transform: translateY(-4px); }
+    .step-circle {
+        width: 44px; height: 44px; border-radius: 50%;
+        border: 2px solid #e2e8f0; color: #1e293b;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 1rem; margin-bottom: 1rem;
+        transition: all .3s cubic-bezier(.22,1,.36,1);
+    }
+    .step-card:hover .step-circle {
+        border-color: #F97316; color: #F97316;
+        transform: scale(1.12);
+        box-shadow: 0 0 0 6px rgba(249,115,22,.08);
+    }
+    .step-card h5 { font-size: .95rem; font-weight: 700; color: #1e293b; margin-bottom: .3rem; }
+    .step-card p { font-size: .85rem; color: #94a3b8; margin: 0; line-height: 1.6; }
+
+    /* connector line between steps (desktop) */
+    .steps-row { position: relative; }
+    .steps-row::before {
+        content: '';
+        position: absolute;
+        top: 34px; left: 18%; right: 18%;
+        height: 2px;
+        background: repeating-linear-gradient(90deg, #e2e8f0 0, #e2e8f0 8px, transparent 8px, transparent 16px);
+        z-index: 0;
+    }
+    .steps-row .col-6, .steps-row .col-lg-3 { position: relative; z-index: 1; }
+
+    /* ---- CTA ---- */
+    .cta-section {
+        padding: 5rem 0;
+        background: #0f172a;
+        position: relative;
+        overflow: hidden;
+    }
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        width: 400px; height: 400px; border-radius: 50%;
+        top: -200px; right: -100px;
+        background: radial-gradient(circle, rgba(249,115,22,.06) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .cta-section h2 { font-size: 2rem; font-weight: 800; color: #f8fafc; }
+    .cta-section p { color: #64748b; font-size: 1.05rem; }
+    .btn-cta {
+        background: #F97316; color: #fff; border: none;
+        padding: .8rem 2rem; border-radius: 10px;
+        font-weight: 600; font-size: .95rem;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .45rem;
+        transition: all .25s cubic-bezier(.22,1,.36,1);
+        position: relative; overflow: hidden;
+    }
+    .btn-cta::after {
+        content: '';
+        position: absolute; top: 50%; left: 50%;
+        width: 0; height: 0; border-radius: 50%;
+        background: rgba(255,255,255,.15);
+        transform: translate(-50%,-50%);
+        transition: width .4s, height .4s;
+    }
+    .btn-cta:hover::after { width: 300px; height: 300px; }
+    .btn-cta:hover { background: #ea6c10; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(249,115,22,.3); }
+
+    /* ---- Testimonials ---- */
+    .testi-section {
+        padding: 5rem 0; background: #f8fafc; overflow: hidden;
+    }
+    .testi-track {
+        display: flex; gap: 1.25rem; overflow-x: auto;
+        scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+        padding: .5rem .25rem 1rem; margin: 0 -.25rem;
+        scrollbar-width: none;
+    }
+    .testi-track::-webkit-scrollbar { display: none; }
+
+    .testi-card {
+        min-width: 300px; max-width: 340px; flex-shrink: 0;
+        scroll-snap-align: start;
+        background: #fff; border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 1.5rem; position: relative;
+        transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s;
+    }
+    .testi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(0,0,0,.07);
+        border-color: transparent;
+    }
+    .testi-quote-icon {
+        position: absolute; top: 1rem; right: 1.2rem;
+        font-size: 1.6rem; color: rgba(249,115,22,.12);
+    }
+    .testi-avatar {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: linear-gradient(135deg, #F97316, #f59e0b);
+        color: #fff; display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: .78rem;
+        box-shadow: 0 3px 8px rgba(249,115,22,.25);
+    }
+    .testi-user { display: flex; align-items: center; gap: .65rem; margin-bottom: 1rem; }
+    .testi-user-name { font-weight: 700; font-size: .88rem; color: #1e293b; }
+    .testi-user-role {
+        font-size: .7rem; color: #94a3b8; font-weight: 500;
+        display: flex; align-items: center; gap: .25rem;
+    }
+    .testi-stars { display: flex; gap: .15rem; margin-bottom: .7rem; }
+    .testi-stars i { font-size: .85rem; }
+    .testi-text {
+        font-size: .88rem; color: #475569; line-height: 1.7;
+        margin: 0; font-style: italic;
+    }
+
+    /* ---- Responsive ---- */
+    @@media (max-width: 991px) {
+        .hero-heading { font-size: 2.2rem; }
+        .hero-visual { display: none; }
+        .stat-divider { display: none; }
+        .steps-row::before { display: none; }
+    }
+    @@media (max-width: 575px) {
+        .hero-heading { font-size: 1.8rem; }
+        .hero-desc { font-size: .95rem; }
+    }
+</style>
+}
+
+<!-- Hero -->
+<div class="dorm-hero">
+    <div class="container">
+        <div class="row align-items-center hero-inner">
+            <div class="col-lg-6">
+                <div class="hero-tag">
+                    <span class="dot"></span> Student Housing Platform — Jordan
+                </div>
+                <h1 class="hero-heading">
+                    Find your place.<br/>
+                    Match with roommates<br/>
+                    who <span class="accent">fit.</span>
+                </h1>
+                <p class="hero-desc">
+                    Take a quick lifestyle quiz, browse apartments near your university, and see how compatible you are with current tenants — before you apply.
+                </p>
+                <div class="hero-actions">
+                    <a href="/Browse" class="btn-hero-primary">
+                        <i class="bi bi-search"></i> Browse Apartments
+                    </a>
+                    <a href="/Account/Register" class="btn-hero-ghost">
+                        Create Account
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-flex hero-visual-col">
+                <div class="hero-visual">
+                    <!-- back card peek -->
+                    <div class="mock-card-back"></div>
+
+                    <!-- main apartment card -->
+                    <div class="mock-card">
+                        <img src="/property/images/img_1.jpg" alt="" class="mock-card-img" />
+                        <div class="mock-card-body">
+                            <div class="mock-card-title">Sunny 3-Bed near PSUT</div>
+                            <div class="mock-card-loc">
+                                <i class="bi bi-geo-alt-fill" style="color:#64748b;font-size:.7rem"></i> Tlaa Al-Ali, Amman
+                            </div>
+                            <div class="mock-card-meta">
+                                <span class="mock-pill"><i class="bi bi-wifi" style="margin-right:3px"></i> WiFi</span>
+                                <span class="mock-pill"><i class="bi bi-snow" style="margin-right:3px"></i> AC</span>
+                                <span class="mock-pill">Female Only</span>
+                            </div>
+                            <div class="mock-card-footer">
+                                <div class="mock-price">120 <span>JOD / month</span></div>
+                                <div class="mock-match">92%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- floating badges -->
+                    <div class="hero-float-badge float-badge-1">
+                        <span class="fb-dot" style="background:#10b981"></span>
+                        <span style="font-weight:600">Match found!</span>
+                    </div>
+                    <div class="hero-float-badge float-badge-2">
+                        <span class="fb-dot" style="background:#3b82f6"></span>
+                        <span style="font-weight:600">2 spots left</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<section class="stats-section">
+    <div class="container">
+        <div class="d-flex justify-content-center align-items-center flex-wrap gap-4 gap-md-0">
+            <div class="stat-block flex-fill reveal delay-1">
+                <div class="num" data-count="30" data-suffix="+">0</div>
+                <div class="label">Apartments Listed</div>
+            </div>
+            <div class="stat-divider d-none d-md-block"></div>
+            <div class="stat-block flex-fill reveal delay-2">
+                <div class="num" data-count="10" data-suffix="+">0</div>
+                <div class="label">Universities Covered</div>
+            </div>
+            <div class="stat-divider d-none d-md-block"></div>
+            <div class="stat-block flex-fill reveal delay-3">
+                <div class="num" data-count="92" data-suffix="%">0</div>
+                <div class="label">Avg Match Score</div>
+            </div>
+            <div class="stat-divider d-none d-md-block"></div>
+            <div class="stat-block flex-fill reveal delay-4">
+                <div class="num" data-count="8" data-suffix="">0</div>
+                <div class="label">Cities</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="features-section">
+    <div class="container">
+        <div class="text-center mb-5 reveal">
+            <div class="section-label"><span>Why Dorm</span></div>
+            <h2 class="section-title">Everything you need in one place</h2>
+            <p class="section-subtitle">Find the right apartment and the right roommate, stress-free.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4 reveal delay-1">
+                <div class="feat-card">
+                    <div class="feat-icon" style="background:#eff6ff;color:#3b82f6">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <h4>Lifestyle-Matched Roommates</h4>
+                    <p>A short 8-question quiz generates a transparency score with every apartment's current tenants.</p>
+                </div>
+            </div>
+            <div class="col-md-4 reveal delay-2">
+                <div class="feat-card">
+                    <div class="feat-icon" style="background:#ecfdf5;color:#10b981">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <h4>Apartments Near Campus</h4>
+                    <p>Filter by university, neighborhood, walking distance, and price — see what's available near you.</p>
+                </div>
+            </div>
+            <div class="col-md-4 reveal delay-3">
+                <div class="feat-card">
+                    <div class="feat-icon" style="background:#f5f3ff;color:#8b5cf6">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h4>Verified & Transparent</h4>
+                    <p>University-email badges, real reviews, and private addresses until accepted — built on trust.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How it works -->
+<section class="how-section">
+    <div class="container">
+        <div class="text-center mb-5 reveal">
+            <div class="section-label"><span>How it works</span></div>
+            <h2 class="section-title">Four steps to your new home</h2>
+        </div>
+        <div class="row g-4 justify-content-center steps-row">
+            <div class="col-6 col-lg-3 reveal delay-1">
+                <div class="step-card">
+                    <div class="step-circle">1</div>
+                    <h5>Sign up</h5>
+                    <p>Create a free account as a student or apartment owner.</p>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 reveal delay-2">
+                <div class="step-card">
+                    <div class="step-circle">2</div>
+                    <h5>Take the quiz</h5>
+                    <p>Answer 8 lifestyle questions about sleep, cleanliness, and more.</p>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 reveal delay-3">
+                <div class="step-card">
+                    <div class="step-circle">3</div>
+                    <h5>Browse & match</h5>
+                    <p>See your compatibility score with every apartment's tenants.</p>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 reveal delay-4">
+                <div class="step-card">
+                    <div class="step-circle">4</div>
+                    <h5>Apply & move in</h5>
+                    <p>Apply directly, chat with the owner, and get accepted.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Suggested for logged-in students -->
+<section id="home-suggested" class="d-none" style="background:#0f172a;padding:4rem 0">
+    <div class="container">
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <i class="bi bi-stars" style="color:#F97316;font-size:1.15rem"></i>
+            <h3 style="font-weight:800;font-size:1.3rem;color:#f8fafc;margin:0">Suggested Near Your University</h3>
+        </div>
+        <p style="color:#64748b;font-size:.9rem;margin-bottom:1.5rem">Apartments close to your campus, picked for you.</p>
+        <div class="row g-3" id="home-suggested-list"></div>
+        <div class="text-center mt-3">
+            <a href="/Browse" style="color:#F97316;font-weight:600;font-size:.9rem;text-decoration:none">
+                See all apartments <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testi-section">
+    <div class="container">
+        <div class="text-center mb-4 reveal">
+            <div class="section-label"><span>Testimonials</span></div>
+            <h2 class="section-title">Hear from Our Community</h2>
+            <p class="section-subtitle">Real feedback from students and owners on the platform.</p>
+        </div>
+        <div id="testimonials-loading" class="text-center py-4">
+            <div class="spinner-border spinner-border-sm" style="color:#94a3b8"></div>
+        </div>
+        <div id="testimonials-track" class="testi-track d-none"></div>
+        <div id="testimonials-empty" class="d-none text-center py-4">
+            <div style="width:56px;height:56px;border-radius:50%;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;margin-bottom:.75rem">
+                <i class="bi bi-chat-quote" style="font-size:1.3rem;color:#94a3b8"></i>
+            </div>
+            <p style="color:#94a3b8;font-size:.9rem;margin:0">No testimonials yet. Be the first to share!</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+    <div class="container text-center reveal">
+        <h2 class="mb-3">Own an apartment near campus?</h2>
+        <p class="mb-4" style="max-width:480px;margin-left:auto;margin-right:auto">List it on Dorm and reach hundreds of students looking for their next home.</p>
+        <a href="/Account/Register" class="btn-cta">
+            <i class="bi bi-plus-circle"></i> Register as Owner
+        </a>
+    </div>
+</section>
+
+@section Scripts {
+<script>
+// ---- Scroll reveal (Intersection Observer) ----
+(function () {
+    var reveals = document.querySelectorAll('.reveal, .reveal-left, .reveal-right')
+    if (!('IntersectionObserver' in window)) {
+        reveals.forEach(function (el) { el.classList.add('visible') })
+        return
+    }
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible')
+                observer.unobserve(entry.target)
+            }
+        })
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' })
+
+    reveals.forEach(function (el) { observer.observe(el) })
+})();
+
+// ---- Counter animation for stat numbers ----
+(function () {
+    var counted = false
+    var counters = document.querySelectorAll('.num[data-count]')
+    if (!counters.length) return
+
+    function animateCounters() {
+        if (counted) return
+        counted = true
+        counters.forEach(function (el) {
+            var target = parseInt(el.getAttribute('data-count'))
+            var suffix = el.getAttribute('data-suffix') || ''
+            var duration = 1600
+            var start = 0
+            var startTime = null
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp
+                var progress = Math.min((timestamp - startTime) / duration, 1)
+                var eased = 1 - Math.pow(1 - progress, 3)
+                var current = Math.round(eased * target)
+                el.textContent = current + suffix
+                if (progress < 1) requestAnimationFrame(step)
+            }
+            requestAnimationFrame(step)
+        })
+    }
+
+    if (!('IntersectionObserver' in window)) { animateCounters(); return }
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) { animateCounters(); observer.disconnect() }
+        })
+    }, { threshold: 0.3 })
+
+    var statsSection = document.querySelector('.stats-section')
+    if (statsSection) observer.observe(statsSection)
+})();
+
+// ---- Tilt on feature cards (subtle) ----
+(function () {
+    document.querySelectorAll('.feat-card').forEach(function (card) {
+        card.addEventListener('mousemove', function (e) {
+            var rect = card.getBoundingClientRect()
+            var x = e.clientX - rect.left
+            var y = e.clientY - rect.top
+            var cx = rect.width / 2
+            var cy = rect.height / 2
+            var rotateX = ((y - cy) / cy) * -4
+            var rotateY = ((x - cx) / cx) * 4
+            card.style.transform = 'translateY(-6px) perspective(600px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg)'
+        })
+        card.addEventListener('mouseleave', function () {
+            card.style.transform = ''
+        })
+    })
+})();
+
+// ---- Testimonials ----
+function loadTestimonials() {
+    api.get('/testimonials/approved').then(function (list) {
+        document.getElementById('testimonials-loading').classList.add('d-none')
+        if (!list || list.length === 0) {
+            document.getElementById('testimonials-empty').classList.remove('d-none')
+            return
+        }
+        var track = document.getElementById('testimonials-track')
+        track.classList.remove('d-none')
+        track.innerHTML = list.map(function (t) {
+            var stars = ''
+            for (var i = 1; i <= 5; i++) {
+                stars += '<i class="bi ' + (i <= t.stars ? 'bi-star-fill' : 'bi-star') + '" style="color:' + (i <= t.stars ? '#F97316' : '#e2e8f0') + '"></i>'
+            }
+            var initials = escapeHtml((t.userName || 'U').split(' ').map(function(n){return n[0]}).join('').substring(0,2).toUpperCase())
+            var roleDot = t.userRole ? '<span style="width:4px;height:4px;border-radius:50%;background:#cbd5e1;display:inline-block"></span> ' : ''
+            return '<div class="testi-card">' +
+                '<i class="bi bi-quote testi-quote-icon"></i>' +
+                '<div class="testi-user">' +
+                '<div class="testi-avatar">' + initials + '</div>' +
+                '<div>' +
+                '<div class="testi-user-name">' + escapeHtml(t.userName || 'User') + '</div>' +
+                '<div class="testi-user-role">' + roleDot + escapeHtml(t.userRole || '') + '</div>' +
+                '</div></div>' +
+                '<div class="testi-stars">' + stars + '</div>' +
+                '<p class="testi-text">"' + escapeHtml(t.text) + '"</p>' +
+                '</div>'
+        }).join('')
+    }).catch(function () {
+        document.getElementById('testimonials-loading').classList.add('d-none')
+        document.getElementById('testimonials-empty').classList.remove('d-none')
+    })
+}
+loadTestimonials()
+
+// ---- Suggested apartments + testimonial form for logged-in users ----
+auth.initAuth().then(function () {
+    var user = auth.getUser()
+    if (!user || user.role !== 0 || user.university == null) return
+    api.get('/apartments', { query: { university: user.university, pageSize: 4, sort: 'newest' } }).then(function (data) {
+        var items = (data.items || data || []).slice(0, 4)
+        if (items.length === 0) return
+        document.getElementById('home-suggested').classList.remove('d-none')
+        document.getElementById('home-suggested-list').innerHTML = items.map(function (apt, idx) {
+            var photo = apt.mainPhotoUrl ? apt.mainPhotoUrl : '/property/images/img_' + ((idx % 8) + 1) + '.jpg'
+            var matchHtml = ''
+            if (apt.compatibilityScore != null) {
+                matchHtml = '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;border:2px solid ' +
+                    (apt.compatibilityScore >= 75 ? '#10b981' : apt.compatibilityScore >= 50 ? '#eab308' : '#94a3b8') + ';color:' +
+                    (apt.compatibilityScore >= 75 ? '#10b981' : apt.compatibilityScore >= 50 ? '#eab308' : '#94a3b8') + '">' + apt.compatibilityScore + '%</div>'
+            }
+            return '<div class="col-md-6 col-xl-3">' +
+                '<a href="/Apartment/Detail/' + apt.id + '" style="text-decoration:none">' +
+                '<div style="background:#1e293b;border-radius:14px;overflow:hidden;transition:transform .3s,box-shadow .3s;border:1px solid rgba(255,255,255,.06)" onmouseenter="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 12px 30px rgba(0,0,0,.3)\'" onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'\'">' +
+                '<img src="' + photo + '" alt="' + escapeHtml(apt.title) + '" style="width:100%;height:160px;object-fit:cover;display:block" />' +
+                '<div style="padding:.85rem 1rem">' +
+                '<div style="font-weight:700;font-size:.9rem;color:#f8fafc;margin-bottom:.2rem">' + escapeHtml(apt.title) + '</div>' +
+                '<div style="font-size:.78rem;color:#64748b;margin-bottom:.5rem"><i class="bi bi-geo-alt-fill"></i> ' + escapeHtml(apt.neighborhood || '') + '</div>' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.06);padding-top:.6rem">' +
+                '<div style="font-size:1rem;font-weight:800;color:#f8fafc">' + apt.fullRent + ' <span style="font-size:.72rem;font-weight:400;color:#64748b">JOD/mo</span></div>' +
+                matchHtml +
+                '</div></div></div></a></div>'
+        }).join('')
+    }).catch(function () {})
+});
+</script>
+}

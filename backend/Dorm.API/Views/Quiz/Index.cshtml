@@ -1,0 +1,255 @@
+@{
+    Layout = "_BrowseLayout";
+    ViewData["Title"] = "Quiz";
+}
+
+@section Styles {
+<style>
+    .quiz-header { margin-bottom: 1.5rem; }
+    .quiz-header h3 { font-size: 1.4rem; font-weight: 800; color: #1e293b; }
+    .quiz-header p { color: #64748b; font-size: .9rem; }
+
+    .quiz-card { border: none; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; }
+    .quiz-card .card-body { padding: 2rem; }
+
+    .progress-wrap { margin-bottom: 1.5rem; }
+    .progress-bar-bg { height: 5px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+    .progress-bar-fill {
+        height: 100%; background: linear-gradient(90deg, #F97316, #fb923c);
+        border-radius: 10px; transition: width .4s cubic-bezier(.22,1,.36,1);
+    }
+    .progress-text { display: flex; justify-content: space-between; margin-top: .5rem; }
+    .progress-text span { font-size: .75rem; font-weight: 600; color: #94a3b8; }
+    .progress-dots { display: flex; gap: .4rem; }
+    .progress-dot {
+        width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0;
+        transition: background .3s, transform .3s;
+    }
+    .progress-dot.done { background: #F97316; }
+    .progress-dot.active { background: #F97316; transform: scale(1.3); }
+
+    .q-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: .25rem; }
+    .q-help { font-size: .9rem; color: #64748b; margin-bottom: 1.5rem; }
+
+    /* question slide animation */
+    .q-slide {
+        animation: slideIn .35s cubic-bezier(.22,1,.36,1);
+    }
+    @@keyframes slideIn {
+        from { opacity: 0; transform: translateX(30px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .opt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+    .opt-card {
+        background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px;
+        padding: 1.25rem 1rem; text-align: center; cursor: pointer;
+        transition: all .25s cubic-bezier(.22,1,.36,1);
+    }
+    .opt-card:hover {
+        border-color: #cbd5e1; background: #fff;
+        transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.06);
+    }
+    .opt-card.selected {
+        border-color: #F97316; background: rgba(249,115,22,.04);
+        box-shadow: 0 0 0 3px rgba(249,115,22,.1);
+    }
+    .opt-card .opt-label { font-weight: 700; font-size: .92rem; color: #1e293b; }
+    .opt-card .opt-check {
+        width: 20px; height: 20px; border-radius: 50%; border: 2px solid #e2e8f0;
+        display: inline-flex; align-items: center; justify-content: center;
+        margin-bottom: .5rem; transition: all .2s;
+    }
+    .opt-card.selected .opt-check {
+        background: #F97316; border-color: #F97316; color: #fff;
+    }
+
+    .quiz-nav { display: flex; justify-content: space-between; margin-top: 2rem; }
+    .btn-quiz-prev {
+        background: #f1f5f9; color: #475569; border: none; border-radius: 10px;
+        padding: .65rem 1.5rem; font-weight: 600; font-size: .88rem;
+        display: inline-flex; align-items: center; gap: .3rem;
+        transition: all .2s;
+    }
+    .btn-quiz-prev:hover { background: #e2e8f0; }
+    .btn-quiz-next {
+        background: #0f172a; color: #fff; border: none; border-radius: 10px;
+        padding: .65rem 1.5rem; font-weight: 600; font-size: .88rem;
+        display: inline-flex; align-items: center; gap: .3rem;
+        transition: all .2s;
+    }
+    .btn-quiz-next:hover { background: #1e293b; transform: translateY(-1px); }
+    .btn-quiz-next:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .btn-quiz-submit {
+        background: #F97316; color: #fff; border: none; border-radius: 10px;
+        padding: .65rem 1.5rem; font-weight: 600; font-size: .88rem;
+        display: inline-flex; align-items: center; gap: .3rem;
+        transition: all .2s;
+    }
+    .btn-quiz-submit:hover { background: #ea6c10; transform: translateY(-1px); }
+    .btn-quiz-submit:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    @@media (max-width: 575px) {
+        .opt-grid { grid-template-columns: 1fr; }
+    }
+</style>
+}
+
+<div class="container" style="max-width:720px;padding:2.5rem 1rem">
+    <div class="quiz-header">
+        <h3>Lifestyle Quiz</h3>
+        <p>Eight short questions — your answers stay private and power your match scores.</p>
+    </div>
+    <div>
+        <div class="quiz-card card">
+            <div class="card-body">
+                <div id="quiz-progress" class="progress-wrap"></div>
+                <div id="quiz-content">
+                    <div class="text-center py-5"><div class="spinner-border" style="color:#94a3b8"></div></div>
+                </div>
+                <div class="quiz-nav" id="quiz-nav" style="display:none"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+var questions = []
+var answers = {}
+var currentQ = 0
+
+// Enum int → string key mapping (backend returns key as int)
+var Q_KEY_NAMES = ['SleepSchedule','Cleanliness','Smoking','StudyHabits','SocialStyle','Guests','Cooking','PetTolerance']
+
+function resolveKey(q) {
+    if (typeof q.key === 'number') return Q_KEY_NAMES[q.key] || String(q.key)
+    return q.key || q.questionKey || ''
+}
+
+var Q_TITLES = {
+    SleepSchedule: 'Sleep Schedule', Cleanliness: 'Cleanliness', Smoking: 'Smoking',
+    StudyHabits: 'Study Habits', SocialStyle: 'Social Style', Guests: 'Guests',
+    Cooking: 'Cooking', PetTolerance: 'Pet Tolerance'
+}
+var Q_HELP = {
+    SleepSchedule: 'When do you usually go to bed and wake up?',
+    Cleanliness: 'How tidy do you keep shared spaces?',
+    Smoking: 'Do you smoke?',
+    StudyHabits: 'Where do you prefer to study?',
+    SocialStyle: 'How social are you at home?',
+    Guests: 'How often do you have visitors?',
+    Cooking: 'How often do you cook at home?',
+    PetTolerance: 'How do you feel about pets?'
+}
+var OPT_LABELS = {
+    SleepSchedule: { EarlyBird: 'Early Bird', NightOwl: 'Night Owl', Flexible: 'Flexible' },
+    Cleanliness: { VeryTidy: 'Very Tidy', Average: 'Average', Relaxed: 'Relaxed' },
+    Smoking: { Yes: 'Yes', No: 'No', Outside: 'Outside Only' },
+    StudyHabits: { QuietAtHome: 'Quiet at Home', Library: 'Library', GroupAtHome: 'Group at Home' },
+    SocialStyle: { Introvert: 'Introvert', Extrovert: 'Extrovert', Balanced: 'Balanced' },
+    Guests: { Often: 'Often', Rarely: 'Rarely', Sometimes: 'Sometimes' },
+    Cooking: { CookALot: 'Cook a Lot', MostlyEatOut: 'Mostly Eat Out', CookSometimes: 'Cook Sometimes' },
+    PetTolerance: { LovePets: 'Love Pets', PreferNoPets: 'No Pets', Tolerate: 'Tolerate' }
+}
+var Q_ICONS = {
+    SleepSchedule: 'bi-moon-stars', Cleanliness: 'bi-sparkle', Smoking: 'bi-wind',
+    StudyHabits: 'bi-book', SocialStyle: 'bi-people', Guests: 'bi-person-plus',
+    Cooking: 'bi-cup-hot', PetTolerance: 'bi-emoji-smile'
+}
+
+auth.initAuth().then(function () {
+    var user = auth.getUser()
+    if (!user || user.role !== 0) { window.location.href = '/Browse'; return }
+    loadQuiz()
+})
+
+async function loadQuiz() {
+    try {
+        var data = await api.get('/quiz/questions')
+        questions = data.questions || data || []
+        try {
+            var existing = await api.get('/quiz/my-answers')
+            if (existing && existing.answers) {
+                existing.answers.forEach(function (a) {
+                    var qk = a.questionKey
+                    // Backend returns enum as int — map to string key
+                    if (typeof qk === 'number') {
+                        var qKeyNames = ['SleepSchedule','Cleanliness','Smoking','StudyHabits','SocialStyle','Guests','Cooking','PetTolerance']
+                        qk = qKeyNames[qk] || qk
+                    }
+                    answers[qk] = a.answerValue || a.answer || a.answerKey
+                })
+            }
+        } catch (e) {}
+        renderQuestion()
+    } catch (e) {
+        document.getElementById('quiz-content').innerHTML = '<div class="text-center py-4"><i class="bi bi-exclamation-circle" style="font-size:2rem;color:#ef4444"></i><p class="mt-2" style="color:#ef4444">Failed to load quiz. Please try again.</p></div>'
+    }
+}
+
+function renderQuestion() {
+    if (questions.length === 0) return
+    var q = questions[currentQ]
+    var qKey = resolveKey(q)
+    var opts = q.options || q.allowedValues || []
+
+    // progress
+    var pct = ((currentQ + 1) / questions.length * 100)
+    var dots = questions.map(function(_, i) {
+        var cls = i < currentQ ? 'done' : i === currentQ ? 'active' : ''
+        return '<div class="progress-dot ' + cls + '"></div>'
+    }).join('')
+    document.getElementById('quiz-progress').innerHTML =
+        '<div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="progress-text"><span>Question ' + (currentQ+1) + ' of ' + questions.length + '</span>' +
+        '<div class="progress-dots">' + dots + '</div></span></div>'
+
+    // content
+    var content = document.getElementById('quiz-content')
+    var labels = OPT_LABELS[qKey] || {}
+    content.innerHTML =
+        '<div class="q-slide">' +
+        '<h4 class="q-title"><i class="bi ' + (Q_ICONS[qKey]||'bi-question-circle') + ' me-2" style="color:#F97316"></i>' + (Q_TITLES[qKey]||qKey) + '</h4>' +
+        '<p class="q-help">' + (Q_HELP[qKey]||'') + '</p>' +
+        '<div class="opt-grid">' +
+        opts.map(function (opt) {
+            var sel = answers[qKey] === opt
+            return '<div class="opt-card' + (sel?' selected':'') + '" onclick="selectAnswer(\'' + qKey + '\',\'' + opt + '\')">' +
+                '<div class="opt-check">' + (sel?'<i class="bi bi-check2" style="font-size:.7rem"></i>':'') + '</div>' +
+                '<div class="opt-label">' + (labels[opt]||opt) + '</div></div>'
+        }).join('') +
+        '</div></div>'
+
+    // nav
+    var nav = document.getElementById('quiz-nav')
+    nav.style.display = 'flex'
+    var prevBtn = currentQ > 0
+        ? '<button class="btn-quiz-prev" onclick="prevQ()"><i class="bi bi-chevron-left"></i> Back</button>'
+        : '<span></span>'
+    var nextBtn = currentQ < questions.length - 1
+        ? '<button class="btn-quiz-next" onclick="nextQ()" ' + (!answers[qKey]?'disabled':'') + '>Next <i class="bi bi-chevron-right"></i></button>'
+        : '<button class="btn-quiz-submit" onclick="submitQuiz()" ' + (!answers[qKey]?'disabled':'') + '>Submit <i class="bi bi-check2"></i></button>'
+    nav.innerHTML = prevBtn + nextBtn
+}
+
+function selectAnswer(qKey, opt) { answers[qKey] = opt; renderQuestion() }
+function nextQ() { if (currentQ < questions.length - 1) { currentQ++; renderQuestion() } }
+function prevQ() { if (currentQ > 0) { currentQ--; renderQuestion() } }
+
+async function submitQuiz() {
+    var payload = Object.keys(answers).map(function (k) {
+        var idx = Q_KEY_NAMES.indexOf(k)
+        return { questionKey: idx >= 0 ? idx : k, answerValue: answers[k] }
+    })
+    try {
+        await api.post('/quiz/answers', { body: { answers: payload } })
+        await auth.fetchMe()
+        window.location.href = '/Browse'
+    } catch (err) {
+        document.getElementById('quiz-content').insertAdjacentHTML('afterbegin',
+            '<div class="alert alert-danger" style="border-radius:10px">' + (err.message || 'Something went wrong.') + '</div>')
+    }
+}
+</script>
+}
