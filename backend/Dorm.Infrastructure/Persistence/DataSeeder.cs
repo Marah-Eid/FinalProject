@@ -399,7 +399,6 @@ public static class DataSeeder
                     DistanceMinutes = 3 + rng.Next(25),
                     SmokingRule = (SmokingRule)rng.Next(3),
                     GuestsRule = (GuestsRule)rng.Next(3),
-                    IsFeatured = rng.NextDouble() > 0.85,
                     IsActive = true,
                     IsSuspended = false,
                     CreatedAt = DateTime.UtcNow.AddDays(-rng.Next(1, 90)),

@@ -31,8 +31,6 @@ public class Apartment
     public SmokingRule SmokingRule { get; set; }
     public GuestsRule GuestsRule { get; set; }
 
-    public bool IsFeatured { get; set; }
-    public DateTime? FeaturedUntil { get; set; }
     public bool IsActive { get; set; } = true;
     public bool IsSuspended { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -96,6 +96,10 @@
             <h6 class="nl-section">Amenities</h6>
             <div class="d-flex flex-wrap gap-2 mb-4" id="nl-amenities"></div>
 
+            <div id="fee-banner" class="d-none mb-3" style="background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:10px;padding:1rem;display:flex;align-items:center;gap:.75rem">
+                <div style="width:40px;height:40px;border-radius:10px;background:rgba(249,115,22,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#F97316;font-size:1.1rem"><i class="bi bi-credit-card"></i></div>
+                <div><span class="fw-bold" style="font-size:.88rem;color:#1e293b">Listing fee required</span><br/><span style="font-size:.8rem;color:#64748b">A 10 JOD fee is required for additional listings. Your first listing was free.</span></div>
+            </div>
             <button type="submit" class="btn-publish w-100" id="nl-submit">Publish Listing</button>
         </form>
     </div>
@@ -105,11 +109,11 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 var AMENITIES = [
-    { key:'WiFi', label:'WiFi' }, { key:'AC', label:'AC' }, { key:'Heating', label:'Heating' },
-    { key:'WashingMachine', label:'Washing Machine' }, { key:'Parking', label:'Parking' },
-    { key:'Furnished', label:'Furnished' }, { key:'Elevator', label:'Elevator' },
-    { key:'Balcony', label:'Balcony' }, { key:'Kitchen', label:'Kitchen' },
-    { key:'PrivateBathroom', label:'Private Bathroom' }
+    { key:0, label:'WiFi' }, { key:1, label:'AC' }, { key:2, label:'Heating' },
+    { key:3, label:'Washing Machine' }, { key:4, label:'Parking' },
+    { key:5, label:'Furnished' }, { key:6, label:'Elevator' },
+    { key:7, label:'Balcony' }, { key:8, label:'Kitchen' },
+    { key:9, label:'Private Bathroom' }
 ]
 
 var amenDiv = document.getElementById('nl-amenities')
@@ -118,6 +122,16 @@ amenDiv.innerHTML = AMENITIES.map(function (a) {
 }).join('')
 
 function toggleAmenity(el) { el.classList.toggle('selected') }
+
+var feeRequired = false
+auth.initAuth().then(function () {
+    api.get('/apartments/requires-listing-fee').then(function (res) {
+        if (res && res.required) {
+            feeRequired = true
+            document.getElementById('fee-banner').classList.remove('d-none')
+        }
+    }).catch(function () {})
+})
 
 setTimeout(function () {
     var el = document.getElementById('nl-map')
@@ -154,7 +168,7 @@ document.getElementById('nl-form').addEventListener('submit', async function (e)
         amenities: []
     }
 
-    document.querySelectorAll('.amenity-chip.selected').forEach(function (el) { body.amenities.push(el.dataset.key) })
+    document.querySelectorAll('.amenity-chip.selected').forEach(function (el) { body.amenities.push(parseInt(el.dataset.key)) })
 
     var uni = document.getElementById('nl-university').value
     if (uni) body.nearestUniversity = parseInt(uni)
@@ -175,6 +189,13 @@ document.getElementById('nl-form').addEventListener('submit', async function (e)
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publishing...'
 
     try {
+        if (feeRequired) {
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing 10 JOD listing fee...'
+            await api.post('/payments/checkout', { body: { type: 1 } })
+            feeRequired = false
+            document.getElementById('fee-banner').classList.add('d-none')
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating listing...'
+        }
         var result = await api.post('/apartments', { body: body })
         window.location.href = '/Apartment/Detail/' + result.id
     } catch (err) {

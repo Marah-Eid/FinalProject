@@ -142,14 +142,14 @@ var SMOKING_LABELS = { 0: 'Yes', 1: 'No', 2: 'Outside Only' }
 var GUESTS_LABELS = { 0: 'Yes', 1: 'No', 2: 'Limited' }
 var UNI_LABELS = ['JU','GJU','PSUT','YU','HU','MU','ZU','BAU','JUST','AAU']
 var AMENITY_LABELS = {
-    WiFi:'WiFi', AC:'AC', Heating:'Heating', WashingMachine:'Washing Machine',
-    Parking:'Parking', Furnished:'Furnished', Elevator:'Elevator',
-    Balcony:'Balcony', Kitchen:'Kitchen', PrivateBathroom:'Private Bathroom'
+    0:'WiFi', 1:'AC', 2:'Heating', 3:'Washing Machine',
+    4:'Parking', 5:'Furnished', 6:'Elevator',
+    7:'Balcony', 8:'Kitchen', 9:'Private Bathroom'
 }
 var AMENITY_ICONS = {
-    WiFi:'bi-wifi', AC:'bi-snow', Heating:'bi-thermometer-sun', WashingMachine:'bi-droplet',
-    Parking:'bi-car-front', Furnished:'bi-lamp', Elevator:'bi-arrow-up-square', Balcony:'bi-sun',
-    Kitchen:'bi-cup-hot', PrivateBathroom:'bi-droplet-half'
+    0:'bi-wifi', 1:'bi-snow', 2:'bi-thermometer-sun', 3:'bi-droplet',
+    4:'bi-car-front', 5:'bi-lamp', 6:'bi-arrow-up-square', 7:'bi-sun',
+    8:'bi-cup-hot', 9:'bi-droplet-half'
 }
 
 auth.initAuth().then(loadApartment)
@@ -162,13 +162,13 @@ function loadApartment() {
         var photos = apt.photos || []
 
         // gallery
-        var mainPhoto = photos.length > 0 ? '/uploads/' + (photos[0].filePath || photos[0]) : '/property/images/img_1.jpg'
+        var mainPhoto = photos.length > 0 ? photos[0].photoUrl : '/property/images/img_1.jpg'
         var galleryHtml = '<div class="gallery-wrap fade-up">' +
             '<img src="' + mainPhoto + '" alt="' + escapeHtml(apt.title) + '" class="gallery-main" id="gallery-main" />'
         if (photos.length > 1) {
             galleryHtml += '<div class="gallery-thumbs">' +
                 photos.map(function (p, i) {
-                    var url = '/uploads/' + (p.filePath || p)
+                    var url = p.photoUrl
                     return '<img src="' + url + '" alt="" class="gallery-thumb' + (i===0?' active':'') + '" onclick="switchPhoto(this,\'' + url + '\')" />'
                 }).join('') + '</div>'
         }

@@ -122,7 +122,7 @@ function renderApps() {
         '<th>Apartment</th><th>Date</th><th class="text-center">Match</th><th class="text-center">Status</th><th class="text-end">Actions</th>' +
         '</tr></thead><tbody>' +
         items.map(function (app) {
-            var dateStr = app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : ''
+            var dateStr = app.createdAt ? new Date(app.createdAt).toLocaleDateString() : ''
             var matchHtml = '—'
             if (app.compatibilityScore != null) {
                 var cls = app.compatibilityScore >= 75 ? 'high' : app.compatibilityScore >= 50 ? 'mid' : 'low'
@@ -137,7 +137,7 @@ function renderApps() {
                 '<td class="text-center">' + matchHtml + '</td>' +
                 '<td class="text-center"><span class="badge bg-' + (STATUS_COLORS[app.status]||'secondary') + ' bg-opacity-10 text-' + (STATUS_COLORS[app.status]||'secondary') + '" style="font-size:.72rem"><i class="bi ' + (STATUS_ICONS[app.status]||'bi-clock') + ' me-1"></i>' + (STATUS_KEYS[app.status]||'Pending') + '</span></td>' +
                 '<td class="text-end">' +
-                (app.status === 0 ? '<button class="btn-withdraw" onclick="withdrawApp(' + app.id + ',this)"><i class="bi bi-x-lg me-1"></i>Withdraw</button>' : '') +
+                (app.status === 0 ? '<button class="btn-withdraw" onclick="withdrawApp(\'' + app.id + '\',this)"><i class="bi bi-x-lg me-1"></i>Withdraw</button>' : '') +
                 (app.status === 1 ? '<a href="/Chat" class="btn-msg"><i class="bi bi-chat-dots me-1"></i>Message</a>' : '') +
                 '</td></tr>'
         }).join('') +

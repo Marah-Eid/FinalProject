@@ -65,12 +65,11 @@ public sealed class ApartmentService(
                 query = query.Where(a => a.Amenities.Any(am => am.AmenityType == required));
         }
 
-        // Sort. highest_match falls back to newest until Phase 5 plugs in scoring.
         query = q.Sort switch
         {
             "price_asc"  => query.OrderBy(a => a.FullRent / a.TotalSpots).ThenByDescending(a => a.CreatedAt),
             "price_desc" => query.OrderByDescending(a => a.FullRent / a.TotalSpots).ThenByDescending(a => a.CreatedAt),
-            _            => query.OrderByDescending(a => a.IsFeatured).ThenByDescending(a => a.CreatedAt),
+            _            => query.OrderByDescending(a => a.CreatedAt),
         };
 
         var total = await query.CountAsync(ct);
@@ -93,9 +92,8 @@ public sealed class ApartmentService(
                 a.NearestUniversity,
                 a.DistanceMinutes,
                 a.Photos.OrderBy(p => p.DisplayOrder).Select(p => p.PhotoUrl).FirstOrDefault(),
-                a.IsFeatured,
-                null,  // OwnerAverageRating  — Phase 9
-                0,     // OwnerRatingsCount   — Phase 9
+                db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Average(r => (double?)r.Stars),
+                db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Count(),
                 null,  // CompatibilityScore — populated below for logged-in students with a complete quiz
                 a.CreatedAt))
             .ToListAsync(ct);
@@ -128,9 +126,8 @@ public sealed class ApartmentService(
                 a.NearestUniversity,
                 a.DistanceMinutes,
                 a.Photos.OrderBy(p => p.DisplayOrder).Select(p => p.PhotoUrl).FirstOrDefault(),
-                a.IsFeatured,
-                null,
-                0,
+                db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Average(r => (double?)r.Stars),
+                db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Count(),
                 null,
                 a.CreatedAt))
             .ToListAsync(ct);
@@ -228,12 +225,16 @@ public sealed class ApartmentService(
                     : null))
             .ToList();
 
+        var ownerRatings = await db.Ratings.AsNoTracking()
+            .Where(r => r.RatedUserId == apartment.OwnerId)
+            .ToListAsync(ct);
+
         var ownerSnippet = new OwnerSnippetDto(
             apartment.Owner.Id,
             apartment.Owner.FullName,
             apartment.Owner.ProfilePhotoUrl,
-            AverageRating: null,   // Phase 9
-            RatingsCount: 0,
+            AverageRating: ownerRatings.Count > 0 ? ownerRatings.Average(r => r.Stars) : null,
+            RatingsCount: ownerRatings.Count,
             apartment.Owner.CreatedAt);
 
         return new ApartmentDetailDto(
@@ -260,8 +261,6 @@ public sealed class ApartmentService(
             currentTenants,
             ownerSnippet,
             OwnerPhoneNumber: unlockPrivate ? apartment.Owner.PhoneNumber : null,
-            apartment.IsFeatured,
-            apartment.FeaturedUntil,
             apartment.IsActive,
             apartment.IsSuspended,
             CompatibilityScore: requesterAnswers is not null

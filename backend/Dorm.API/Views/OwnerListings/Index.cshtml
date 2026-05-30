@@ -83,8 +83,7 @@ async function loadListings() {
             '<th>Apartment</th><th>Location</th><th class="text-center">Rent</th><th class="text-center">Spots</th><th class="text-center">Gender</th><th class="text-end">Actions</th>' +
             '</tr></thead><tbody>' +
             listings.map(function (apt) {
-                var photo = apt.photos && apt.photos[0]
-                var photoUrl = photo ? '/uploads/' + (photo.filePath || photo) : ''
+                var photoUrl = apt.mainPhotoUrl || ''
                 var spotsOpen = apt.availableSpots > 0
 
                 return '<tr><td><div class="d-flex align-items-center gap-3">' +

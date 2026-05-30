@@ -17,7 +17,6 @@ public sealed record ApartmentListItemDto(
     University NearestUniversity,
     int DistanceMinutes,
     string? MainPhotoUrl,
-    bool IsFeatured,
     double? OwnerAverageRating,
     int OwnerRatingsCount,
     /// <summary>Populated for logged-in students whose quiz is complete (Phase 5).</summary>

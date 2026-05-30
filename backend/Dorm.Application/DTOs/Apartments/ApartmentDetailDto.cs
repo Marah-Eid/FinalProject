@@ -41,8 +41,6 @@ public sealed record ApartmentDetailDto(
     /// <summary>NULL unless the caller is the owner or has an accepted application.</summary>
     string? OwnerPhoneNumber,
 
-    bool IsFeatured,
-    DateTime? FeaturedUntil,
     bool IsActive,
     bool IsSuspended,
 

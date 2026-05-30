@@ -56,11 +56,5 @@ a:hover { color: var(--dorm-orange-hover); }
 /* Brand logo */
 .auth-logo span { color: var(--dorm-orange) !important; }
 
-/* RTL */
-[dir="rtl"] .me-2 { margin-right: 0 !important; margin-left: 0.5rem !important; }
-[dir="rtl"] .float-start { float: right !important; }
-[dir="rtl"] .text-start { text-align: right !important; }
-
 /* Fonts */
-body { font-family: 'Nunito', 'Tajawal', sans-serif; }
-[dir="rtl"] body { font-family: 'Tajawal', 'Nunito', sans-serif; }
+body { font-family: 'Nunito', sans-serif; }

@@ -80,16 +80,5 @@ a:hover { color: var(--dorm-orange-hover); }
 .page-heading h3 { font-weight: 700; color: #1e293b; }
 .page-heading p { color: #64748b; }
 
-/* RTL adjustments */
-[dir="rtl"] .me-2 { margin-right: 0 !important; margin-left: 0.5rem !important; }
-[dir="rtl"] .me-3 { margin-right: 0 !important; margin-left: 1rem !important; }
-[dir="rtl"] .ms-2 { margin-left: 0 !important; margin-right: 0.5rem !important; }
-[dir="rtl"] .float-start { float: right !important; }
-[dir="rtl"] .float-end { float: left !important; }
-[dir="rtl"] .text-start { text-align: right !important; }
-[dir="rtl"] .text-end { text-align: left !important; }
-[dir="rtl"] .border-start { border-left: 0 !important; border-right: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color) !important; }
-
 /* Fonts */
-body { font-family: 'Nunito', 'Tajawal', sans-serif; }
-[dir="rtl"] body { font-family: 'Tajawal', 'Nunito', sans-serif; }
+body { font-family: 'Nunito', sans-serif; }

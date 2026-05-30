@@ -131,8 +131,8 @@ function renderApps() {
                 '<td class="text-end">' +
                 (app.status === 0
                     ? '<div class="d-flex gap-1 justify-content-end">' +
-                      '<button class="btn-accept" onclick="acceptApp(' + app.id + ',this)"><i class="bi bi-check-lg me-1"></i>Accept</button>' +
-                      '<button class="btn-reject" onclick="rejectApp(' + app.id + ',this)"><i class="bi bi-x-lg me-1"></i>Reject</button></div>'
+                      '<button class="btn-accept" onclick="acceptApp(\'' + app.id + '\',this)"><i class="bi bi-check-lg me-1"></i>Accept</button>' +
+                      '<button class="btn-reject" onclick="rejectApp(\'' + app.id + '\',this)"><i class="bi bi-x-lg me-1"></i>Reject</button></div>'
                     : '') +
                 '</td></tr>'
         }).join('') +

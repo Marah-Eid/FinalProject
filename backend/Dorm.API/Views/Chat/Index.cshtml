@@ -90,7 +90,7 @@ async function loadConversations() {
         }
         list.innerHTML = convos.map(function (c) {
             var init = (c.otherPartyName || 'U').charAt(0).toUpperCase()
-            return '<div class="convo-item d-flex align-items-center gap-3' + (c.id === activeConvoId ? ' active' : '') + '" onclick="openConvo(' + c.id + ')">' +
+            return '<div class="convo-item d-flex align-items-center gap-3' + (c.id === activeConvoId ? ' active' : '') + '" onclick="openConvo(\'' + c.id + '\')">' +
                 '<div class="convo-avatar">' + init + '</div>' +
                 '<div class="flex-grow-1" style="min-width:0">' +
                 '<div class="convo-name">' + escapeHtml(c.otherPartyName || '') + '</div>' +
