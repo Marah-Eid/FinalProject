@@ -1,5 +1,5 @@
 @{
-    Layout = "_BrowseLayout";
+    Layout = "_DashboardLayout";
     ViewData["Title"] = "Edit Profile";
 }
 
@@ -159,7 +159,6 @@
 @section Scripts {
 <script>
 var ROLE_NAMES = { 0: 'Student', 1: 'Owner', 2: 'Admin' }
-var UNI_NAMES = { 0: 'JU', 1: 'GJU', 2: 'PSUT', 3: 'YU' }
 
 auth.initAuth().then(function () {
     var user = auth.getUser()

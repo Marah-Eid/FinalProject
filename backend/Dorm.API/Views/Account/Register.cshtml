@@ -112,7 +112,6 @@ document.getElementById('reg-form').addEventListener('submit', async function (e
     try {
         var user = await auth.register(payload)
         if (user.role === 2) window.location.href = '/Admin'
-        else if (user.role === 0) window.location.href = '/'
         else window.location.href = '/Dashboard'
     } catch (err) {
         errBox.textContent = err.message || 'Something went wrong. Please try again.'

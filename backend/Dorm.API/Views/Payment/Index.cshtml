@@ -1,5 +1,5 @@
 @{
-    Layout = "_BrowseLayout";
+    Layout = "_DashboardLayout";
     ViewData["Title"] = "Payments";
 }
 
@@ -27,12 +27,11 @@
 </style>
 }
 
-<div class="container" style="max-width:960px;padding:2.5rem 1rem">
-    <div class="pay-header mb-4">
-        <h3>Payments</h3>
-        <p>Match commissions, listing fees and verified badge.</p>
-    </div>
-    <div>
+<div class="pay-header mb-4">
+    <h3>Payments</h3>
+    <p>Match commissions, listing fees and verified badge. Powered by Stripe.</p>
+</div>
+<div>
         <div id="pay-summary"></div>
         <div class="pay-card">
             <div id="payments-list">
@@ -40,7 +39,6 @@
             </div>
         </div>
     </div>
-</div>
 
 @section Scripts {
 <script>

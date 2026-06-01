@@ -11,5 +11,7 @@ public interface IPaymentsAppService
 {
     Task<PaymentDto> CheckoutAsync(Guid userId, CheckoutRequest req, CancellationToken ct);
 
+    Task<PaymentDto?> ConfirmSessionAsync(string sessionId, CancellationToken ct);
+
     Task<IReadOnlyList<PaymentDto>> GetHistoryAsync(Guid userId, CancellationToken ct);
 }

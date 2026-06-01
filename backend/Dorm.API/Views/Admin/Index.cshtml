@@ -8,18 +8,70 @@
     .admin-tabs {
         display: flex; gap: .5rem; margin-bottom: 1.5rem;
         border-bottom: 2px solid #f1f5f9; padding-bottom: 0;
+        overflow-x: auto;
     }
     .admin-tab {
         padding: .55rem 1.1rem; border: none; background: transparent;
         font-size: .85rem; font-weight: 600; color: #94a3b8;
         border-bottom: 2px solid transparent; margin-bottom: -2px;
-        cursor: pointer; transition: all .15s;
+        cursor: pointer; transition: all .15s; white-space: nowrap;
     }
     .admin-tab:hover { color: #475569; }
     .admin-tab.active { color: #F97316; border-bottom-color: #F97316; }
 
     .admin-section { display: none; }
     .admin-section.active { display: block; }
+
+    .stat-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .admin-stat {
+        flex: 1; min-width: 140px; background: #fff; border-radius: 12px;
+        border: 1px solid #f1f5f9; padding: 1rem;
+        display: flex; align-items: center; gap: .75rem;
+    }
+    .admin-stat-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    }
+    .admin-stat .label { font-size: .72rem; color: #94a3b8; font-weight: 500; }
+    .admin-stat .value { font-size: 1.15rem; font-weight: 800; color: #1e293b; }
+
+    .admin-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .admin-toolbar { padding: 1rem 1.25rem; border-bottom: 1px solid #f8fafc; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+    .admin-toolbar input, .admin-toolbar select {
+        font-size: .82rem; border: 1px solid #e2e8f0; border-radius: 6px; padding: .35rem .6rem;
+    }
+    .admin-toolbar input:focus, .admin-toolbar select:focus { border-color: #F97316; outline: none; box-shadow: 0 0 0 2px rgba(249,115,22,.08); }
+
+    .btn-approve {
+        background: rgba(16,185,129,.1); color: #10b981; border: none;
+        border-radius: 6px; padding: .35rem .7rem; font-size: .78rem; font-weight: 600;
+        cursor: pointer; transition: all .15s;
+    }
+    .btn-approve:hover { background: rgba(16,185,129,.2); }
+    .btn-deny {
+        background: rgba(239,68,68,.08); color: #ef4444; border: none;
+        border-radius: 6px; padding: .35rem .7rem; font-size: .78rem; font-weight: 600;
+        cursor: pointer; transition: all .15s;
+    }
+    .btn-deny:hover { background: rgba(239,68,68,.15); }
+    .btn-action {
+        background: rgba(59,130,246,.1); color: #3b82f6; border: none;
+        border-radius: 6px; padding: .35rem .7rem; font-size: .78rem; font-weight: 600;
+        cursor: pointer; transition: all .15s;
+    }
+    .btn-action:hover { background: rgba(59,130,246,.2); }
+
+    .badge-role { font-size: .7rem; font-weight: 600; padding: .2rem .5rem; border-radius: 4px; }
+    .badge-student { background: rgba(59,130,246,.1); color: #3b82f6; }
+    .badge-owner { background: rgba(139,92,246,.1); color: #8b5cf6; }
+    .badge-admin-role { background: rgba(249,115,22,.1); color: #F97316; }
+    .badge-banned { background: rgba(239,68,68,.1); color: #ef4444; }
+    .badge-active { background: rgba(16,185,129,.1); color: #10b981; }
+    .badge-suspended { background: rgba(234,179,8,.1); color: #eab308; }
+    .badge-pending { background: rgba(234,179,8,.1); color: #eab308; font-size: .7rem; font-weight: 600; padding: .2rem .5rem; border-radius: 4px; }
+    .badge-approved { background: rgba(16,185,129,.1); color: #10b981; font-size: .7rem; font-weight: 600; padding: .2rem .5rem; border-radius: 4px; }
+    .badge-dismissed { background: rgba(148,163,184,.1); color: #94a3b8; font-size: .7rem; font-weight: 600; padding: .2rem .5rem; border-radius: 4px; }
+    .badge-resolved { background: rgba(59,130,246,.1); color: #3b82f6; font-size: .7rem; font-weight: 600; padding: .2rem .5rem; border-radius: 4px; }
 
     .testi-card {
         background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
@@ -37,45 +89,27 @@
     .testi-body .text { font-size: .85rem; color: #475569; margin: .3rem 0; line-height: 1.6; }
     .testi-stars i { font-size: .75rem; }
     .testi-actions { display: flex; gap: .4rem; flex-shrink: 0; align-self: center; }
-    .btn-approve {
-        background: rgba(16,185,129,.1); color: #10b981; border: none;
-        border-radius: 6px; padding: .35rem .7rem; font-size: .78rem; font-weight: 600;
-        cursor: pointer; transition: all .15s;
-    }
-    .btn-approve:hover { background: rgba(16,185,129,.2); }
-    .btn-deny {
-        background: rgba(239,68,68,.08); color: #ef4444; border: none;
-        border-radius: 6px; padding: .35rem .7rem; font-size: .78rem; font-weight: 600;
-        cursor: pointer; transition: all .15s;
-    }
-    .btn-deny:hover { background: rgba(239,68,68,.15); }
-
-    .badge-pending { background: rgba(234,179,8,.1); color: #eab308; font-size: .7rem; font-weight: 600; padding: .2rem .5rem; border-radius: 4px; }
-    .badge-approved { background: rgba(16,185,129,.1); color: #10b981; font-size: .7rem; font-weight: 600; padding: .2rem .5rem; border-radius: 4px; }
-
-    .stat-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-    .admin-stat {
-        flex: 1; min-width: 140px; background: #fff; border-radius: 12px;
-        border: 1px solid #f1f5f9; padding: 1rem;
-        display: flex; align-items: center; gap: .75rem;
-    }
-    .admin-stat-icon {
-        width: 40px; height: 40px; border-radius: 10px;
-        display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
-    }
-    .admin-stat .label { font-size: .72rem; color: #94a3b8; font-weight: 500; }
-    .admin-stat .value { font-size: 1.15rem; font-weight: 800; color: #1e293b; }
 
     .empty-admin { text-align: center; padding: 3rem 1rem; color: #94a3b8; }
     .empty-admin i { font-size: 2rem; color: #cbd5e1; }
     .empty-admin p { margin-top: .5rem; font-size: .88rem; }
+
+    .revenue-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
+    .revenue-card {
+        flex: 1; min-width: 160px; background: #0f172a; border-radius: 12px; padding: 1rem 1.25rem; color: #f8fafc;
+    }
+    .revenue-card .rev-label { font-size: .72rem; opacity: .6; }
+    .revenue-card .rev-value { font-size: 1.3rem; font-weight: 800; }
 </style>
 }
 
 <div id="admin-content">
-    <div class="admin-tabs">
-        <button class="admin-tab active" onclick="showTab('dashboard')">Dashboard</button>
-        <button class="admin-tab" onclick="showTab('testimonials')">Testimonials</button>
+    <div class="admin-tabs" id="admin-tabs">
+        <button class="admin-tab active" onclick="showTab('dashboard',this)">Dashboard</button>
+        <button class="admin-tab" onclick="showTab('users',this)">Users</button>
+        <button class="admin-tab" onclick="showTab('listings',this)">Listings</button>
+        <button class="admin-tab" onclick="showTab('reports',this)">Reports</button>
+        <button class="admin-tab" onclick="showTab('testimonials',this)">Testimonials</button>
     </div>
 
     <!-- Dashboard Tab -->
@@ -96,6 +130,78 @@
             <div class="admin-stat">
                 <div class="admin-stat-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6"><i class="bi bi-flag-fill"></i></div>
                 <div><div class="label">Pending Reports</div><div class="value" id="stat-reports">—</div></div>
+            </div>
+        </div>
+        <div class="stat-row">
+            <div class="admin-stat">
+                <div class="admin-stat-icon" style="background:rgba(6,182,212,.1);color:#06b6d4"><i class="bi bi-mortarboard-fill"></i></div>
+                <div><div class="label">Students</div><div class="value" id="stat-students">—</div></div>
+            </div>
+            <div class="admin-stat">
+                <div class="admin-stat-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6"><i class="bi bi-house-door-fill"></i></div>
+                <div><div class="label">Owners</div><div class="value" id="stat-owners">—</div></div>
+            </div>
+            <div class="admin-stat">
+                <div class="admin-stat-icon" style="background:rgba(239,68,68,.1);color:#ef4444"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <div><div class="label">Suspended</div><div class="value" id="stat-suspended">—</div></div>
+            </div>
+            <div class="admin-stat">
+                <div class="admin-stat-icon" style="background:rgba(16,185,129,.1);color:#10b981"><i class="bi bi-key-fill"></i></div>
+                <div><div class="label">Active Tenancies</div><div class="value" id="stat-tenancies">—</div></div>
+            </div>
+        </div>
+        <div class="revenue-row" id="revenue-row"></div>
+    </div>
+
+    <!-- Users Tab -->
+    <div class="admin-section" id="tab-users">
+        <div class="admin-card">
+            <div class="admin-toolbar">
+                <input type="text" placeholder="Search name or email..." id="user-search" style="flex:1;min-width:180px" />
+                <select id="user-role-filter">
+                    <option value="">All Roles</option>
+                    <option value="0">Student</option>
+                    <option value="1">Owner</option>
+                    <option value="2">Admin</option>
+                </select>
+                <button class="btn-action" onclick="loadUsers()"><i class="bi bi-search me-1"></i>Search</button>
+            </div>
+            <div id="users-list">
+                <div class="text-center py-4"><div class="spinner-border spinner-border-sm" style="color:#94a3b8"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listings Tab -->
+    <div class="admin-section" id="tab-listings">
+        <div class="admin-card">
+            <div class="admin-toolbar">
+                <input type="text" placeholder="Search title..." id="listing-search" style="flex:1;min-width:180px" />
+                <select id="listing-status-filter">
+                    <option value="">All</option>
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+                <button class="btn-action" onclick="loadListings()"><i class="bi bi-search me-1"></i>Search</button>
+            </div>
+            <div id="listings-list">
+                <div class="text-center py-4"><div class="spinner-border spinner-border-sm" style="color:#94a3b8"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Tab -->
+    <div class="admin-section" id="tab-reports">
+        <div class="admin-card">
+            <div class="admin-toolbar">
+                <select id="reports-filter">
+                    <option value="pending">Pending Only</option>
+                    <option value="all">All Reports</option>
+                </select>
+                <button class="btn-action" onclick="loadReports()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+            </div>
+            <div id="reports-list">
+                <div class="text-center py-4"><div class="spinner-border spinner-border-sm" style="color:#94a3b8"></div></div>
             </div>
         </div>
     </div>
@@ -119,27 +225,68 @@
 @section Scripts {
 <script>
 var allTestimonials = []
-var currentFilter = 'all'
+var testiFilter = 'all'
+var ROLE_LABELS = { 0: 'Student', 1: 'Owner', 2: 'Admin' }
+var ROLE_BADGE = { 0: 'badge-student', 1: 'badge-owner', 2: 'badge-admin-role' }
+var GENDER_LABELS = { 0: 'Male', 1: 'Female' }
+var CITY_LABELS = { 0:'Amman', 1:'Irbid', 2:'Zarqa', 3:'Madaba', 4:'Salt', 5:'Karak', 6:'Mafraq', 7:'Aqaba' }
+var REASON_LABELS = { 0:'Fake Listing', 1:'Misleading Photos', 2:'Scam', 3:'Inappropriate', 4:'Other' }
+var REPORT_STATUS = { 0:'Pending', 1:'Resolved', 2:'Dismissed' }
+var REPORT_BADGE = { 0:'badge-pending', 1:'badge-resolved', 2:'badge-dismissed' }
 
 auth.initAuth().then(function () {
     var user = auth.getUser()
     if (!user || user.role !== 2) { window.location.href = '/'; return }
     loadAdminStats()
     loadAdminTestimonials()
+    loadUsers()
+    loadListings()
+    loadReports()
+
+    var hash = window.location.hash.replace('#','')
+    if (hash) {
+        var btn = document.querySelector('.admin-tabs .admin-tab[onclick*="' + hash + '"]')
+        if (btn) showTab(hash, btn)
+    }
 })
 
-function showTab(name) {
+document.getElementById('user-search').addEventListener('keydown', function (e) { if (e.key === 'Enter') loadUsers() })
+document.getElementById('listing-search').addEventListener('keydown', function (e) { if (e.key === 'Enter') loadListings() })
+
+function showTab(name, btn) {
     document.querySelectorAll('.admin-section').forEach(function (s) { s.classList.remove('active') })
-    document.querySelectorAll('.admin-tabs .admin-tab').forEach(function (t) { t.classList.remove('active') })
+    document.querySelectorAll('#admin-tabs .admin-tab').forEach(function (t) { t.classList.remove('active') })
     document.getElementById('tab-' + name).classList.add('active')
-    event.target.classList.add('active')
+    btn.classList.add('active')
 }
 
+// ── Dashboard ──────────────────────────────────────────────────────
 function loadAdminStats() {
     api.get('/admin/dashboard').then(function (d) {
         document.getElementById('stat-users').textContent = d.totalUsers || 0
         document.getElementById('stat-listings').textContent = d.activeListings || 0
         document.getElementById('stat-reports').textContent = d.pendingReports || 0
+        document.getElementById('stat-students').textContent = d.totalStudents || 0
+        document.getElementById('stat-owners').textContent = d.totalOwners || 0
+        document.getElementById('stat-suspended').textContent = d.suspendedListings || 0
+        document.getElementById('stat-tenancies').textContent = d.activeTenancies || 0
+
+        var revHtml = '<div class="revenue-card">' +
+            '<div class="rev-label">Revenue This Month</div>' +
+            '<div class="rev-value">' + (d.revenueThisMonthJod || 0) + ' JOD</div></div>' +
+            '<div class="revenue-card">' +
+            '<div class="rev-label">Revenue All Time</div>' +
+            '<div class="rev-value">' + (d.revenueAllTimeJod || 0) + ' JOD</div></div>'
+
+        if (d.revenueByType && d.revenueByType.length > 0) {
+            var TYPE_NAMES = { 0: 'Match Commission', 1: 'Listing Fee', 2: 'Verified Badge' }
+            d.revenueByType.forEach(function (r) {
+                revHtml += '<div class="revenue-card" style="background:#1e293b">' +
+                    '<div class="rev-label">' + (TYPE_NAMES[r.type] || 'Other') + '</div>' +
+                    '<div class="rev-value">' + r.total + ' JOD <span style="font-size:.7rem;font-weight:400;opacity:.5">(' + r.count + ')</span></div></div>'
+            })
+        }
+        document.getElementById('revenue-row').innerHTML = revHtml
     }).catch(function () {})
 
     api.get('/testimonials/all').then(function (list) {
@@ -148,6 +295,171 @@ function loadAdminStats() {
     }).catch(function () {})
 }
 
+// ── Users ──────────────────────────────────────────────────────────
+function loadUsers() {
+    var container = document.getElementById('users-list')
+    container.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm" style="color:#94a3b8"></div></div>'
+
+    var query = { take: 100 }
+    var search = document.getElementById('user-search').value.trim()
+    if (search) query.search = search
+    var role = document.getElementById('user-role-filter').value
+    if (role !== '') query.role = role
+
+    api.get('/admin/users', { query: query }).then(function (users) {
+        users = users || []
+        if (users.length === 0) {
+            container.innerHTML = '<div class="empty-admin"><i class="bi bi-people"></i><p>No users found.</p></div>'
+            return
+        }
+        container.innerHTML = '<div class="table-responsive"><table class="table table-hover align-middle mb-0">' +
+            '<thead><tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">' +
+            '<th>User</th><th>Role</th><th>Gender</th><th class="text-center">Verified</th><th class="text-center">Status</th><th class="text-end">Actions</th>' +
+            '</tr></thead><tbody>' +
+            users.map(function (u) {
+                var init = (u.fullName || 'U').split(' ').map(function(n){return n[0]}).join('').substring(0,2).toUpperCase()
+                var roleBadge = '<span class="badge-role ' + (ROLE_BADGE[u.role]||'') + '">' + (ROLE_LABELS[u.role]||'') + '</span>'
+                var statusHtml = u.isBanned
+                    ? '<span class="badge-role badge-banned"><i class="bi bi-slash-circle me-1"></i>Banned</span>'
+                    : '<span class="badge-role badge-active"><i class="bi bi-check-circle me-1"></i>Active</span>'
+                var verifiedHtml = ''
+                if (u.isEmailVerified) verifiedHtml += '<i class="bi bi-envelope-check-fill text-success" title="Email verified" style="font-size:.8rem"></i> '
+                if (u.isUniversityVerified) verifiedHtml += '<i class="bi bi-patch-check-fill text-primary" title="University verified" style="font-size:.8rem"></i>'
+                if (!verifiedHtml) verifiedHtml = '<span style="color:#cbd5e1">—</span>'
+
+                var actions = ''
+                if (u.role !== 2) {
+                    actions = u.isBanned
+                        ? '<button class="btn-approve" onclick="unbanUser(\'' + u.id + '\')"><i class="bi bi-unlock me-1"></i>Unban</button>'
+                        : '<button class="btn-deny" onclick="banUser(\'' + u.id + '\')"><i class="bi bi-slash-circle me-1"></i>Ban</button>'
+                }
+
+                return '<tr><td><div class="d-flex align-items-center gap-2">' +
+                    '<div style="width:32px;height:32px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.7rem;color:#64748b">' + init + '</div>' +
+                    '<div><span class="fw-semibold" style="font-size:.85rem">' + escapeHtml(u.fullName) + '</span>' +
+                    '<br/><span style="color:#94a3b8;font-size:.72rem">' + escapeHtml(u.email) + '</span></div></div></td>' +
+                    '<td>' + roleBadge + '</td>' +
+                    '<td style="font-size:.82rem;color:#64748b">' + (GENDER_LABELS[u.gender]||'') + '</td>' +
+                    '<td class="text-center">' + verifiedHtml + '</td>' +
+                    '<td class="text-center">' + statusHtml + '</td>' +
+                    '<td class="text-end">' + actions + '</td></tr>'
+            }).join('') +
+            '</tbody></table></div>'
+    }).catch(function () {
+        container.innerHTML = '<div class="empty-admin"><i class="bi bi-exclamation-circle"></i><p>Failed to load users.</p></div>'
+    })
+}
+
+function banUser(id) {
+    if (!confirm('Ban this user?')) return
+    api.put('/admin/users/' + id + '/ban').then(function () { loadUsers(); loadAdminStats() }).catch(function (err) { alert(err.message || 'Failed.') })
+}
+function unbanUser(id) {
+    api.put('/admin/users/' + id + '/unban').then(function () { loadUsers(); loadAdminStats() }).catch(function (err) { alert(err.message || 'Failed.') })
+}
+
+// ── Listings ───────────────────────────────────────────────────────
+function loadListings() {
+    var container = document.getElementById('listings-list')
+    container.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm" style="color:#94a3b8"></div></div>'
+
+    var query = { take: 100 }
+    var search = document.getElementById('listing-search').value.trim()
+    if (search) query.search = search
+    var status = document.getElementById('listing-status-filter').value
+    if (status === 'suspended') query.suspended = true
+    else if (status === 'active') query.suspended = false
+
+    api.get('/admin/listings', { query: query }).then(function (items) {
+        items = items || []
+        if (items.length === 0) {
+            container.innerHTML = '<div class="empty-admin"><i class="bi bi-building"></i><p>No listings found.</p></div>'
+            return
+        }
+        container.innerHTML = '<div class="table-responsive"><table class="table table-hover align-middle mb-0">' +
+            '<thead><tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">' +
+            '<th>Listing</th><th>Owner</th><th>City</th><th class="text-center">Spots</th><th class="text-center">Status</th><th class="text-center">Reports</th><th class="text-end">Actions</th>' +
+            '</tr></thead><tbody>' +
+            items.map(function (a) {
+                var statusHtml = a.isSuspended
+                    ? '<span class="badge-role badge-suspended"><i class="bi bi-pause-circle me-1"></i>Suspended</span>'
+                    : a.isActive
+                        ? '<span class="badge-role badge-active"><i class="bi bi-check-circle me-1"></i>Active</span>'
+                        : '<span class="badge-role" style="background:#f1f5f9;color:#94a3b8">Inactive</span>'
+                var reportsHtml = a.pendingReportsCount > 0
+                    ? '<span class="badge-role badge-banned">' + a.pendingReportsCount + '</span>'
+                    : '<span style="color:#cbd5e1">0</span>'
+                var actions = a.isSuspended
+                    ? '<button class="btn-approve" onclick="activateListing(\'' + a.id + '\')"><i class="bi bi-play-circle me-1"></i>Activate</button>'
+                    : '<button class="btn-deny" onclick="suspendListing(\'' + a.id + '\')"><i class="bi bi-pause-circle me-1"></i>Suspend</button>'
+
+                return '<tr><td><div><a href="/Apartment/Detail/' + a.id + '" class="fw-semibold text-decoration-none" style="color:#1e293b;font-size:.85rem">' + escapeHtml(a.title) + '</a>' +
+                    '<br/><span style="color:#94a3b8;font-size:.72rem">' + escapeHtml(a.neighborhood) + '</span></div></td>' +
+                    '<td style="font-size:.82rem;color:#64748b">' + escapeHtml(a.ownerName) + '</td>' +
+                    '<td style="font-size:.82rem;color:#64748b">' + (CITY_LABELS[a.city]||'') + '</td>' +
+                    '<td class="text-center" style="font-size:.85rem">' + a.availableSpots + ' / ' + a.totalSpots + '</td>' +
+                    '<td class="text-center">' + statusHtml + '</td>' +
+                    '<td class="text-center">' + reportsHtml + '</td>' +
+                    '<td class="text-end">' + actions + '</td></tr>'
+            }).join('') +
+            '</tbody></table></div>'
+    }).catch(function () {
+        container.innerHTML = '<div class="empty-admin"><i class="bi bi-exclamation-circle"></i><p>Failed to load listings.</p></div>'
+    })
+}
+
+function suspendListing(id) {
+    if (!confirm('Suspend this listing?')) return
+    api.put('/admin/listings/' + id + '/suspend').then(function () { loadListings(); loadAdminStats() }).catch(function (err) { alert(err.message || 'Failed.') })
+}
+function activateListing(id) {
+    api.put('/admin/listings/' + id + '/activate').then(function () { loadListings(); loadAdminStats() }).catch(function (err) { alert(err.message || 'Failed.') })
+}
+
+// ── Reports ────────────────────────────────────────────────────────
+function loadReports() {
+    var container = document.getElementById('reports-list')
+    container.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm" style="color:#94a3b8"></div></div>'
+
+    var pendingOnly = document.getElementById('reports-filter').value === 'pending'
+    api.get('/admin/reports', { query: { pendingOnly: pendingOnly, take: 100 } }).then(function (items) {
+        items = items || []
+        if (items.length === 0) {
+            container.innerHTML = '<div class="empty-admin"><i class="bi bi-flag"></i><p>No reports found.</p></div>'
+            return
+        }
+        container.innerHTML = '<div class="table-responsive"><table class="table table-hover align-middle mb-0">' +
+            '<thead><tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">' +
+            '<th>Apartment</th><th>Reporter</th><th>Reason</th><th>Description</th><th class="text-center">Status</th><th class="text-end">Actions</th>' +
+            '</tr></thead><tbody>' +
+            items.map(function (r) {
+                var statusBadge = '<span class="' + (REPORT_BADGE[r.status]||'badge-pending') + '">' + (REPORT_STATUS[r.status]||'Pending') + '</span>'
+                var actions = r.status === 0
+                    ? '<div class="d-flex gap-1 justify-content-end">' +
+                      '<button class="btn-deny" onclick="resolveReport(\'' + r.id + '\',false)"><i class="bi bi-check-lg me-1"></i>Resolve</button>' +
+                      '<button class="btn-approve" onclick="resolveReport(\'' + r.id + '\',true)"><i class="bi bi-x-lg me-1"></i>Dismiss</button></div>'
+                    : ''
+
+                return '<tr><td><a href="/Apartment/Detail/' + r.reportedApartmentId + '" class="fw-semibold text-decoration-none" style="color:#1e293b;font-size:.85rem">' + escapeHtml(r.apartmentTitle) + '</a></td>' +
+                    '<td style="font-size:.82rem;color:#64748b">' + escapeHtml(r.reporterName) + '</td>' +
+                    '<td><span class="badge-pending">' + (REASON_LABELS[r.reason]||'Other') + '</span></td>' +
+                    '<td style="font-size:.82rem;color:#64748b;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(r.description || '—') + '</td>' +
+                    '<td class="text-center">' + statusBadge + '</td>' +
+                    '<td class="text-end">' + actions + '</td></tr>'
+            }).join('') +
+            '</tbody></table></div>'
+    }).catch(function () {
+        container.innerHTML = '<div class="empty-admin"><i class="bi bi-exclamation-circle"></i><p>Failed to load reports.</p></div>'
+    })
+}
+
+function resolveReport(id, dismiss) {
+    var label = dismiss ? 'Dismiss this report?' : 'Resolve this report? The listing will stay suspended.'
+    if (!confirm(label)) return
+    api.put('/admin/reports/' + id + '/resolve', { body: { dismiss: dismiss } }).then(function () { loadReports(); loadAdminStats() }).catch(function (err) { alert(err.message || 'Failed.') })
+}
+
+// ── Testimonials ───────────────────────────────────────────────────
 function loadAdminTestimonials() {
     api.get('/testimonials/all').then(function (list) {
         allTestimonials = list || []
@@ -158,7 +470,7 @@ function loadAdminTestimonials() {
 }
 
 function filterTestimonials(filter) {
-    currentFilter = filter
+    testiFilter = filter
     document.querySelectorAll('#tab-testimonials .admin-tab').forEach(function (t) { t.classList.remove('active') })
     document.getElementById('filter-' + filter).classList.add('active')
     renderTestimonials()
@@ -166,8 +478,8 @@ function filterTestimonials(filter) {
 
 function renderTestimonials() {
     var list = allTestimonials
-    if (currentFilter === 'pending') list = list.filter(function (t) { return !t.isApproved })
-    if (currentFilter === 'approved') list = list.filter(function (t) { return t.isApproved })
+    if (testiFilter === 'pending') list = list.filter(function (t) { return !t.isApproved })
+    if (testiFilter === 'approved') list = list.filter(function (t) { return t.isApproved })
 
     var container = document.getElementById('testi-admin-list')
     if (list.length === 0) {
@@ -205,9 +517,7 @@ function approveTestimonial(id) {
     api.put('/testimonials/' + id + '/approve').then(function () {
         loadAdminTestimonials()
         loadAdminStats()
-    }).catch(function (err) {
-        alert(err.message || 'Failed to approve.')
-    })
+    }).catch(function (err) { alert(err.message || 'Failed to approve.') })
 }
 
 function deleteTestimonial(id) {
@@ -215,9 +525,7 @@ function deleteTestimonial(id) {
     api.delete('/testimonials/' + id).then(function () {
         loadAdminTestimonials()
         loadAdminStats()
-    }).catch(function (err) {
-        alert(err.message || 'Failed to delete.')
-    })
+    }).catch(function (err) { alert(err.message || 'Failed to delete.') })
 }
 </script>
 }

@@ -15,4 +15,12 @@ public class OwnerListingsController : Controller
         ViewData["Title"] = "New Listing";
         return View();
     }
+
+    [Route("OwnerListings/Edit/{id}")]
+    public IActionResult Edit(Guid id)
+    {
+        ViewData["Title"] = "Edit Listing";
+        ViewData["ApartmentId"] = id;
+        return View();
+    }
 }

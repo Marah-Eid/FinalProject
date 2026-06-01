@@ -1,11 +1,13 @@
 @{
     Layout = "_DashboardLayout";
-    ViewData["Title"] = "New Listing";
+    ViewData["Title"] = "Edit Listing";
+    var apartmentId = ViewData["ApartmentId"]?.ToString();
 }
 
 @section Styles {
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
+    .nl-header { display: flex; justify-content: space-between; align-items: center; }
     .nl-header h3 { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: .15rem; }
     .nl-header p { color: #64748b; font-size: .9rem; }
 
@@ -29,12 +31,12 @@
     }
     .amenity-chip.selected { background: #0f172a; color: #fff; border-color: #0f172a; }
 
-    .btn-publish {
+    .btn-save {
         background: #F97316; color: #fff; border: none; border-radius: 10px;
         font-weight: 600; font-size: .95rem; padding: .75rem;
         transition: all .2s;
     }
-    .btn-publish:hover { background: #ea6c10; color: #fff; }
+    .btn-save:hover { background: #ea6c10; color: #fff; }
 
     #nl-map { border-radius: 12px; }
 
@@ -49,17 +51,30 @@
         border: none; font-size: .65rem; display: flex; align-items: center;
         justify-content: center; cursor: pointer; line-height: 1;
     }
+
+    .toggle-active {
+        display: inline-flex; align-items: center; gap: .5rem;
+        padding: .45rem 1rem; border-radius: 8px; font-size: .82rem; font-weight: 600;
+        border: 1px solid #e2e8f0; cursor: pointer; transition: all .15s;
+    }
+    .toggle-active.is-active { background: rgba(16,185,129,.08); color: #10b981; border-color: #10b981; }
+    .toggle-active.is-inactive { background: rgba(239,68,68,.08); color: #ef4444; border-color: #ef4444; }
 </style>
 }
 
 <div class="nl-header mb-4">
-    <h3>New Listing</h3>
-    <p>Tell students about the place.</p>
+    <div>
+        <h3>Edit Listing</h3>
+        <p>Update your apartment details.</p>
+    </div>
+    <a href="/OwnerListings" class="btn btn-sm" style="background:#f1f5f9;color:#475569;font-weight:600;border-radius:8px"><i class="bi bi-arrow-left me-1"></i> Back</a>
 </div>
 <div>
     <div class="nl-card">
         <div class="alert alert-danger d-none" id="nl-error" style="border-radius:8px"></div>
-        <form id="nl-form" novalidate>
+        <div class="alert alert-success d-none" id="nl-success" style="border-radius:8px"></div>
+        <div id="edit-loading" class="text-center py-5"><div class="spinner-border" style="color:#94a3b8"></div></div>
+        <form id="nl-form" novalidate style="display:none">
             <h6 class="nl-section">Basics</h6>
             <div class="mb-3"><label class="form-label">Title</label><input type="text" class="form-control" id="nl-title" required /></div>
             <div class="mb-3"><label class="form-label">Description <span class="text-danger">*</span></label><textarea class="form-control" id="nl-description" rows="3" required minlength="20" placeholder="At least 20 characters"></textarea></div>
@@ -112,22 +127,26 @@
             <div class="d-flex flex-wrap gap-2 mb-4" id="nl-amenities"></div>
 
             <h6 class="nl-section">Photos</h6>
+            <div id="existing-photos" class="d-flex flex-wrap gap-2 mb-3"></div>
             <div id="nl-photo-zone" style="border:2px dashed #e2e8f0;border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:1rem"
                  ondragover="event.preventDefault();this.style.borderColor='#F97316'"
                  ondragleave="this.style.borderColor='#e2e8f0'"
                  ondrop="event.preventDefault();this.style.borderColor='#e2e8f0';addFiles(event.dataTransfer.files)"
                  onclick="document.getElementById('nl-photo-input').click()">
                 <i class="bi bi-cloud-arrow-up" style="font-size:2rem;color:#94a3b8"></i>
-                <p style="color:#64748b;font-size:.85rem;margin:.5rem 0 0">Click or drag photos here (max 10, jpg/png/webp)</p>
+                <p style="color:#64748b;font-size:.85rem;margin:.5rem 0 0">Click or drag to add more photos (max 10 total)</p>
             </div>
             <input type="file" id="nl-photo-input" accept="image/jpeg,image/png,image/webp" multiple style="display:none" onchange="addFiles(this.files)" />
             <div id="nl-photo-preview" class="d-flex flex-wrap gap-2 mb-4"></div>
 
-            <div id="fee-banner" class="d-none mb-3" style="background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:10px;padding:1rem;display:flex;align-items:center;gap:.75rem">
-                <div style="width:40px;height:40px;border-radius:10px;background:rgba(249,115,22,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#F97316;font-size:1.1rem"><i class="bi bi-credit-card"></i></div>
-                <div><span class="fw-bold" style="font-size:.88rem;color:#1e293b">Listing fee required</span><br/><span style="font-size:.8rem;color:#64748b">A 10 JOD fee is required for additional listings. Your first listing was free.</span></div>
+            <h6 class="nl-section">Status</h6>
+            <div class="mb-4">
+                <div class="toggle-active is-active" id="nl-active-toggle" onclick="toggleActive()">
+                    <i class="bi bi-check-circle-fill"></i> <span>Active</span>
+                </div>
             </div>
-            <button type="submit" class="btn-publish w-100" id="nl-submit">Publish Listing</button>
+
+            <button type="submit" class="btn-save w-100" id="nl-submit">Save Changes</button>
         </form>
     </div>
 </div>
@@ -135,6 +154,7 @@
 @section Scripts {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+var APARTMENT_ID = '@apartmentId'
 var AMENITIES = [
     { key:0, label:'WiFi' }, { key:1, label:'AC' }, { key:2, label:'Heating' },
     { key:3, label:'Washing Machine' }, { key:4, label:'Parking' },
@@ -143,66 +163,162 @@ var AMENITIES = [
     { key:9, label:'Private Bathroom' }
 ]
 
-var amenDiv = document.getElementById('nl-amenities')
-amenDiv.innerHTML = AMENITIES.map(function (a) {
-    return '<div class="amenity-chip" data-key="' + a.key + '" onclick="toggleAmenity(this)">' + a.label + '</div>'
-}).join('')
+var existingPhotos = []
+var selectedFiles = []
+var isActive = true
+var mapInstance = null
+var marker = null
 
 function toggleAmenity(el) { el.classList.toggle('selected') }
 
-var selectedFiles = []
+function toggleActive() {
+    isActive = !isActive
+    var el = document.getElementById('nl-active-toggle')
+    if (isActive) {
+        el.className = 'toggle-active is-active'
+        el.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Active</span>'
+    } else {
+        el.className = 'toggle-active is-inactive'
+        el.innerHTML = '<i class="bi bi-x-circle-fill"></i> <span>Inactive</span>'
+    }
+}
+
 function addFiles(fileList) {
+    var totalPhotos = existingPhotos.length + selectedFiles.length
     for (var i = 0; i < fileList.length; i++) {
-        if (selectedFiles.length >= 10) break
+        if (totalPhotos + selectedFiles.length >= 10) break
         var f = fileList[i]
         if (!f.type.match(/^image\/(jpeg|png|webp)$/)) continue
         selectedFiles.push(f)
     }
-    renderPreviews()
+    renderNewPreviews()
 }
-function removeFile(idx) {
+
+function removeNewFile(idx) {
     selectedFiles.splice(idx, 1)
-    renderPreviews()
+    renderNewPreviews()
 }
-function renderPreviews() {
+
+function renderNewPreviews() {
     var container = document.getElementById('nl-photo-preview')
     container.innerHTML = selectedFiles.map(function (f, i) {
         var url = URL.createObjectURL(f)
         return '<div class="photo-thumb">' +
             '<img src="' + url + '" alt="" />' +
-            '<button type="button" class="remove-btn" onclick="removeFile(' + i + ')">&times;</button>' +
+            '<button type="button" class="remove-btn" onclick="removeNewFile(' + i + ')">&times;</button>' +
             '</div>'
     }).join('')
 }
 
-var feeRequired = false
-auth.initAuth().then(function () {
-    api.get('/apartments/requires-listing-fee').then(function (res) {
-        if (res && res.required) {
-            feeRequired = true
-            document.getElementById('fee-banner').classList.remove('d-none')
-        }
-    }).catch(function () {})
-})
+function renderExistingPhotos() {
+    var container = document.getElementById('existing-photos')
+    if (existingPhotos.length === 0) {
+        container.innerHTML = '<p style="color:#94a3b8;font-size:.82rem">No photos yet.</p>'
+        return
+    }
+    container.innerHTML = existingPhotos.map(function (p) {
+        return '<div class="photo-thumb">' +
+            '<img src="' + escapeHtml(p.photoUrl) + '" alt="" />' +
+            '<button type="button" class="remove-btn" onclick="deleteExistingPhoto(\'' + p.id + '\')">&times;</button>' +
+            '</div>'
+    }).join('')
+}
 
-setTimeout(function () {
-    var el = document.getElementById('nl-map')
-    if (!el || !window.L) return
-    var mapInstance = L.map(el).setView([31.95, 35.93], 10)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(mapInstance)
-    var marker = null
-    mapInstance.on('click', function (e) {
-        if (marker) mapInstance.removeLayer(marker)
-        marker = L.marker(e.latlng).addTo(mapInstance)
-        document.getElementById('nl-lat').value = e.latlng.lat
-        document.getElementById('nl-lng').value = e.latlng.lng
+async function deleteExistingPhoto(photoId) {
+    try {
+        await api.delete('/apartments/' + APARTMENT_ID + '/photos/' + photoId)
+        existingPhotos = existingPhotos.filter(function (p) { return p.id !== photoId })
+        renderExistingPhotos()
+    } catch (err) {
+        alert('Failed to delete photo: ' + (err.message || 'Unknown error'))
+    }
+}
+
+function populateForm(apt) {
+    document.getElementById('nl-title').value = apt.title || ''
+    document.getElementById('nl-description').value = apt.description || ''
+    document.getElementById('nl-city').value = apt.city != null ? apt.city : ''
+    document.getElementById('nl-neighborhood').value = apt.neighborhood || ''
+    document.getElementById('nl-address').value = apt.addressDetail || ''
+    document.getElementById('nl-rent').value = apt.fullRent || ''
+    document.getElementById('nl-totalSpots').value = apt.totalSpots || ''
+    document.getElementById('nl-availableSpots').value = apt.availableSpots != null ? apt.availableSpots : ''
+    document.getElementById('nl-gender').value = apt.genderType != null ? apt.genderType : 0
+    document.getElementById('nl-smoking').value = apt.smokingRule != null ? apt.smokingRule : 0
+    document.getElementById('nl-guests').value = apt.guestsRule != null ? apt.guestsRule : 0
+    document.getElementById('nl-furnished').checked = !!apt.isFurnished
+    document.getElementById('nl-university').value = apt.nearestUniversity != null ? apt.nearestUniversity : ''
+    document.getElementById('nl-distance').value = apt.distanceMinutes || ''
+
+    if (apt.latitude && apt.longitude) {
+        document.getElementById('nl-lat').value = apt.latitude
+        document.getElementById('nl-lng').value = apt.longitude
+        if (mapInstance) {
+            var latlng = L.latLng(apt.latitude, apt.longitude)
+            mapInstance.setView(latlng, 14)
+            marker = L.marker(latlng).addTo(mapInstance)
+        }
+    }
+
+    var amenitySet = (apt.amenities || []).map(function (a) { return typeof a === 'number' ? a : a })
+    document.querySelectorAll('.amenity-chip').forEach(function (el) {
+        if (amenitySet.indexOf(parseInt(el.dataset.key)) >= 0) el.classList.add('selected')
     })
-}, 300)
+
+    existingPhotos = apt.photos || []
+    renderExistingPhotos()
+
+    isActive = apt.isActive !== false
+    if (!isActive) {
+        var el = document.getElementById('nl-active-toggle')
+        el.className = 'toggle-active is-inactive'
+        el.innerHTML = '<i class="bi bi-x-circle-fill"></i> <span>Inactive</span>'
+    }
+}
+
+var amenDiv = document.getElementById('nl-amenities')
+amenDiv.innerHTML = AMENITIES.map(function (a) {
+    return '<div class="amenity-chip" data-key="' + a.key + '" onclick="toggleAmenity(this)">' + a.label + '</div>'
+}).join('')
+
+auth.initAuth().then(async function () {
+    try {
+        var apt = await api.get('/apartments/' + APARTMENT_ID)
+
+        setTimeout(function () {
+            var el = document.getElementById('nl-map')
+            if (!el || !window.L) return
+            var center = (apt.latitude && apt.longitude) ? [apt.latitude, apt.longitude] : [31.95, 35.93]
+            var zoom = (apt.latitude && apt.longitude) ? 14 : 10
+            mapInstance = L.map(el).setView(center, zoom)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(mapInstance)
+            if (apt.latitude && apt.longitude) {
+                marker = L.marker([apt.latitude, apt.longitude]).addTo(mapInstance)
+            }
+            mapInstance.on('click', function (e) {
+                if (marker) mapInstance.removeLayer(marker)
+                marker = L.marker(e.latlng).addTo(mapInstance)
+                document.getElementById('nl-lat').value = e.latlng.lat
+                document.getElementById('nl-lng').value = e.latlng.lng
+            })
+        }, 300)
+
+        populateForm(apt)
+        document.getElementById('edit-loading').style.display = 'none'
+        document.getElementById('nl-form').style.display = 'block'
+    } catch (err) {
+        document.getElementById('edit-loading').innerHTML =
+            '<i class="bi bi-exclamation-circle" style="font-size:2rem;color:#ef4444"></i>' +
+            '<p class="mt-2" style="color:#ef4444">' + escapeHtml(err.message || 'Failed to load listing.') + '</p>'
+    }
+})
 
 document.getElementById('nl-form').addEventListener('submit', async function (e) {
     e.preventDefault()
     var errBox = document.getElementById('nl-error')
+    var successBox = document.getElementById('nl-success')
     errBox.classList.add('d-none')
+    successBox.classList.add('d-none')
 
     var body = {
         title: document.getElementById('nl-title').value.trim(),
@@ -217,18 +333,22 @@ document.getElementById('nl-form').addEventListener('submit', async function (e)
         smokingRule: parseInt(document.getElementById('nl-smoking').value),
         guestsRule: parseInt(document.getElementById('nl-guests').value),
         isFurnished: document.getElementById('nl-furnished').checked,
-        amenities: []
+        amenities: [],
+        isActive: isActive
     }
 
     document.querySelectorAll('.amenity-chip.selected').forEach(function (el) { body.amenities.push(parseInt(el.dataset.key)) })
 
     var uni = document.getElementById('nl-university').value
     if (uni) body.nearestUniversity = parseInt(uni)
+    else body.nearestUniversity = 0
     var dist = document.getElementById('nl-distance').value
     if (dist) body.distanceMinutes = parseInt(dist)
+    else body.distanceMinutes = 0
     var lat = document.getElementById('nl-lat').value
     var lng = document.getElementById('nl-lng').value
     if (lat && lng) { body.latitude = parseFloat(lat); body.longitude = parseFloat(lng) }
+    else { body.latitude = 0; body.longitude = 0 }
 
     var errors = []
     if (!body.title || body.title.length < 5) errors.push('Title must be at least 5 characters.')
@@ -247,38 +367,47 @@ document.getElementById('nl-form').addEventListener('submit', async function (e)
 
     var btn = document.getElementById('nl-submit')
     btn.disabled = true
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publishing...'
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...'
 
     try {
-        if (feeRequired) {
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing 10 JOD listing fee...'
-            var payResult = await api.post('/payments/checkout', { body: { type: 1 } })
-            if (payResult.checkoutUrl) {
-                sessionStorage.setItem('pendingListing', JSON.stringify(body))
-                window.location.href = payResult.checkoutUrl
-                return
-            }
-            feeRequired = false
-            document.getElementById('fee-banner').classList.add('d-none')
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating listing...'
-        }
-        var result = await api.post('/apartments', { body: body })
+        await api.put('/apartments/' + APARTMENT_ID, { body: body })
+
         if (selectedFiles.length > 0) {
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading photos...'
             for (var i = 0; i < selectedFiles.length; i++) {
                 var fd = new FormData()
                 fd.append('file', selectedFiles[i])
-                await api.post('/apartments/' + result.id + '/photos', { formData: fd })
+                var photo = await api.post('/apartments/' + APARTMENT_ID + '/photos', { formData: fd })
+                existingPhotos.push(photo)
             }
+            selectedFiles = []
+            renderNewPreviews()
+            renderExistingPhotos()
         }
-        window.location.href = '/Apartment/Detail/' + result.id
+
+        successBox.textContent = 'Listing updated successfully!'
+        successBox.classList.remove('d-none')
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        btn.disabled = false
+        btn.textContent = 'Save Changes'
     } catch (err) {
         var msg = err.message || 'Something went wrong. Please try again.'
-        if (err.details && err.details.length) msg = err.details.map(function(d) { return d.message || d }).join('<br>')
+        if (err.details) {
+            var detailMsgs = []
+            if (Array.isArray(err.details)) {
+                detailMsgs = err.details.map(function(d) { return d.message || d })
+            } else {
+                Object.keys(err.details).forEach(function(k) {
+                    var vals = err.details[k]
+                    if (Array.isArray(vals)) detailMsgs = detailMsgs.concat(vals)
+                })
+            }
+            if (detailMsgs.length) msg = detailMsgs.join('<br>')
+        }
         errBox.innerHTML = msg
         errBox.classList.remove('d-none')
         btn.disabled = false
-        btn.textContent = 'Publish Listing'
+        btn.textContent = 'Save Changes'
     }
 })
 </script>

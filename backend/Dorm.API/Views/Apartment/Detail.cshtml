@@ -20,6 +20,27 @@
     }
     .gallery-thumb:hover, .gallery-thumb.active { opacity: 1; }
 
+    .photo-mgmt { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 1.25rem; margin-top: 1rem; }
+    .photo-mgmt h6 { font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin-bottom: .75rem; }
+    .photo-mgmt-grid { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .photo-mgmt-item {
+        position: relative; width: 90px; height: 90px; border-radius: 8px;
+        overflow: hidden; border: 1px solid #e2e8f0;
+    }
+    .photo-mgmt-item img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-mgmt-item .del-btn {
+        position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
+        border-radius: 50%; background: rgba(239,68,68,.9); color: #fff;
+        border: none; font-size: .7rem; cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+    }
+    .photo-add-zone {
+        width: 90px; height: 90px; border: 2px dashed #e2e8f0; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+        color: #94a3b8; font-size: 1.5rem; transition: border-color .2s;
+    }
+    .photo-add-zone:hover { border-color: #F97316; color: #F97316; }
+
     .detail-card {
         background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
         padding: 1.5rem; margin-bottom: 1.25rem;
@@ -140,7 +161,7 @@ var aptId = '@apartmentId';
 var GENDER_LABELS = { 0: 'Male Only', 1: 'Female Only', 2: 'Mixed' }
 var SMOKING_LABELS = { 0: 'Yes', 1: 'No', 2: 'Outside Only' }
 var GUESTS_LABELS = { 0: 'Yes', 1: 'No', 2: 'Limited' }
-var UNI_LABELS = ['JU','GJU','PSUT','YU','HU','MU','ZU','BAU','JUST','AAU']
+var UNI_LABELS = ['JU','GJU','PSUT','YU','HU','MU','ZU','BAU','JUST','AAU','AABU','UOP','MEU','ASU','WISE','PU','Isra','Jadara','Tafila','AHU']
 var AMENITY_LABELS = {
     0:'WiFi', 1:'AC', 2:'Heating', 3:'Washing Machine',
     4:'Parking', 5:'Furnished', 6:'Elevator',
@@ -173,6 +194,13 @@ function loadApartment() {
                 }).join('') + '</div>'
         }
         galleryHtml += '</div>'
+
+        var isOwner = user && user.role === 1 && apt.owner && apt.owner.id === user.id
+        if (isOwner) {
+            galleryHtml += '<div class="photo-mgmt" id="photo-mgmt"><h6>Manage Photos</h6>' +
+                '<div class="photo-mgmt-grid" id="photo-mgmt-grid"></div>' +
+                '<input type="file" id="detail-photo-input" accept="image/jpeg,image/png,image/webp" multiple style="display:none" /></div>'
+        }
 
         // amenities
         var amenitiesHtml = (apt.amenities || []).map(function (a) {
@@ -275,6 +303,23 @@ function loadApartment() {
             }).catch(function(){})
         }
 
+        if (isOwner) {
+            renderPhotoMgmt(photos)
+            document.getElementById('detail-photo-input').addEventListener('change', async function () {
+                var files = this.files
+                for (var i = 0; i < files.length; i++) {
+                    var fd = new FormData()
+                    fd.append('file', files[i])
+                    await api.post('/apartments/' + aptId + '/photos', { formData: fd })
+                }
+                this.value = ''
+                var refreshed = await api.get('/apartments/' + aptId)
+                photos = refreshed.photos || []
+                renderPhotoMgmt(photos)
+                refreshGallery(photos, refreshed.title)
+            })
+        }
+
         if (user && user.role === 0 && user.quizCompleted) {
             api.get('/apartments/' + aptId + '/compatibility').then(function (c) {
                 var cls = c.score >= 75 ? 'compat-high' : c.score >= 50 ? 'compat-mid' : 'compat-low'
@@ -289,6 +334,40 @@ function loadApartment() {
             '<p>This listing may have been removed or you don\'t have access.</p>' +
             '<a href="/Browse" class="btn-apply" style="width:auto;display:inline-block;padding:.6rem 1.5rem;border-radius:8px">Back to Browse</a></div>'
     })
+}
+
+function renderPhotoMgmt(photos) {
+    var grid = document.getElementById('photo-mgmt-grid')
+    if (!grid) return
+    grid.innerHTML = photos.map(function (p) {
+        return '<div class="photo-mgmt-item">' +
+            '<img src="' + p.photoUrl + '" alt="" />' +
+            '<button class="del-btn" onclick="deletePhoto(\'' + p.id + '\')">&times;</button></div>'
+    }).join('') +
+    (photos.length < 10 ? '<div class="photo-add-zone" onclick="document.getElementById(\'detail-photo-input\').click()"><i class="bi bi-plus-lg"></i></div>' : '')
+}
+
+async function deletePhoto(photoId) {
+    if (!confirm('Remove this photo?')) return
+    await api.delete('/apartments/' + aptId + '/photos/' + photoId)
+    var refreshed = await api.get('/apartments/' + aptId)
+    var photos = refreshed.photos || []
+    renderPhotoMgmt(photos)
+    refreshGallery(photos, refreshed.title)
+}
+
+function refreshGallery(photos, title) {
+    var mainPhoto = photos.length > 0 ? photos[0].photoUrl : '/property/images/img_1.jpg'
+    var mainImg = document.getElementById('gallery-main')
+    if (mainImg) mainImg.src = mainPhoto
+    var thumbs = document.querySelector('.gallery-thumbs')
+    if (thumbs && photos.length > 1) {
+        thumbs.innerHTML = photos.map(function (p, i) {
+            return '<img src="' + p.photoUrl + '" alt="" class="gallery-thumb' + (i===0?' active':'') + '" onclick="switchPhoto(this,\'' + p.photoUrl + '\')" />'
+        }).join('')
+    } else if (thumbs && photos.length <= 1) {
+        thumbs.innerHTML = ''
+    }
 }
 
 function switchPhoto(thumb, url) {

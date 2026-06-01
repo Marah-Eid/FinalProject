@@ -27,6 +27,16 @@ public sealed class PaymentsController(
         return Ok(await payments.CheckoutAsync(userId, req, ct));
     }
 
+    /// <summary>Confirm a Stripe checkout session after redirect.</summary>
+    [HttpPost("confirm")]
+    public async Task<ActionResult<PaymentDto>> Confirm(
+        [FromBody] ConfirmRequest req, CancellationToken ct)
+    {
+        var result = await payments.ConfirmSessionAsync(req.SessionId, ct);
+        if (result is null) return NotFound();
+        return Ok(result);
+    }
+
     /// <summary>The caller's payment history, newest first.</summary>
     [HttpGet("history")]
     public async Task<ActionResult<IReadOnlyList<PaymentDto>>> History(CancellationToken ct)
@@ -35,3 +45,5 @@ public sealed class PaymentsController(
         return Ok(await payments.GetHistoryAsync(userId, ct));
     }
 }
+
+public sealed record ConfirmRequest(string SessionId);

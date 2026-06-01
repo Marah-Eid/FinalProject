@@ -109,7 +109,7 @@ auth.initAuth().then(function () {
     var user = auth.getUser()
     if (!user) { window.location.href = '/Account/Login'; return }
     if (user.role === 2) { window.location.href = '/Admin'; return }
-    if (user.role === 0) { window.location.href = '/Browse'; return }
+    if (user.role === 0) renderStudentDashboard(user)
     if (user.role === 1) renderOwnerDashboard(user)
 })
 
@@ -235,10 +235,10 @@ function renderOwnerDashboard(user) {
                 '<a href="/OwnerApps" class="btn-view-all">View all <i class="bi bi-chevron-right"></i></a></div>' +
                 '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><tbody>' +
                 pending.slice(0, 5).map(function (a) {
-                    var init = (a.studentName || a.applicantName || 'U').split(' ').map(function(n){return n[0]}).join('').substring(0,2).toUpperCase()
+                    var init = (a.studentFullName || 'U').split(' ').map(function(n){return n[0]}).join('').substring(0,2).toUpperCase()
                     return '<tr><td><div class="d-flex align-items-center gap-2">' +
                         '<div style="width:32px;height:32px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.7rem;color:#64748b">' + init + '</div>' +
-                        '<div><span class="fw-semibold" style="font-size:.85rem">' + escapeHtml(a.studentName || a.applicantName || '') + '</span>' +
+                        '<div><span class="fw-semibold" style="font-size:.85rem">' + escapeHtml(a.studentFullName || '') + '</span>' +
                         '<br/><span style="color:#94a3b8;font-size:.75rem">' + escapeHtml(a.apartmentTitle || '') + '</span></div></div></td>' +
                         '<td class="text-end"><span class="badge bg-warning bg-opacity-10 text-warning" style="font-size:.72rem"><i class="bi bi-clock me-1"></i>Pending</span></td></tr>'
                 }).join('') +

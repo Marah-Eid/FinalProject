@@ -17,14 +17,24 @@ public sealed class PaymentsAppService(
             result.Amount,
             result.Status,
             result.TransactionRef,
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            result.CheckoutUrl);
+    }
+
+    public async Task<PaymentDto?> ConfirmSessionAsync(string sessionId, CancellationToken ct)
+    {
+        var result = await payments.ConfirmSessionAsync(sessionId, ct);
+        if (result is null) return null;
+        return new PaymentDto(
+            result.PaymentId, result.Type, result.Amount,
+            result.Status, result.TransactionRef, DateTime.UtcNow);
     }
 
     public Task<IReadOnlyList<PaymentDto>> GetHistoryAsync(Guid userId, CancellationToken ct) =>
         db.Payments.AsNoTracking()
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.CreatedAt)
-            .Select(p => new PaymentDto(p.Id, p.Type, p.Amount, p.Status, p.TransactionRef, p.CreatedAt))
+            .Select(p => new PaymentDto(p.Id, p.Type, p.Amount, p.Status, p.TransactionRef, p.CreatedAt, null))
             .ToListAsync(ct)
             .ContinueWith(t => (IReadOnlyList<PaymentDto>)t.Result, ct);
 }

@@ -57,8 +57,15 @@ public static class DependencyInjection
         // File storage (local during dev — swap impl later for cloud) ────────
         services.AddSingleton<IFileStorage, LocalFileStorage>();
 
-        // Payments (mock during dev — swap for CliQ later) ───────────────────
-        services.AddScoped<IPaymentService, MockPaymentService>();
+        // Payments — Stripe when key is configured, otherwise mock ───────────
+        services.Configure<Application.Options.StripeOptions>(
+            config.GetSection(Application.Options.StripeOptions.SectionName));
+
+        var stripeKey = config.GetSection("Stripe")["SecretKey"];
+        if (!string.IsNullOrWhiteSpace(stripeKey))
+            services.AddScoped<IPaymentService, StripePaymentService>();
+        else
+            services.AddScoped<IPaymentService, MockPaymentService>();
 
         return services;
     }

@@ -8,7 +8,8 @@ public sealed record PaymentDto(
     decimal Amount,
     PaymentStatus Status,
     string? TransactionRef,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    string? CheckoutUrl = null);
 
 public sealed record CheckoutRequest(
     PaymentType Type,

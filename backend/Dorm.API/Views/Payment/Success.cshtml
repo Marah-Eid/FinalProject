@@ -1,0 +1,86 @@
+@{
+    Layout = "_BrowseLayout";
+    ViewData["Title"] = "Payment Successful";
+}
+
+@section Styles {
+<style>
+    .success-card {
+        background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+        padding: 3rem 2rem; text-align: center; max-width: 500px; margin: 3rem auto;
+    }
+    .success-icon {
+        width: 64px; height: 64px; border-radius: 50%;
+        background: rgba(16,185,129,.1); color: #10b981;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; margin: 0 auto 1.25rem;
+    }
+</style>
+}
+
+<div class="container">
+    <div class="success-card" id="success-card">
+        <div class="text-center py-4"><div class="spinner-border" style="color:#94a3b8"></div></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(async function () {
+    var card = document.getElementById('success-card')
+    var sessionId = '@(ViewData["SessionId"] ?? "")'
+
+    if (!sessionId) {
+        card.innerHTML = '<div class="success-icon"><i class="bi bi-x-circle"></i></div>' +
+            '<h4 class="fw-bold" style="color:#1e293b">Invalid Session</h4>' +
+            '<p style="color:#64748b">No payment session found.</p>' +
+            '<a href="/Payment" class="btn btn-outline-secondary mt-3">Go to Payments</a>'
+        return
+    }
+
+    try {
+        await auth.initAuth()
+        var result = await api.post('/payments/confirm', { body: { sessionId: sessionId } })
+
+        var pendingJson = sessionStorage.getItem('pendingListing')
+        if (pendingJson) {
+            sessionStorage.removeItem('pendingListing')
+            card.innerHTML = '<div class="success-icon"><i class="bi bi-check-lg"></i></div>' +
+                '<h4 class="fw-bold" style="color:#1e293b">Payment Successful!</h4>' +
+                '<p style="color:#64748b;font-size:.9rem">Your payment of <strong>' + result.amount + ' JOD</strong> has been confirmed. Creating your listing...</p>'
+            try {
+                var listing = await api.post('/apartments', { body: JSON.parse(pendingJson) })
+                card.innerHTML = '<div class="success-icon"><i class="bi bi-check-lg"></i></div>' +
+                    '<h4 class="fw-bold" style="color:#1e293b">Listing Published!</h4>' +
+                    '<p style="color:#64748b;font-size:.9rem">Payment confirmed and your listing has been created.</p>' +
+                    '<div class="d-flex justify-content-center gap-2 mt-3">' +
+                    '<a href="/Apartment/Detail/' + listing.id + '" class="btn btn-dorm">View Listing</a>' +
+                    '<a href="/Dashboard" class="btn btn-outline-secondary">Dashboard</a></div>'
+                return
+            } catch (listErr) {
+                card.innerHTML = '<div class="success-icon" style="background:rgba(234,179,8,.1);color:#eab308"><i class="bi bi-exclamation-triangle"></i></div>' +
+                    '<h4 class="fw-bold" style="color:#1e293b">Payment Confirmed</h4>' +
+                    '<p style="color:#64748b;font-size:.9rem">Payment of <strong>' + result.amount + ' JOD</strong> confirmed, but listing creation failed: ' + (listErr.message || 'Unknown error') + '</p>' +
+                    '<div class="d-flex justify-content-center gap-2 mt-3">' +
+                    '<a href="/OwnerListings/New" class="btn btn-dorm">Try Again</a>' +
+                    '<a href="/Dashboard" class="btn btn-outline-secondary">Dashboard</a></div>'
+                return
+            }
+        }
+
+        card.innerHTML = '<div class="success-icon"><i class="bi bi-check-lg"></i></div>' +
+            '<h4 class="fw-bold" style="color:#1e293b">Payment Successful!</h4>' +
+            '<p style="color:#64748b;font-size:.9rem">Your payment of <strong>' + result.amount + ' JOD</strong> has been confirmed.</p>' +
+            '<div class="d-flex justify-content-center gap-2 mt-3">' +
+            '<a href="/Payment" class="btn btn-outline-secondary">View Payments</a>' +
+            '<a href="/Dashboard" class="btn btn-dorm">Dashboard</a></div>'
+    } catch (err) {
+        sessionStorage.removeItem('pendingListing')
+        card.innerHTML = '<div class="success-icon" style="background:rgba(239,68,68,.1);color:#ef4444"><i class="bi bi-exclamation-triangle"></i></div>' +
+            '<h4 class="fw-bold" style="color:#1e293b">Verification Failed</h4>' +
+            '<p style="color:#64748b;font-size:.9rem">' + (err.message || 'Could not verify payment.') + '</p>' +
+            '<a href="/Payment" class="btn btn-outline-secondary mt-3">Go to Payments</a>'
+    }
+})()
+</script>
+}

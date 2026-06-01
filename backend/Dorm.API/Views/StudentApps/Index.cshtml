@@ -1,5 +1,5 @@
 @{
-    Layout = "_BrowseLayout";
+    Layout = "_DashboardLayout";
     ViewData["Title"] = "My Applications";
 }
 
@@ -55,16 +55,15 @@
 </style>
 }
 
-<div class="container" style="max-width:960px;padding:2.5rem 1rem">
-    <div class="apps-header">
-        <div>
-            <h3>My Applications</h3>
-            <p>Track the status of apartments you've applied to.</p>
-        </div>
-        <a href="/Browse" class="btn-browse-sm"><i class="bi bi-search"></i> Browse</a>
-    </div>
+<div class="apps-header">
     <div>
-        <div class="apps-card">
+        <h3>My Applications</h3>
+        <p>Track the status of apartments you've applied to.</p>
+    </div>
+    <a href="/Browse" class="btn-browse-sm"><i class="bi bi-search"></i> Browse</a>
+</div>
+<div>
+    <div class="apps-card">
             <div class="filter-tabs d-flex flex-wrap gap-2" id="status-btns">
                 <button class="filter-tab active" onclick="filterApps('all',this)">All</button>
                 <button class="filter-tab" onclick="filterApps('pending',this)">Pending</button>
@@ -76,7 +75,6 @@
             </div>
         </div>
     </div>
-</div>
 
 @section Scripts {
 <script>

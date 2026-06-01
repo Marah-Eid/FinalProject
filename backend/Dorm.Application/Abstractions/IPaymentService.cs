@@ -3,31 +3,34 @@ using Dorm.Domain.Enums;
 namespace Dorm.Application.Abstractions;
 
 /// <summary>
-/// Result returned from a checkout attempt — what the controller hands back
-/// to the frontend. The transaction reference is mock-generated in dev;
-/// in production it'll be the CliQ payment ID.
+/// Result returned from a checkout attempt. For Stripe, <see cref="CheckoutUrl"/>
+/// contains the hosted checkout page URL. For the mock provider it is null and
+/// the payment is already Completed.
 /// </summary>
 public sealed record PaymentChargeResult(
     Guid PaymentId,
     PaymentType Type,
     decimal Amount,
     PaymentStatus Status,
-    string? TransactionRef);
+    string? TransactionRef,
+    string? CheckoutUrl = null);
 
 /// <summary>
-/// Platform payment service. The dev implementation (<c>MockPaymentService</c>)
-/// sleeps for ~1s and returns Completed; CliQ wiring replaces this without
-/// touching the application code that depends on the interface.
+/// Platform payment service. Implementations: <c>StripePaymentService</c> (live)
+/// and <c>MockPaymentService</c> (dev fallback).
 /// </summary>
 public interface IPaymentService
 {
-    /// <summary>
-    /// Charge the user for the given payment type. The implementation creates
-    /// the Payment row, processes it, and persists the final status.
-    /// </summary>
     Task<PaymentChargeResult> ChargeAsync(
         Guid userId,
         PaymentType type,
         Guid? relatedEntityId,
         CancellationToken ct);
+
+    /// <summary>
+    /// Called when Stripe redirects the user back after a successful payment.
+    /// Verifies the session and marks the payment as Completed.
+    /// Returns null if the session is invalid or already processed.
+    /// </summary>
+    Task<PaymentChargeResult?> ConfirmSessionAsync(string sessionId, CancellationToken ct);
 }

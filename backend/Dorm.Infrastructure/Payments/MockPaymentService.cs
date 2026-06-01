@@ -51,4 +51,7 @@ public sealed class MockPaymentService(
 
         return new PaymentChargeResult(payment.Id, payment.Type, payment.Amount, payment.Status, payment.TransactionRef);
     }
+
+    public Task<PaymentChargeResult?> ConfirmSessionAsync(string sessionId, CancellationToken ct)
+        => Task.FromResult<PaymentChargeResult?>(null);
 }

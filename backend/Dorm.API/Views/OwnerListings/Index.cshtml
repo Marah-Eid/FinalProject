@@ -30,12 +30,18 @@
     .spots-full { background: #f1f5f9; color: #94a3b8; }
     .gender-badge { font-size: .75rem; font-weight: 500; padding: .2rem .5rem; border-radius: 5px; background: #f1f5f9; color: #64748b; }
 
+    .btn-view, .btn-edit {
+        border-radius: 6px; padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
+        text-decoration: none; transition: all .15s; display: inline-flex; align-items: center; gap: .25rem;
+    }
     .btn-view {
-        background: #fff; color: #475569; border: 1px solid #e2e8f0; border-radius: 6px;
-        padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
-        text-decoration: none; transition: all .15s;
+        background: #fff; color: #475569; border: 1px solid #e2e8f0;
     }
     .btn-view:hover { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
+    .btn-edit {
+        background: #fff; color: #F97316; border: 1px solid #fed7aa;
+    }
+    .btn-edit:hover { background: #fff7ed; color: #ea6c10; border-color: #F97316; }
 
     .empty-ol { text-align: center; padding: 3.5rem 1rem; }
     .empty-ol i { font-size: 2.5rem; color: #cbd5e1; }
@@ -97,7 +103,8 @@ async function loadListings() {
                     '<td class="text-center"><span class="fw-bold" style="font-size:.92rem;color:#1e293b">' + apt.fullRent + ' JOD</span></td>' +
                     '<td class="text-center"><span class="spots-badge ' + (spotsOpen ? 'spots-open' : 'spots-full') + '">' + apt.availableSpots + ' / ' + apt.totalSpots + '</span></td>' +
                     '<td class="text-center"><span class="gender-badge">' + (GENDER_LABELS[apt.genderType] || '') + '</span></td>' +
-                    '<td class="text-end"><a href="/Apartment/Detail/' + apt.id + '" class="btn-view"><i class="bi bi-eye me-1"></i>View</a></td></tr>'
+                    '<td class="text-end"><a href="/OwnerListings/Edit/' + apt.id + '" class="btn-edit me-1"><i class="bi bi-pencil"></i>Edit</a>' +
+                    '<a href="/Apartment/Detail/' + apt.id + '" class="btn-view"><i class="bi bi-eye"></i>View</a></td></tr>'
             }).join('') +
             '</tbody></table></div>'
     } catch (e) {
