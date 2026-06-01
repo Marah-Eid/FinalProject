@@ -63,6 +63,24 @@
         opacity: 0; transition: opacity .3s;
     }
     .save-success.show { opacity: 1; }
+
+    .verified-card {
+        border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem;
+        margin-top: 1.5rem; background: #fff;
+        display: flex; align-items: center; gap: 1rem;
+    }
+    .verified-card-icon {
+        width: 44px; height: 44px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; flex-shrink: 0;
+    }
+    .btn-get-badge {
+        background: #F97316; color: #fff; border: none; border-radius: 8px;
+        padding: .45rem 1rem; font-weight: 600; font-size: .82rem;
+        cursor: pointer; transition: all .2s; white-space: nowrap;
+    }
+    .btn-get-badge:hover { background: #ea6c10; }
+    .btn-get-badge:disabled { opacity: .5; cursor: not-allowed; }
 </style>
 }
 
@@ -75,6 +93,7 @@
     </div>
 
     <div id="profile-content" class="d-none">
+        <div id="badge-section"></div>
         <div class="profile-card">
             <div class="profile-card-header">
                 <div class="profile-big-avatar" id="p-avatar">U</div>
@@ -193,6 +212,21 @@ auth.initAuth().then(function () {
         if (user.university != null) {
             document.getElementById('pf-university').value = user.university
         }
+
+        var badgeSection = document.getElementById('badge-section')
+        if (user.isUniversityVerified) {
+            badgeSection.innerHTML = '<div class="verified-card mb-4">' +
+                '<div class="verified-card-icon" style="background:rgba(59,130,246,.1);color:#3b82f6"><i class="bi bi-patch-check-fill"></i></div>' +
+                '<div style="flex:1"><div class="fw-bold" style="font-size:.88rem;color:#1e293b">Verified Student</div>' +
+                '<div style="font-size:.78rem;color:#64748b">Your university email has been verified.</div></div>' +
+                '<span class="badge bg-success bg-opacity-10 text-success" style="font-size:.72rem"><i class="bi bi-check-circle-fill me-1"></i>Active</span></div>'
+        } else {
+            badgeSection.innerHTML = '<div class="verified-card mb-4">' +
+                '<div class="verified-card-icon" style="background:rgba(249,115,22,.1);color:#F97316"><i class="bi bi-patch-check"></i></div>' +
+                '<div style="flex:1"><div class="fw-bold" style="font-size:.88rem;color:#1e293b">Get Verified</div>' +
+                '<div style="font-size:.78rem;color:#64748b">Show a verified badge on your profile for 2 JOD/month.</div></div>' +
+                '<button class="btn-get-badge" id="btn-verified-badge" onclick="buyVerifiedBadge(this)"><i class="bi bi-patch-check me-1"></i>Get Badge — 2 JOD</button></div>'
+        }
     }
 })
 
@@ -243,5 +277,23 @@ document.getElementById('profile-form').addEventListener('submit', async functio
         btn.innerHTML = '<i class="bi bi-check2"></i> Save Changes'
     }
 })
+
+async function buyVerifiedBadge(btn) {
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...'
+    try {
+        var result = await api.post('/payments/checkout', { body: { type: 2 } })
+        if (result.checkoutUrl) {
+            window.location.href = result.checkoutUrl
+        } else {
+            await auth.fetchMe()
+            window.location.reload()
+        }
+    } catch (err) {
+        alert(err.message || 'Payment failed. Please try again.')
+        btn.disabled = false
+        btn.innerHTML = '<i class="bi bi-patch-check me-1"></i>Get Badge — 2 JOD'
+    }
+}
 </script>
 }

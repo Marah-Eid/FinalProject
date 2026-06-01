@@ -34,7 +34,7 @@ public sealed class PaymentsAppService(
         db.Payments.AsNoTracking()
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.CreatedAt)
-            .Select(p => new PaymentDto(p.Id, p.Type, p.Amount, p.Status, p.TransactionRef, p.CreatedAt, null))
+            .Select(p => new PaymentDto(p.Id, p.Type, p.Amount, p.Status, p.TransactionRef, p.CreatedAt, null, p.RelatedEntityId))
             .ToListAsync(ct)
             .ContinueWith(t => (IReadOnlyList<PaymentDto>)t.Result, ct);
 }

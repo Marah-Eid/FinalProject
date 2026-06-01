@@ -9,7 +9,8 @@ public sealed record PaymentDto(
     PaymentStatus Status,
     string? TransactionRef,
     DateTime CreatedAt,
-    string? CheckoutUrl = null);
+    string? CheckoutUrl = null,
+    Guid? RelatedEntityId = null);
 
 public sealed record CheckoutRequest(
     PaymentType Type,

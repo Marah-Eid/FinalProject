@@ -47,6 +47,17 @@
         text-decoration: none; transition: all .15s;
     }
     .btn-msg:hover { background: #eff6ff; border-color: #3b82f6; }
+    .btn-pay {
+        background: #F97316; color: #fff; border: none; border-radius: 6px;
+        padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
+        cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: .25rem;
+    }
+    .btn-pay:hover { background: #ea6c10; }
+    .btn-pay:disabled { opacity: .5; cursor: not-allowed; }
+    .badge-paid {
+        display: inline-flex; align-items: center; gap: .25rem;
+        font-size: .72rem; font-weight: 600; color: #10b981;
+    }
 
     .empty-apps { text-align: center; padding: 3.5rem 1rem; }
     .empty-apps i { font-size: 2.5rem; color: #cbd5e1; }
@@ -79,12 +90,22 @@
 @section Scripts {
 <script>
 var allApps = []
+var paidAppIds = new Set()
 var currentFilter = 'all'
 var STATUS_KEYS = { 0: 'Pending', 1: 'Accepted', 2: 'Rejected', 3: 'Withdrawn' }
 var STATUS_COLORS = { 0: 'warning', 1: 'success', 2: 'danger', 3: 'secondary' }
 var STATUS_ICONS = { 0: 'bi-clock', 1: 'bi-check-circle-fill', 2: 'bi-x-circle-fill', 3: 'bi-arrow-return-left' }
 
-auth.initAuth().then(loadApps)
+auth.initAuth().then(async function () {
+    try {
+        var payments = await api.get('/payments/history')
+        var list = payments.items || payments || []
+        list.forEach(function (p) {
+            if (p.type === 0 && p.status === 1 && p.relatedEntityId) paidAppIds.add(p.relatedEntityId)
+        })
+    } catch (e) {}
+    loadApps()
+})
 
 function filterApps(f, btn) {
     currentFilter = f
@@ -134,10 +155,12 @@ function renderApps() {
                 '<td style="color:#94a3b8;font-size:.82rem">' + dateStr + '</td>' +
                 '<td class="text-center">' + matchHtml + '</td>' +
                 '<td class="text-center"><span class="badge bg-' + (STATUS_COLORS[app.status]||'secondary') + ' bg-opacity-10 text-' + (STATUS_COLORS[app.status]||'secondary') + '" style="font-size:.72rem"><i class="bi ' + (STATUS_ICONS[app.status]||'bi-clock') + ' me-1"></i>' + (STATUS_KEYS[app.status]||'Pending') + '</span></td>' +
-                '<td class="text-end">' +
+                '<td class="text-end"><div class="d-flex justify-content-end gap-1 align-items-center">' +
                 (app.status === 0 ? '<button class="btn-withdraw" onclick="withdrawApp(\'' + app.id + '\',this)"><i class="bi bi-x-lg me-1"></i>Withdraw</button>' : '') +
+                (app.status === 1 && paidAppIds.has(app.id) ? '<span class="badge-paid"><i class="bi bi-check-circle-fill"></i> Paid</span>' : '') +
+                (app.status === 1 && !paidAppIds.has(app.id) ? '<button class="btn-pay" onclick="payCommission(\'' + app.id + '\',this)"><i class="bi bi-credit-card"></i> Pay 15 JOD</button>' : '') +
                 (app.status === 1 ? '<a href="/Chat" class="btn-msg"><i class="bi bi-chat-dots me-1"></i>Message</a>' : '') +
-                '</td></tr>'
+                '</div></td></tr>'
         }).join('') +
         '</tbody></table></div>'
 }
@@ -147,6 +170,24 @@ async function withdrawApp(id, btn) {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'
     try { await api.delete('/applications/' + id); loadApps() }
     catch (e) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-x-lg me-1"></i>Withdraw' }
+}
+
+async function payCommission(appId, btn) {
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...'
+    try {
+        var result = await api.post('/payments/checkout', { body: { type: 0, relatedEntityId: appId } })
+        if (result.checkoutUrl) {
+            window.location.href = result.checkoutUrl
+        } else {
+            paidAppIds.add(appId)
+            renderApps()
+        }
+    } catch (err) {
+        alert(err.message || 'Payment failed. Please try again.')
+        btn.disabled = false
+        btn.innerHTML = '<i class="bi bi-credit-card"></i> Pay 15 JOD'
+    }
 }
 </script>
 }
