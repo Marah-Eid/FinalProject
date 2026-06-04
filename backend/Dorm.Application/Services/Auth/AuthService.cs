@@ -7,18 +7,15 @@ using Dorm.Domain.Entities;
 using Dorm.Domain.Enums;
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace Dorm.Application.Services.Auth;
 
-/// <summary>
-/// Orchestrates register / login / refresh / verify-email / forgot+reset /
-/// verify-university. Holds no state — all state changes go through AppDbContext.
-/// </summary>
 public sealed class AuthService(
     IAppDbContext db,
-    IPasswordHasher passwordHasher,
+    UserManager<User> userManager,
     ITokenHasher tokenHasher,
     IJwtTokenService jwtService,
     IEmailService emailService,
@@ -28,7 +25,6 @@ public sealed class AuthService(
 {
     private readonly JwtOptions _jwt = jwtOptions.Value;
 
-    // Token validity windows.
     private static readonly TimeSpan EmailVerificationLifetime = TimeSpan.FromDays(7);
     private static readonly TimeSpan PasswordResetLifetime = TimeSpan.FromHours(1);
     private static readonly TimeSpan UniversityVerificationLifetime = TimeSpan.FromDays(7);
@@ -39,7 +35,8 @@ public sealed class AuthService(
             throw new ForbiddenException("Admin accounts cannot be created via this endpoint.");
 
         var email = Normalize(req.Email);
-        if (await db.Users.AsNoTracking().AnyAsync(u => u.Email == email, ct))
+        var existing = await userManager.FindByEmailAsync(email);
+        if (existing is not null)
             throw new ConflictException("An account with this email already exists.");
 
         var user = new User
@@ -47,7 +44,7 @@ public sealed class AuthService(
             Id = Guid.NewGuid(),
             FullName = req.FullName.Trim(),
             Email = email,
-            PasswordHash = passwordHasher.Hash(req.Password),
+            UserName = email,
             PhoneNumber = req.PhoneNumber.Trim(),
             Role = req.Role,
             Gender = req.Gender,
@@ -55,13 +52,20 @@ public sealed class AuthService(
             CreatedAt = DateTime.UtcNow,
         };
 
-        // Issue the email-verification token at registration time and email it.
+        var result = await userManager.CreateAsync(user, req.Password);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            throw new ValidationException(new[]
+            {
+                new ValidationFailure("Password", errors)
+            });
+        }
+
         var rawVerifyToken = tokenHasher.GenerateToken();
         user.EmailVerificationTokenHash = tokenHasher.Hash(rawVerifyToken);
         user.EmailVerificationTokenExpiresAt = DateTime.UtcNow.Add(EmailVerificationLifetime);
-
-        db.Users.Add(user);
-        await db.SaveChangesAsync(ct);
+        await userManager.UpdateAsync(user);
 
         await emailService.SendEmailVerificationAsync(user.Email, user.FullName, rawVerifyToken, ct);
 
@@ -71,9 +75,9 @@ public sealed class AuthService(
     public async Task<AuthResponse> LoginAsync(LoginRequest req, CancellationToken ct)
     {
         var email = Normalize(req.Email);
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
+        var user = await userManager.FindByEmailAsync(email);
 
-        if (user is null || !passwordHasher.Verify(req.Password, user.PasswordHash))
+        if (user is null || !await userManager.CheckPasswordAsync(user, req.Password))
             throw new UnauthorizedException("Invalid email or password.");
 
         if (user.IsBanned)
@@ -99,7 +103,6 @@ public sealed class AuthService(
         if (stored.User.IsBanned)
             throw new ForbiddenException("This account has been suspended.");
 
-        // Rotate: revoke the old, issue a new one, link them.
         stored.RevokedAt = DateTime.UtcNow;
         var (rawRefresh, hashRefresh, expiresRefresh) = NewRefreshToken();
         var fresh = new RefreshToken
@@ -132,9 +135,7 @@ public sealed class AuthService(
         user.EmailVerificationTokenHash = null;
         user.EmailVerificationTokenExpiresAt = null;
 
-        // If the signup email is itself a university email, the verification
-        // also earns the "Verified Student" badge.
-        if (uniDetector.IsUniversityEmail(user.Email))
+        if (uniDetector.IsUniversityEmail(user.Email!))
             user.IsUniversityVerified = true;
 
         await db.SaveChangesAsync(ct);
@@ -143,10 +144,8 @@ public sealed class AuthService(
     public async Task ForgotPasswordAsync(ForgotPasswordRequest req, CancellationToken ct)
     {
         var email = Normalize(req.Email);
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
+        var user = await userManager.FindByEmailAsync(email);
 
-        // We deliberately return a uniform response whether the email exists,
-        // to avoid revealing which addresses are registered.
         if (user is null) return;
 
         var raw = tokenHasher.GenerateToken();
@@ -154,7 +153,7 @@ public sealed class AuthService(
         user.PasswordResetTokenExpiresAt = DateTime.UtcNow.Add(PasswordResetLifetime);
         await db.SaveChangesAsync(ct);
 
-        await emailService.SendPasswordResetAsync(user.Email, user.FullName, raw, ct);
+        await emailService.SendPasswordResetAsync(user.Email!, user.FullName, raw, ct);
     }
 
     public async Task ResetPasswordAsync(ResetPasswordRequest req, CancellationToken ct)
@@ -165,11 +164,17 @@ public sealed class AuthService(
         if (user is null || user.PasswordResetTokenExpiresAt is null || user.PasswordResetTokenExpiresAt <= DateTime.UtcNow)
             throw new UnauthorizedException("Reset link is invalid or expired.");
 
-        user.PasswordHash = passwordHasher.Hash(req.NewPassword);
+        await userManager.RemovePasswordAsync(user);
+        var result = await userManager.AddPasswordAsync(user, req.NewPassword);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            throw new ValidationException(new[] { new ValidationFailure("Password", errors) });
+        }
+
         user.PasswordResetTokenHash = null;
         user.PasswordResetTokenExpiresAt = null;
 
-        // Revoke any outstanding refresh tokens for the user so old sessions can't be replayed.
         await db.RefreshTokens
             .Where(r => r.UserId == user.Id && r.RevokedAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(r => r.RevokedAt, DateTime.UtcNow), ct);
@@ -179,7 +184,7 @@ public sealed class AuthService(
 
     public async Task RequestUniversityVerificationAsync(Guid userId, VerifyUniversityRequest req, CancellationToken ct)
     {
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct)
+        var user = await userManager.FindByIdAsync(userId.ToString())
             ?? throw new NotFoundException("User not found.");
 
         if (user.Role != UserRole.Student)
@@ -221,17 +226,14 @@ public sealed class AuthService(
 
     public async Task<UserDto> GetCurrentUserAsync(Guid userId, CancellationToken ct)
     {
-        var user = await db.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == userId, ct)
+        var user = await userManager.FindByIdAsync(userId.ToString())
             ?? throw new NotFoundException("User not found.");
         return mapper.Map<UserDto>(user);
     }
 
     public async Task<UserDto> UpdateProfileAsync(Guid userId, UpdateProfileRequest req, CancellationToken ct)
     {
-        var user = await db.Users
-            .FirstOrDefaultAsync(u => u.Id == userId, ct)
+        var user = await userManager.FindByIdAsync(userId.ToString())
             ?? throw new NotFoundException("User not found.");
 
         if (!string.IsNullOrWhiteSpace(req.FullName))
@@ -240,10 +242,10 @@ public sealed class AuthService(
         if (req.PhoneNumber is not null)
             user.PhoneNumber = req.PhoneNumber.Trim();
 
-        if (req.University is not null && user.Role == Domain.Enums.UserRole.Student)
+        if (req.University is not null && user.Role == UserRole.Student)
             user.University = req.University;
 
-        await db.SaveChangesAsync(ct);
+        await userManager.UpdateAsync(user);
         return mapper.Map<UserDto>(user);
     }
 

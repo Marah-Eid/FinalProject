@@ -1,12 +1,13 @@
 using System.Text;
 using Dorm.Application.Abstractions;
 using Dorm.Application.Options;
+using Dorm.Domain.Entities;
 using Dorm.Infrastructure.Email;
 using Dorm.Infrastructure.Identity;
 using Dorm.Infrastructure.Payments;
 using Dorm.Infrastructure.Persistence;
 using Dorm.Infrastructure.Storage;
-// IAppDbContext lives in Dorm.Application.Abstractions; using its short form here.
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,7 +46,22 @@ public static class DependencyInjection
         // Expose the same scoped context behind the Application-layer abstraction.
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
-        // Identity services ──────────────────────────────────────────────────
+        // ASP.NET Core Identity ─────────────────────────────────────────────
+        services.AddIdentityCore<User>(o =>
+            {
+                o.Password.RequireDigit = true;
+                o.Password.RequireLowercase = true;
+                o.Password.RequireUppercase = true;
+                o.Password.RequireNonAlphanumeric = true;
+                o.Password.RequiredLength = 8;
+                o.User.RequireUniqueEmail = true;
+            })
+            .AddRoles<IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<AppDbContext>();
+
+        services.AddScoped<IPasswordHasher<User>, BCryptIdentityPasswordHasher>();
+
+        // Custom identity services ──────────────────────────────────────────
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
         services.AddSingleton<ITokenHasher, TokenHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();

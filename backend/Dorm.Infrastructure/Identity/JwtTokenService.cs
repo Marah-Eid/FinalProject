@@ -25,10 +25,10 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options) : IJwtTokenSer
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email),
+            new(JwtRegisteredClaimNames.Email, user.Email!),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Email, user.Email!),
             new(ClaimTypes.Role, user.Role.ToString()),
             new("gender", user.Gender.ToString()),
         };

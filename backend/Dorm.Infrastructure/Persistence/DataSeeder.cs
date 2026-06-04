@@ -1,11 +1,10 @@
-using Dorm.Application.Abstractions;
 using Dorm.Application.Common;
 using Dorm.Domain.Entities;
 using Dorm.Domain.Enums;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-// Alias for the entity that collides with the Dorm.Application namespace.
 using AppApplication = Dorm.Domain.Entities.Application;
 
 namespace Dorm.Infrastructure.Persistence;
@@ -29,7 +28,7 @@ public static class DataSeeder
     {
         var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(DataSeeder));
         var db = services.GetRequiredService<AppDbContext>();
-        var hasher = services.GetRequiredService<IPasswordHasher>();
+        var userManager = services.GetRequiredService<UserManager<User>>();
 
         var alreadySeeded = await db.Users.AsNoTracking().AnyAsync(u => u.Email == SeedMarkerEmail, ct);
         if (alreadySeeded)
@@ -43,12 +42,14 @@ public static class DataSeeder
         var rng = new Random(19092002);  // deterministic seed for reproducible demos
 
         // ── Owners ─────────────────────────────────────────────────────────
-        var owners = BuildOwners(hasher);
-        db.Users.AddRange(owners);
+        var owners = BuildOwners();
+        foreach (var o in owners)
+            await userManager.CreateAsync(o, "Owner123!");
 
         // ── Students ───────────────────────────────────────────────────────
-        var students = BuildStudents(hasher);
-        db.Users.AddRange(students);
+        var students = BuildStudents();
+        foreach (var s in students)
+            await userManager.CreateAsync(s, "Student123!");
 
         // ── Student profiles + quiz answers (all 20 students completed) ────
         foreach (var s in students)
@@ -219,7 +220,7 @@ public static class DataSeeder
         || (apt == GenderType.MaleOnly && student == Gender.Male)
         || (apt == GenderType.FemaleOnly && student == Gender.Female);
 
-    private static List<User> BuildOwners(IPasswordHasher hasher)
+    private static List<User> BuildOwners()
     {
         var seedOwners = new (string FullName, string Email, Gender Gender)[]
         {
@@ -240,7 +241,7 @@ public static class DataSeeder
             Id = Guid.NewGuid(),
             FullName = o.FullName,
             Email = o.Email,
-            PasswordHash = hasher.Hash("Owner123!"),
+            UserName = o.Email,
             PhoneNumber = $"+9627{Random.Shared.Next(10000000, 99999999)}",
             Role = UserRole.Owner,
             Gender = o.Gender,
@@ -250,7 +251,7 @@ public static class DataSeeder
         }).ToList();
     }
 
-    private static List<User> BuildStudents(IPasswordHasher hasher)
+    private static List<User> BuildStudents()
     {
         var seedStudents = new (string Name, string EmailLocal, string Domain, Gender Gender, University? University)[]
         {
@@ -276,20 +277,23 @@ public static class DataSeeder
             ("Layla Touqan",    "student20.seed", "hu.edu.jo",   Gender.Female, University.HU),
         };
 
-        return seedStudents.Select((s, i) => new User
+        return seedStudents.Select((s, i) =>
         {
-            Id = Guid.NewGuid(),
-            FullName = s.Name,
-            Email = $"{s.EmailLocal}@{s.Domain}",
-            PasswordHash = hasher.Hash("Student123!"),
-            PhoneNumber = $"+9627{77 + i:D2}{Random.Shared.Next(100000, 999999)}",
-            Role = UserRole.Student,
-            Gender = s.Gender,
-            University = s.University,
-            // Half verified through email, all the .edu.jo ones get the university badge.
-            IsEmailVerified = true,
-            IsUniversityVerified = s.Domain.EndsWith(".edu.jo"),
-            CreatedAt = DateTime.UtcNow.AddDays(-Random.Shared.Next(7, 180)),
+            var email = $"{s.EmailLocal}@{s.Domain}";
+            return new User
+            {
+                Id = Guid.NewGuid(),
+                FullName = s.Name,
+                Email = email,
+                UserName = email,
+                PhoneNumber = $"+9627{77 + i:D2}{Random.Shared.Next(100000, 999999)}",
+                Role = UserRole.Student,
+                Gender = s.Gender,
+                University = s.University,
+                IsEmailVerified = true,
+                IsUniversityVerified = s.Domain.EndsWith(".edu.jo"),
+                CreatedAt = DateTime.UtcNow.AddDays(-Random.Shared.Next(7, 180)),
+            };
         }).ToList();
     }
 

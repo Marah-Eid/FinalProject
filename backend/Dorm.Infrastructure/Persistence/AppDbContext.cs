@@ -1,27 +1,16 @@
 using Dorm.Application.Abstractions;
 using Dorm.Domain.Entities;
 using Dorm.Domain.Enums;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-// Alias because the `Application` *entity* name collides with the `Dorm.Application` *namespace*
-// (Dorm.Infrastructure references Dorm.Application, so `Application` resolves to the namespace
-// under sibling-lookup rules). We give the entity a non-clashing alias here.
 using AppApplication = Dorm.Domain.Entities.Application;
 
 namespace Dorm.Infrastructure.Persistence;
 
-/// <summary>
-/// Application's single EF Core context. All entities live here.
-///
-/// Conventions used throughout OnModelCreating:
-/// • Enums are stored as strings (HasConversion&lt;string&gt;) so the DB is readable.
-/// • Money columns (FullRent, Amount) are decimal(10,2).
-/// • DateTime columns are stored as datetime2 (SQL Server default).
-/// • Two relationships to the same parent table use DeleteBehavior.Restrict
-///   to avoid Postgres "multiple cascade paths" errors.
-/// </summary>
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IAppDbContext
+public class AppDbContext(DbContextOptions<AppDbContext> options)
+    : IdentityDbContext<User, IdentityRole<Guid>, Guid>(options), IAppDbContext
 {
-    public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<StudentProfile> StudentProfiles => Set<StudentProfile>();
     public DbSet<QuizAnswer> QuizAnswers => Set<QuizAnswer>();
@@ -43,16 +32,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         base.OnModelCreating(b);
 
-        // ─── User ────────────────────────────────────────────────────────────
+        // ─── User (extends IdentityUser<Guid> — PK + Email/PhoneNumber/PasswordHash come from base) ──
         b.Entity<User>(e =>
         {
-            e.HasKey(u => u.Id);
-            e.HasIndex(u => u.Email).IsUnique();
-
             e.Property(u => u.FullName).HasMaxLength(120).IsRequired();
-            e.Property(u => u.Email).HasMaxLength(254).IsRequired();
-            e.Property(u => u.PasswordHash).HasMaxLength(255).IsRequired();
-            e.Property(u => u.PhoneNumber).HasMaxLength(40).IsRequired();
             e.Property(u => u.ProfilePhotoUrl).HasMaxLength(500);
             e.Property(u => u.PendingUniversityEmail).HasMaxLength(254);
 
