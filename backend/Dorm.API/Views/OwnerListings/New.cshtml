@@ -1,6 +1,8 @@
+@using Dorm.Domain.Enums
 @{
     Layout = "_DashboardLayout";
     ViewData["Title"] = "New Listing";
+    var requiresFee = (bool)(ViewBag.RequiresListingFee ?? false);
 }
 
 @section Styles {
@@ -60,12 +62,19 @@
     <div class="nl-card">
         <div class="alert alert-danger d-none" id="nl-error" style="border-radius:8px"></div>
         <form id="nl-form" novalidate>
+            @Html.AntiForgeryToken()
             <h6 class="nl-section">Basics</h6>
             <div class="mb-3"><label class="form-label">Title</label><input type="text" class="form-control" id="nl-title" required /></div>
             <div class="mb-3"><label class="form-label">Description <span class="text-danger">*</span></label><textarea class="form-control" id="nl-description" rows="3" required minlength="20" placeholder="At least 20 characters"></textarea></div>
             <div class="row g-3 mb-4">
                 <div class="col-sm-4"><label class="form-label">City</label>
-                    <select class="form-select" id="nl-city" required><option value="">—</option><option value="0">Amman</option><option value="1">Irbid</option><option value="2">Zarqa</option><option value="3">Madaba</option><option value="4">Salt</option><option value="5">Karak</option><option value="6">Mafraq</option><option value="7">Aqaba</option></select></div>
+                    <select class="form-select" id="nl-city" required>
+                        <option value="">—</option>
+                        @foreach (var c in Enum.GetValues<City>())
+                        {
+                            <option value="@((int)c)">@c</option>
+                        }
+                    </select></div>
                 <div class="col-sm-4"><label class="form-label">Neighborhood</label><input type="text" class="form-control" id="nl-neighborhood" required /></div>
                 <div class="col-sm-4"><label class="form-label">Address Detail <span class="text-danger">*</span></label><input type="text" class="form-control" id="nl-address" required /></div>
             </div>
@@ -75,12 +84,10 @@
                 <div class="col-sm-6"><label class="form-label">Nearest University</label>
                     <select class="form-select" id="nl-university">
                         <option value="">—</option>
-                        <option value="0">JU</option><option value="1">GJU</option><option value="2">PSUT</option>
-                        <option value="3">YU</option><option value="4">HU</option><option value="5">MU</option>
-                        <option value="6">ZU</option><option value="7">BAU</option><option value="8">JUST</option><option value="9">AAU</option>
-                        <option value="10">AABU</option><option value="11">UOP</option><option value="12">MEU</option><option value="13">ASU</option>
-                        <option value="14">WISE</option><option value="15">PU</option><option value="16">Isra</option><option value="17">Jadara</option>
-                        <option value="18">Tafila</option><option value="19">AHU</option>
+                        @foreach (var u in Enum.GetValues<University>())
+                        {
+                            <option value="@((int)u)">@u</option>
+                        }
                     </select></div>
                 <div class="col-sm-6"><label class="form-label">Walking Minutes</label><input type="number" class="form-control" id="nl-distance" min="1" /></div>
             </div>
@@ -97,11 +104,26 @@
             <h6 class="nl-section">House Rules</h6>
             <div class="row g-3 mb-3">
                 <div class="col-sm-4"><label class="form-label">Gender Policy</label>
-                    <select class="form-select" id="nl-gender" required><option value="0">Male Only</option><option value="1">Female Only</option><option value="2">Mixed</option></select></div>
+                    <select class="form-select" id="nl-gender" required>
+                        @foreach (var g in Enum.GetValues<GenderType>())
+                        {
+                            <option value="@((int)g)">@g</option>
+                        }
+                    </select></div>
                 <div class="col-sm-4"><label class="form-label">Smoking</label>
-                    <select class="form-select" id="nl-smoking"><option value="0">Yes</option><option value="1">No</option><option value="2">Outside Only</option></select></div>
+                    <select class="form-select" id="nl-smoking">
+                        @foreach (var s in Enum.GetValues<SmokingRule>())
+                        {
+                            <option value="@((int)s)">@s</option>
+                        }
+                    </select></div>
                 <div class="col-sm-4"><label class="form-label">Guests</label>
-                    <select class="form-select" id="nl-guests"><option value="0">Yes</option><option value="1">No</option><option value="2">Limited</option></select></div>
+                    <select class="form-select" id="nl-guests">
+                        @foreach (var g in Enum.GetValues<GuestsRule>())
+                        {
+                            <option value="@((int)g)">@g</option>
+                        }
+                    </select></div>
             </div>
             <div class="form-check mb-4">
                 <input type="checkbox" class="form-check-input" id="nl-furnished" />
@@ -109,7 +131,12 @@
             </div>
 
             <h6 class="nl-section">Amenities</h6>
-            <div class="d-flex flex-wrap gap-2 mb-4" id="nl-amenities"></div>
+            <div class="d-flex flex-wrap gap-2 mb-4" id="nl-amenities">
+                @foreach (var a in Enum.GetValues<AmenityType>())
+                {
+                    <div class="amenity-chip" data-key="@((int)a)" onclick="this.classList.toggle('selected')">@a</div>
+                }
+            </div>
 
             <h6 class="nl-section">Photos</h6>
             <div id="nl-photo-zone" style="border:2px dashed #e2e8f0;border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:1rem"
@@ -123,10 +150,13 @@
             <input type="file" id="nl-photo-input" accept="image/jpeg,image/png,image/webp" multiple style="display:none" onchange="addFiles(this.files)" />
             <div id="nl-photo-preview" class="d-flex flex-wrap gap-2 mb-4"></div>
 
-            <div id="fee-banner" class="d-none mb-3" style="background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:10px;padding:1rem;display:flex;align-items:center;gap:.75rem">
-                <div style="width:40px;height:40px;border-radius:10px;background:rgba(249,115,22,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#F97316;font-size:1.1rem"><i class="bi bi-credit-card"></i></div>
-                <div><span class="fw-bold" style="font-size:.88rem;color:#1e293b">Listing fee required</span><br/><span style="font-size:.8rem;color:#64748b">A 10 JOD fee is required for additional listings. Your first listing was free.</span></div>
-            </div>
+            @if (requiresFee)
+            {
+                <div id="fee-banner" class="mb-3" style="background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:10px;padding:1rem;display:flex;align-items:center;gap:.75rem">
+                    <div style="width:40px;height:40px;border-radius:10px;background:rgba(249,115,22,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#F97316;font-size:1.1rem"><i class="bi bi-credit-card"></i></div>
+                    <div><span class="fw-bold" style="font-size:.88rem;color:#1e293b">Listing fee required</span><br/><span style="font-size:.8rem;color:#64748b">A 10 JOD fee is required for additional listings. Your first listing was free.</span></div>
+                </div>
+            }
             <button type="submit" class="btn-publish w-100" id="nl-submit">Publish Listing</button>
         </form>
     </div>
@@ -135,74 +165,52 @@
 @section Scripts {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-var AMENITIES = [
-    { key:0, label:'WiFi' }, { key:1, label:'AC' }, { key:2, label:'Heating' },
-    { key:3, label:'Washing Machine' }, { key:4, label:'Parking' },
-    { key:5, label:'Furnished' }, { key:6, label:'Elevator' },
-    { key:7, label:'Balcony' }, { key:8, label:'Kitchen' },
-    { key:9, label:'Private Bathroom' }
-]
+var feeRequired = @(requiresFee ? "true" : "false");
+var csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
-var amenDiv = document.getElementById('nl-amenities')
-amenDiv.innerHTML = AMENITIES.map(function (a) {
-    return '<div class="amenity-chip" data-key="' + a.key + '" onclick="toggleAmenity(this)">' + a.label + '</div>'
-}).join('')
-
-function toggleAmenity(el) { el.classList.toggle('selected') }
-
-var selectedFiles = []
+var selectedFiles = [];
 function addFiles(fileList) {
     for (var i = 0; i < fileList.length; i++) {
-        if (selectedFiles.length >= 10) break
-        var f = fileList[i]
-        if (!f.type.match(/^image\/(jpeg|png|webp)$/)) continue
-        selectedFiles.push(f)
+        if (selectedFiles.length >= 10) break;
+        var f = fileList[i];
+        if (!f.type.match(/^image\/(jpeg|png|webp)$/)) continue;
+        selectedFiles.push(f);
     }
-    renderPreviews()
+    renderPreviews();
 }
 function removeFile(idx) {
-    selectedFiles.splice(idx, 1)
-    renderPreviews()
+    selectedFiles.splice(idx, 1);
+    renderPreviews();
 }
 function renderPreviews() {
-    var container = document.getElementById('nl-photo-preview')
+    var container = document.getElementById('nl-photo-preview');
     container.innerHTML = selectedFiles.map(function (f, i) {
-        var url = URL.createObjectURL(f)
+        var url = URL.createObjectURL(f);
         return '<div class="photo-thumb">' +
             '<img src="' + url + '" alt="" />' +
             '<button type="button" class="remove-btn" onclick="removeFile(' + i + ')">&times;</button>' +
-            '</div>'
-    }).join('')
+            '</div>';
+    }).join('');
 }
 
-var feeRequired = false
-auth.initAuth().then(function () {
-    api.get('/apartments/requires-listing-fee').then(function (res) {
-        if (res && res.required) {
-            feeRequired = true
-            document.getElementById('fee-banner').classList.remove('d-none')
-        }
-    }).catch(function () {})
-})
-
 setTimeout(function () {
-    var el = document.getElementById('nl-map')
-    if (!el || !window.L) return
-    var mapInstance = L.map(el).setView([31.95, 35.93], 10)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(mapInstance)
-    var marker = null
+    var el = document.getElementById('nl-map');
+    if (!el || !window.L) return;
+    var mapInstance = L.map(el).setView([31.95, 35.93], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(mapInstance);
+    var marker = null;
     mapInstance.on('click', function (e) {
-        if (marker) mapInstance.removeLayer(marker)
-        marker = L.marker(e.latlng).addTo(mapInstance)
-        document.getElementById('nl-lat').value = e.latlng.lat
-        document.getElementById('nl-lng').value = e.latlng.lng
-    })
-}, 300)
+        if (marker) mapInstance.removeLayer(marker);
+        marker = L.marker(e.latlng).addTo(mapInstance);
+        document.getElementById('nl-lat').value = e.latlng.lat;
+        document.getElementById('nl-lng').value = e.latlng.lng;
+    });
+}, 300);
 
 document.getElementById('nl-form').addEventListener('submit', async function (e) {
-    e.preventDefault()
-    var errBox = document.getElementById('nl-error')
-    errBox.classList.add('d-none')
+    e.preventDefault();
+    var errBox = document.getElementById('nl-error');
+    errBox.classList.add('d-none');
 
     var body = {
         title: document.getElementById('nl-title').value.trim(),
@@ -218,68 +226,84 @@ document.getElementById('nl-form').addEventListener('submit', async function (e)
         guestsRule: parseInt(document.getElementById('nl-guests').value),
         isFurnished: document.getElementById('nl-furnished').checked,
         amenities: []
-    }
+    };
 
-    document.querySelectorAll('.amenity-chip.selected').forEach(function (el) { body.amenities.push(parseInt(el.dataset.key)) })
+    document.querySelectorAll('.amenity-chip.selected').forEach(function (el) { body.amenities.push(parseInt(el.dataset.key)); });
 
-    var uni = document.getElementById('nl-university').value
-    if (uni) body.nearestUniversity = parseInt(uni)
-    var dist = document.getElementById('nl-distance').value
-    if (dist) body.distanceMinutes = parseInt(dist)
-    var lat = document.getElementById('nl-lat').value
-    var lng = document.getElementById('nl-lng').value
-    if (lat && lng) { body.latitude = parseFloat(lat); body.longitude = parseFloat(lng) }
+    var uni = document.getElementById('nl-university').value;
+    if (uni) body.nearestUniversity = parseInt(uni);
+    var dist = document.getElementById('nl-distance').value;
+    if (dist) body.distanceMinutes = parseInt(dist);
+    var lat = document.getElementById('nl-lat').value;
+    var lng = document.getElementById('nl-lng').value;
+    if (lat && lng) { body.latitude = parseFloat(lat); body.longitude = parseFloat(lng); }
 
-    var errors = []
-    if (!body.title || body.title.length < 5) errors.push('Title must be at least 5 characters.')
-    if (!body.description || body.description.length < 20) errors.push('Description must be at least 20 characters.')
-    if (isNaN(body.city)) errors.push('Please select a city.')
-    if (!body.neighborhood) errors.push('Neighborhood is required.')
-    if (!body.addressDetail) errors.push('Address detail is required.')
-    if (isNaN(body.fullRent) || body.fullRent <= 0) errors.push('Rent must be greater than 0.')
-    if (isNaN(body.totalSpots) || body.totalSpots < 1) errors.push('Total spots must be at least 1.')
-    if (isNaN(body.availableSpots)) errors.push('Available spots is required.')
+    var errors = [];
+    if (!body.title || body.title.length < 5) errors.push('Title must be at least 5 characters.');
+    if (!body.description || body.description.length < 20) errors.push('Description must be at least 20 characters.');
+    if (isNaN(body.city)) errors.push('Please select a city.');
+    if (!body.neighborhood) errors.push('Neighborhood is required.');
+    if (!body.addressDetail) errors.push('Address detail is required.');
+    if (isNaN(body.fullRent) || body.fullRent <= 0) errors.push('Rent must be greater than 0.');
+    if (isNaN(body.totalSpots) || body.totalSpots < 1) errors.push('Total spots must be at least 1.');
+    if (isNaN(body.availableSpots)) errors.push('Available spots is required.');
     if (errors.length) {
-        errBox.innerHTML = errors.join('<br>')
-        errBox.classList.remove('d-none')
-        return
+        errBox.innerHTML = errors.join('<br>');
+        errBox.classList.remove('d-none');
+        return;
     }
 
-    var btn = document.getElementById('nl-submit')
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publishing...'
+    var btn = document.getElementById('nl-submit');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publishing...';
 
     try {
         if (feeRequired) {
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing 10 JOD listing fee...'
-            var payResult = await api.post('/payments/checkout', { body: { type: 1 } })
-            if (payResult.checkoutUrl) {
-                sessionStorage.setItem('pendingListing', JSON.stringify(body))
-                window.location.href = payResult.checkoutUrl
-                return
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing 10 JOD listing fee...';
+            var payRes = await fetch('/Payment/Checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'type=1&__RequestVerificationToken=' + encodeURIComponent(csrfToken),
+                redirect: 'manual'
+            });
+            if (payRes.status === 0 || payRes.type === 'opaqueredirect' || (payRes.status >= 300 && payRes.status < 400)) {
+                sessionStorage.setItem('pendingListing', JSON.stringify(body));
+                var loc = payRes.headers.get('Location');
+                if (loc) { window.location.href = loc; return; }
             }
-            feeRequired = false
-            document.getElementById('fee-banner').classList.add('d-none')
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating listing...'
+            feeRequired = false;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating listing...';
         }
-        var result = await api.post('/apartments', { body: body })
+
+        var res = await fetch('/OwnerListings/Create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+            var err = await res.json().catch(function () { return {}; });
+            throw { message: err.error?.message || 'Failed to create listing.', details: err.error?.details };
+        }
+        var result = await res.json();
+
         if (selectedFiles.length > 0) {
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading photos...'
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading photos...';
             for (var i = 0; i < selectedFiles.length; i++) {
-                var fd = new FormData()
-                fd.append('file', selectedFiles[i])
-                await api.post('/apartments/' + result.id + '/photos', { formData: fd })
+                var fd = new FormData();
+                fd.append('file', selectedFiles[i]);
+                fd.append('__RequestVerificationToken', csrfToken);
+                await fetch('/OwnerListings/' + result.id + '/Photos', { method: 'POST', body: fd });
             }
         }
-        window.location.href = '/Apartment/Detail/' + result.id
+        window.location.href = '/Apartment/Detail/' + result.id;
     } catch (err) {
-        var msg = err.message || 'Something went wrong. Please try again.'
-        if (err.details && err.details.length) msg = err.details.map(function(d) { return d.message || d }).join('<br>')
-        errBox.innerHTML = msg
-        errBox.classList.remove('d-none')
-        btn.disabled = false
-        btn.textContent = 'Publish Listing'
+        var msg = err.message || 'Something went wrong. Please try again.';
+        if (err.details && Array.isArray(err.details)) msg = err.details.map(function(d) { return d.message || d; }).join('<br>');
+        errBox.innerHTML = msg;
+        errBox.classList.remove('d-none');
+        btn.disabled = false;
+        btn.textContent = 'Publish Listing';
     }
-})
+});
 </script>
 }

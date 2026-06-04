@@ -1,6 +1,11 @@
 @{
-    Layout = "_DashboardLayout";
+    Layout = User.FindFirstValue(ClaimTypes.Role) == "Student" ? "_BrowseLayout" : "_DashboardLayout";
     ViewData["Title"] = "Edit Profile";
+    var profile = (Dorm.Application.DTOs.Auth.UserDto)ViewBag.UserProfile;
+    var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+    var initials = string.Join("", profile.FullName.Split(' ').Select(n => n.Length > 0 ? n[0].ToString() : "")).ToUpper();
+    if (initials.Length > 2) initials = initials.Substring(0, 2);
+    var roleName = profile.Role switch { Dorm.Domain.Enums.UserRole.Student => "Student", Dorm.Domain.Enums.UserRole.Owner => "Owner", Dorm.Domain.Enums.UserRole.Admin => "Admin", _ => "User" };
 }
 
 @section Styles {
@@ -8,11 +13,7 @@
     .profile-page { max-width: 640px; margin: 0 auto; padding: 2.5rem 1rem; }
     .profile-page-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: .25rem; }
     .profile-page-sub { color: #64748b; font-size: .9rem; margin-bottom: 2rem; }
-
-    .profile-card {
-        background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
-        overflow: hidden;
-    }
+    .profile-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
     .profile-card-header {
         padding: 1.5rem 1.5rem 1rem; display: flex; align-items: center; gap: 1rem;
         border-bottom: 1px solid #f1f5f9;
@@ -26,61 +27,21 @@
     .profile-card-header .info h5 { font-weight: 700; font-size: 1.05rem; color: #1e293b; margin-bottom: .1rem; }
     .profile-card-header .info p { font-size: .82rem; color: #94a3b8; margin: 0; }
     .profile-card-header .badges { display: flex; gap: .4rem; margin-top: .3rem; }
-    .badge-verified {
-        display: inline-flex; align-items: center; gap: .25rem;
-        font-size: .7rem; font-weight: 600; padding: .2rem .5rem; border-radius: 4px;
-    }
+    .badge-verified { display: inline-flex; align-items: center; gap: .25rem; font-size: .7rem; font-weight: 600; padding: .2rem .5rem; border-radius: 4px; }
     .badge-email { background: rgba(16,185,129,.1); color: #10b981; }
     .badge-uni { background: rgba(59,130,246,.1); color: #3b82f6; }
     .badge-not { background: #f1f5f9; color: #94a3b8; }
-
     .profile-form { padding: 1.5rem; }
-    .profile-form label {
-        font-size: .82rem; font-weight: 600; color: #475569; margin-bottom: .3rem;
-    }
-    .profile-form .form-control, .profile-form .form-select {
-        padding: .65rem .9rem; border-radius: 8px; font-size: .9rem;
-    }
-    .profile-form .form-control:disabled, .profile-form .form-select:disabled {
-        background: #f8fafc; color: #94a3b8;
-    }
-    .profile-form .field-hint {
-        font-size: .75rem; color: #94a3b8; margin-top: .2rem;
-    }
-
+    .profile-form label { font-size: .82rem; font-weight: 600; color: #475569; margin-bottom: .3rem; }
+    .profile-form .form-control, .profile-form .form-select { padding: .65rem .9rem; border-radius: 8px; font-size: .9rem; }
+    .profile-form .form-control:disabled, .profile-form .form-select:disabled { background: #f8fafc; color: #94a3b8; }
+    .profile-form .field-hint { font-size: .75rem; color: #94a3b8; margin-top: .2rem; }
     .btn-save-profile {
         background: #0f172a; color: #fff; border: none; border-radius: 8px;
         padding: .65rem 1.5rem; font-weight: 600; font-size: .88rem;
         display: inline-flex; align-items: center; gap: .4rem;
-        transition: all .2s;
     }
     .btn-save-profile:hover { background: #1e293b; }
-    .btn-save-profile:disabled { opacity: .5; cursor: not-allowed; }
-
-    .save-success {
-        display: inline-flex; align-items: center; gap: .3rem;
-        font-size: .82rem; font-weight: 600; color: #10b981;
-        opacity: 0; transition: opacity .3s;
-    }
-    .save-success.show { opacity: 1; }
-
-    .verified-card {
-        border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem;
-        margin-top: 1.5rem; background: #fff;
-        display: flex; align-items: center; gap: 1rem;
-    }
-    .verified-card-icon {
-        width: 44px; height: 44px; border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem; flex-shrink: 0;
-    }
-    .btn-get-badge {
-        background: #F97316; color: #fff; border: none; border-radius: 8px;
-        padding: .45rem 1rem; font-weight: 600; font-size: .82rem;
-        cursor: pointer; transition: all .2s; white-space: nowrap;
-    }
-    .btn-get-badge:hover { background: #ea6c10; }
-    .btn-get-badge:disabled { opacity: .5; cursor: not-allowed; }
 </style>
 }
 
@@ -88,212 +49,80 @@
     <h2 class="profile-page-title">Edit Profile</h2>
     <p class="profile-page-sub">Update your personal information.</p>
 
-    <div id="profile-loading" class="text-center py-5">
-        <div class="spinner-border" style="color:#94a3b8"></div>
-    </div>
+    @if (TempData["Success"] is string success)
+    {
+        <div class="alert alert-success" style="border-radius:8px">@success</div>
+    }
 
-    <div id="profile-content" class="d-none">
-        <div id="badge-section"></div>
-        <div class="profile-card">
-            <div class="profile-card-header">
-                <div class="profile-big-avatar" id="p-avatar">U</div>
-                <div class="info">
-                    <h5 id="p-display-name">User</h5>
-                    <p id="p-display-email"></p>
-                    <div class="badges" id="p-badges"></div>
+    <div class="profile-card">
+        <div class="profile-card-header">
+            <div class="profile-big-avatar">@initials</div>
+            <div class="info">
+                <h5>@profile.FullName</h5>
+                <p>@profile.Email</p>
+                <div class="badges">
+                    @if (profile.IsEmailVerified)
+                    {
+                        <span class="badge-verified badge-email"><i class="bi bi-check-circle-fill"></i> Email Verified</span>
+                    }
+                    else
+                    {
+                        <span class="badge-verified badge-not"><i class="bi bi-clock"></i> Email Pending</span>
+                    }
+                    @if (profile.IsUniversityVerified)
+                    {
+                        <span class="badge-verified badge-uni"><i class="bi bi-patch-check-fill"></i> Verified Student</span>
+                    }
                 </div>
             </div>
+        </div>
 
-            <div class="profile-form">
-                <div class="alert alert-danger d-none" id="profile-error" style="border-radius:8px;font-size:.85rem"></div>
-
-                <form id="profile-form" novalidate>
+        <div class="profile-form">
+            <form method="post" asp-action="Update" asp-controller="Profile">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-control" name="fullName" value="@profile.FullName" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" value="@profile.Email" disabled />
+                    <div class="field-hint">Email cannot be changed.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" class="form-control" name="phoneNumber" value="@profile.PhoneNumber" placeholder="+962..." />
+                </div>
+                @if (role == "Student")
+                {
                     <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" class="form-control" id="pf-name" required />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" id="pf-email" disabled />
-                        <div class="field-hint">Email cannot be changed.</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Phone Number</label>
-                        <input type="tel" class="form-control" id="pf-phone" placeholder="+962..." />
-                    </div>
-
-                    <div class="mb-3 d-none" id="pf-uni-group">
                         <label class="form-label">University</label>
-                        <select class="form-select" id="pf-university">
+                        <select class="form-select" name="university">
                             <option value="">Select university</option>
-                            <option value="0">University of Jordan (JU)</option>
-                            <option value="1">German Jordanian University (GJU)</option>
-                            <option value="2">Princess Sumaya University (PSUT)</option>
-                            <option value="3">Yarmouk University (YU)</option>
-                            <option value="4">Hashemite University (HU)</option>
-                            <option value="5">Mutah University (MU)</option>
-                            <option value="6">Zarqa University (ZU)</option>
-                            <option value="7">Al-Balqa Applied University (BAU)</option>
-                            <option value="8">Jordan University of Science & Technology (JUST)</option>
-                            <option value="9">Amman Arab University (AAU)</option>
-                            <option value="10">Al-Ahliyya Amman University (AABU)</option>
-                            <option value="11">University of Petra (UOP)</option>
-                            <option value="12">Middle East University (MEU)</option>
-                            <option value="13">Applied Science University (ASU)</option>
-                            <option value="14">World Islamic Sciences University (WISE)</option>
-                            <option value="15">Philadelphia University (PU)</option>
-                            <option value="16">Isra University</option>
-                            <option value="17">Jadara University</option>
-                            <option value="18">Tafila Technical University</option>
-                            <option value="19">Al-Hussein Bin Talal University (AHU)</option>
+                            @foreach (var uni in Enum.GetValues<Dorm.Domain.Enums.University>())
+                            {
+                                if (profile.University == uni)
+                                {
+                                    <option value="@((int)uni)" selected>@uni</option>
+                                }
+                                else
+                                {
+                                    <option value="@((int)uni)">@uni</option>
+                                }
+                            }
                         </select>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <input type="text" class="form-control" id="pf-role" disabled />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Member since</label>
-                        <input type="text" class="form-control" id="pf-joined" disabled />
-                    </div>
-
-                    <div class="d-flex align-items-center gap-3 mt-4">
-                        <button type="submit" class="btn-save-profile" id="pf-save-btn">
-                            <i class="bi bi-check2"></i> Save Changes
-                        </button>
-                        <span class="save-success" id="save-success">
-                            <i class="bi bi-check-circle-fill"></i> Saved
-                        </span>
-                    </div>
-                </form>
-            </div>
+                }
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <input type="text" class="form-control" value="@roleName" disabled />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Member since</label>
+                    <input type="text" class="form-control" value="@profile.CreatedAt.ToString("MMMM d, yyyy")" disabled />
+                </div>
+                <button type="submit" class="btn-save-profile mt-3"><i class="bi bi-check2"></i> Save Changes</button>
+            </form>
         </div>
     </div>
 </div>
-
-@section Scripts {
-<script>
-var ROLE_NAMES = { 0: 'Student', 1: 'Owner', 2: 'Admin' }
-
-auth.initAuth().then(function () {
-    var user = auth.getUser()
-    if (!user) { window.location.href = '/Account/Login'; return }
-
-    document.getElementById('profile-loading').classList.add('d-none')
-    document.getElementById('profile-content').classList.remove('d-none')
-
-    var name = user.fullName || 'User'
-    var initials = name.split(' ').map(function(n){ return n[0] }).join('').substring(0,2).toUpperCase()
-
-    document.getElementById('p-avatar').textContent = initials
-    document.getElementById('p-display-name').textContent = name
-    document.getElementById('p-display-email').textContent = user.email || ''
-
-    // Badges
-    var badges = ''
-    if (user.isEmailVerified) badges += '<span class="badge-verified badge-email"><i class="bi bi-check-circle-fill"></i> Email Verified</span>'
-    else badges += '<span class="badge-verified badge-not"><i class="bi bi-clock"></i> Email Pending</span>'
-    if (user.isUniversityVerified) badges += '<span class="badge-verified badge-uni"><i class="bi bi-patch-check-fill"></i> Verified Student</span>'
-    document.getElementById('p-badges').innerHTML = badges
-
-    // Fill form
-    document.getElementById('pf-name').value = user.fullName || ''
-    document.getElementById('pf-email').value = user.email || ''
-    document.getElementById('pf-phone').value = user.phoneNumber || ''
-    document.getElementById('pf-role').value = ROLE_NAMES[user.role] || 'User'
-    document.getElementById('pf-joined').value = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) : ''
-
-    if (user.role === 0) {
-        document.getElementById('pf-uni-group').classList.remove('d-none')
-        if (user.university != null) {
-            document.getElementById('pf-university').value = user.university
-        }
-
-        var badgeSection = document.getElementById('badge-section')
-        if (user.isUniversityVerified) {
-            badgeSection.innerHTML = '<div class="verified-card mb-4">' +
-                '<div class="verified-card-icon" style="background:rgba(59,130,246,.1);color:#3b82f6"><i class="bi bi-patch-check-fill"></i></div>' +
-                '<div style="flex:1"><div class="fw-bold" style="font-size:.88rem;color:#1e293b">Verified Student</div>' +
-                '<div style="font-size:.78rem;color:#64748b">Your university email has been verified.</div></div>' +
-                '<span class="badge bg-success bg-opacity-10 text-success" style="font-size:.72rem"><i class="bi bi-check-circle-fill me-1"></i>Active</span></div>'
-        } else {
-            badgeSection.innerHTML = '<div class="verified-card mb-4">' +
-                '<div class="verified-card-icon" style="background:rgba(249,115,22,.1);color:#F97316"><i class="bi bi-patch-check"></i></div>' +
-                '<div style="flex:1"><div class="fw-bold" style="font-size:.88rem;color:#1e293b">Get Verified</div>' +
-                '<div style="font-size:.78rem;color:#64748b">Show a verified badge on your profile for 2 JOD/month.</div></div>' +
-                '<button class="btn-get-badge" id="btn-verified-badge" onclick="buyVerifiedBadge(this)"><i class="bi bi-patch-check me-1"></i>Get Badge — 2 JOD</button></div>'
-        }
-    }
-})
-
-document.getElementById('profile-form').addEventListener('submit', async function (e) {
-    e.preventDefault()
-    var errBox = document.getElementById('profile-error')
-    errBox.classList.add('d-none')
-
-    var btn = document.getElementById('pf-save-btn')
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...'
-
-    var payload = {
-        fullName: document.getElementById('pf-name').value.trim() || null,
-        phoneNumber: document.getElementById('pf-phone').value.trim() || null,
-        university: null
-    }
-
-    var user = auth.getUser()
-    if (user && user.role === 0) {
-        var uniVal = document.getElementById('pf-university').value
-        payload.university = uniVal !== '' ? parseInt(uniVal) : null
-    }
-
-    try {
-        await api.put('/users/me', { body: payload })
-        await auth.fetchMe()
-
-        // Update header display
-        var updated = auth.getUser()
-        if (updated) {
-            var name = updated.fullName || 'User'
-            var initials = name.split(' ').map(function(n){ return n[0] }).join('').substring(0,2).toUpperCase()
-            document.getElementById('p-avatar').textContent = initials
-            document.getElementById('p-display-name').textContent = name
-        }
-
-        btn.disabled = false
-        btn.innerHTML = '<i class="bi bi-check2"></i> Save Changes'
-
-        var success = document.getElementById('save-success')
-        success.classList.add('show')
-        setTimeout(function () { success.classList.remove('show') }, 3000)
-    } catch (err) {
-        errBox.textContent = err.message || 'Failed to save changes.'
-        errBox.classList.remove('d-none')
-        btn.disabled = false
-        btn.innerHTML = '<i class="bi bi-check2"></i> Save Changes'
-    }
-})
-
-async function buyVerifiedBadge(btn) {
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...'
-    try {
-        var result = await api.post('/payments/checkout', { body: { type: 2 } })
-        if (result.checkoutUrl) {
-            window.location.href = result.checkoutUrl
-        } else {
-            await auth.fetchMe()
-            window.location.reload()
-        }
-    } catch (err) {
-        alert(err.message || 'Payment failed. Please try again.')
-        btn.disabled = false
-        btn.innerHTML = '<i class="bi bi-patch-check me-1"></i>Get Badge — 2 JOD'
-    }
-}
-</script>
-}

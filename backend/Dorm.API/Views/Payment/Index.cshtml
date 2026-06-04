@@ -1,6 +1,10 @@
+@using Dorm.Domain.Enums
 @{
-    Layout = "_DashboardLayout";
+    Layout = User.FindFirstValue(ClaimTypes.Role) == "Student" ? "_BrowseLayout" : "_DashboardLayout";
     ViewData["Title"] = "Payments";
+    var payments = (IReadOnlyList<Dorm.Application.DTOs.Payments.PaymentDto>)(ViewBag.Payments ?? Array.Empty<Dorm.Application.DTOs.Payments.PaymentDto>());
+    var completed = payments.Where(p => p.Status == PaymentStatus.Completed).ToList();
+    var total = completed.Sum(p => p.Amount);
 }
 
 @section Styles {
@@ -31,70 +35,66 @@
     <h3>Payments</h3>
     <p>Match commissions, listing fees and verified badge. Powered by Stripe.</p>
 </div>
-<div>
-        <div id="pay-summary"></div>
-        <div class="pay-card">
-            <div id="payments-list">
-                <div class="text-center py-5"><div class="spinner-border" style="color:#94a3b8"></div></div>
-            </div>
-        </div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" style="border-radius:8px">@success</div>
+}
+
+@if (total > 0)
+{
+    <div class="pay-summary">
+        <div class="pay-summary-icon"><i class="bi bi-wallet2"></i></div>
+        <div><div class="label">Total Paid</div><div class="amount">@total JOD</div></div>
     </div>
+}
 
-@section Scripts {
-<script>
-var TYPE_LABELS = { 0: 'Match Commission', 1: 'Listing Fee', 2: 'Verified Badge' }
-var TYPE_ICONS = { 0: 'bi-people-fill', 1: 'bi-building', 2: 'bi-patch-check-fill' }
-var TYPE_COLORS = { 0: '#3b82f6', 1: '#8B5CF6', 2: '#06B6D4' }
-var TYPE_BG = { 0: 'rgba(59,130,246,.1)', 1: 'rgba(139,92,246,.1)', 2: 'rgba(6,182,212,.1)' }
-var STATUS_LABELS = { 0: 'Pending', 1: 'Completed', 2: 'Failed' }
-var STATUS_COLORS = { 0: 'warning', 1: 'success', 2: 'danger' }
-var STATUS_ICONS = { 0: 'bi-clock', 1: 'bi-check-circle', 2: 'bi-x-circle' }
-
-auth.initAuth().then(loadPayments)
-
-async function loadPayments() {
-    var container = document.getElementById('payments-list')
-    try {
-        var data = await api.get('/payments/history')
-        var items = data.items || data || []
-
-        if (items.length === 0) {
-            container.innerHTML = '<div class="text-center py-5"><i class="bi bi-credit-card" style="font-size:2.5rem;color:#cbd5e1"></i>' +
-                '<h5 class="fw-bold mt-3" style="color:#1e293b">No payments yet</h5>' +
-                '<p style="color:#94a3b8;font-size:.88rem">Your payment history will appear here.</p></div>'
-            return
-        }
-
-        var total = items.filter(function (p) { return p.status === 1 }).reduce(function (s, p) { return s + (p.amount || 0) }, 0)
-        if (total > 0) {
-            document.getElementById('pay-summary').innerHTML =
-                '<div class="pay-summary">' +
-                '<div class="pay-summary-icon"><i class="bi bi-wallet2"></i></div>' +
-                '<div><div class="label">Total Paid</div><div class="amount">' + total + ' JOD</div></div></div>'
-        }
-
-        container.innerHTML = '<div class="table-responsive"><table class="table table-hover align-middle mb-0">' +
-            '<thead><tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">' +
-            '<th>Type</th><th>Date</th><th>Reference</th><th class="text-center">Status</th><th class="text-end">Amount</th>' +
-            '</tr></thead><tbody>' +
-            items.map(function (p) {
-                var icon = TYPE_ICONS[p.type] || 'bi-credit-card'
-                var color = TYPE_COLORS[p.type] || '#64748b'
-                var bg = TYPE_BG[p.type] || '#f1f5f9'
-                var dateStr = p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''
-                return '<tr>' +
-                    '<td><div class="d-flex align-items-center gap-2">' +
-                    '<div class="pay-type-icon" style="background:' + bg + ';color:' + color + '"><i class="bi ' + icon + '"></i></div>' +
-                    '<span class="fw-semibold" style="font-size:.88rem">' + (TYPE_LABELS[p.type]||'Payment') + '</span></div></td>' +
-                    '<td style="color:#94a3b8;font-size:.82rem">' + dateStr + '</td>' +
-                    '<td style="color:#94a3b8;font-size:.82rem;font-family:monospace">' + (p.transactionRef || '—') + '</td>' +
-                    '<td class="text-center"><span class="badge bg-' + (STATUS_COLORS[p.status]||'secondary') + ' bg-opacity-10 text-' + (STATUS_COLORS[p.status]||'secondary') + '" style="font-size:.72rem"><i class="bi ' + (STATUS_ICONS[p.status]||'bi-clock') + ' me-1"></i>' + (STATUS_LABELS[p.status]||'Pending') + '</span></td>' +
-                    '<td class="text-end"><span class="fw-bold" style="font-size:.92rem;color:#1e293b">' + p.amount + ' JOD</span></td></tr>'
-            }).join('') +
-            '</tbody></table></div>'
-    } catch (e) {
-        container.innerHTML = '<div class="text-center py-5"><p style="color:#ef4444">Failed to load payments.</p></div>'
+<div class="pay-card">
+    @if (payments.Count == 0)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-credit-card" style="font-size:2.5rem;color:#cbd5e1"></i>
+            <h5 class="fw-bold mt-3" style="color:#1e293b">No payments yet</h5>
+            <p style="color:#94a3b8;font-size:.88rem">Your payment history will appear here.</p>
+        </div>
     }
-}
-</script>
-}
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">
+                        <th>Type</th><th>Date</th><th>Reference</th><th class="text-center">Status</th><th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var p in payments)
+                {
+                    var typeLabel = p.Type switch { PaymentType.MatchCommission => "Match Commission", PaymentType.ListingFee => "Listing Fee", PaymentType.VerifiedBadge => "Verified Badge", _ => "Payment" };
+                    var typeIcon = p.Type switch { PaymentType.MatchCommission => "bi-people-fill", PaymentType.ListingFee => "bi-building", PaymentType.VerifiedBadge => "bi-patch-check-fill", _ => "bi-credit-card" };
+                    var typeColor = p.Type switch { PaymentType.MatchCommission => "#3b82f6", PaymentType.ListingFee => "#8B5CF6", PaymentType.VerifiedBadge => "#06B6D4", _ => "#64748b" };
+                    var typeBg = p.Type switch { PaymentType.MatchCommission => "rgba(59,130,246,.1)", PaymentType.ListingFee => "rgba(139,92,246,.1)", PaymentType.VerifiedBadge => "rgba(6,182,212,.1)", _ => "#f1f5f9" };
+                    var statusLabel = p.Status switch { PaymentStatus.Pending => "Pending", PaymentStatus.Completed => "Completed", PaymentStatus.Failed => "Failed", _ => "Pending" };
+                    var statusColor = p.Status switch { PaymentStatus.Pending => "warning", PaymentStatus.Completed => "success", PaymentStatus.Failed => "danger", _ => "secondary" };
+                    var statusIcon = p.Status switch { PaymentStatus.Pending => "bi-clock", PaymentStatus.Completed => "bi-check-circle", PaymentStatus.Failed => "bi-x-circle", _ => "bi-clock" };
+
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="pay-type-icon" style="background:@typeBg;color:@typeColor"><i class="bi @typeIcon"></i></div>
+                                <span class="fw-semibold" style="font-size:.88rem">@typeLabel</span>
+                            </div>
+                        </td>
+                        <td style="color:#94a3b8;font-size:.82rem">@p.CreatedAt.ToString("MMM d, yyyy")</td>
+                        <td style="color:#94a3b8;font-size:.82rem;font-family:monospace">@(p.TransactionRef ?? "—")</td>
+                        <td class="text-center">
+                            <span class="badge bg-@statusColor bg-opacity-10 text-@statusColor" style="font-size:.72rem"><i class="bi @statusIcon me-1"></i>@statusLabel</span>
+                        </td>
+                        <td class="text-end"><span class="fw-bold" style="font-size:.92rem;color:#1e293b">@p.Amount JOD</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

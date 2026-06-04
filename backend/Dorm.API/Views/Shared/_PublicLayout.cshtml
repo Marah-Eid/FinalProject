@@ -1,3 +1,7 @@
+@{
+    var isAuth = User.Identity?.IsAuthenticated == true;
+    var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+}
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -36,14 +40,33 @@
                 <div class="site-navigation">
                     <a href="/" class="logo m-0 float-start">Dorm</a>
 
-                    <ul class="js-clone-nav d-none d-lg-inline-block text-start site-menu float-end" id="nav-menu">
+                    <ul class="js-clone-nav d-none d-lg-inline-block text-start site-menu float-end">
                         <li><a href="/">Home</a></li>
                         <li><a href="/Browse">Browse</a></li>
                         <li><a href="/About">About & Contact</a></li>
-                        <li id="nav-login"><a href="/Account/Login">Log in</a></li>
-                        <li id="nav-register"><a href="/Account/Register">Sign up</a></li>
-                        <li id="nav-dashboard" class="d-none"><a href="/Dashboard">Dashboard</a></li>
-                        <li id="nav-logout" class="d-none"><a href="#" onclick="auth.logout();return false" style="background:rgba(239,68,68,.15);color:#ef4444 !important;border-radius:6px;padding:6px 14px !important">Log out</a></li>
+
+                        @if (isAuth)
+                        {
+                            @if (role == "Admin")
+                            {
+                                <li><a href="/Admin">Admin</a></li>
+                            }
+                            else if (role == "Owner")
+                            {
+                                <li><a href="/Dashboard">Dashboard</a></li>
+                            }
+                            <li>
+                                <form method="post" asp-action="Logout" asp-controller="Account" style="display:inline;margin:0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" style="background:rgba(239,68,68,.15);color:#ef4444 !important;border-radius:6px;padding:6px 14px !important;border:none;cursor:pointer;font-size:inherit;font-family:inherit">Log out</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li><a href="/Account/Login">Log in</a></li>
+                            <li><a href="/Account/Register">Sign up</a></li>
+                        }
                     </ul>
 
                     <a href="#" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-inline-block d-lg-none" data-toggle="collapse" data-target="#main-navbar">
@@ -61,12 +84,12 @@
                 <div class="col-lg-6">
                     <div class="widget">
                         <h3>Dorm</h3>
-                        <p id="footer-tagline">Student housing, made compatible.</p>
+                        <p>Student housing, made compatible.</p>
                     </div>
                 </div>
                 <div class="col-lg-6">
                     <div class="widget">
-                        <h3 id="footer-links-title">Links</h3>
+                        <h3>Links</h3>
                         <ul class="list-unstyled links">
                             <li><a href="/">Home</a></li>
                             <li><a href="/Browse">Browse</a></li>
@@ -96,11 +119,6 @@
     <script src="~/property/js/navbar.js"></script>
     <script src="~/property/js/counter.js"></script>
     <script src="~/property/js/custom.js"></script>
-
-    <script src="~/js/utils.js"></script>
-    <script src="~/js/api.js"></script>
-    <script src="~/js/auth.js"></script>
-    <script src="~/js/nav.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -1,4 +1,3 @@
-using System.Text;
 using Dorm.API;
 using Dorm.API.Filters;
 using Dorm.API.Identity;
@@ -9,11 +8,9 @@ using Dorm.Application.Options;
 using Dorm.Domain.Enums;
 using Dorm.Infrastructure;
 using Dorm.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using Serilog;
 
 // Bootstrap logger so we capture startup failures before the full config is read.
@@ -33,18 +30,6 @@ try
         .ReadFrom.Services(services)
         .Enrich.FromLogContext());
 
-    // ─── CORS ──────────────────────────────────────────────────────────────
-    const string CorsPolicy = "DormFrontend";
-    var allowedOrigins = builder.Configuration
-        .GetSection("Cors:AllowedOrigins")
-        .Get<string[]>() ?? new[] { "http://localhost:5173" };
-
-    builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy => policy
-        .WithOrigins(allowedOrigins)
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials()));
-
     // ─── Dorm layers ───────────────────────────────────────────────────────
     builder.Services.AddDormApplication();
     builder.Services.AddDormInfrastructure(builder.Configuration);
@@ -53,27 +38,19 @@ try
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ICurrentUser, CurrentUserService>();
 
-    // ─── Auth (JWT bearer) ─────────────────────────────────────────────────
-    var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
-    var jwtSecret = jwtSection["Secret"]!;
-    var jwtIssuer = jwtSection["Issuer"]!;
-    var jwtAudience = jwtSection["Audience"]!;
-
+    // ─── Auth (cookie) ───────────────────────────────────────────────────
     builder.Services
-        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(options =>
+        .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+        .AddCookie(options =>
         {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = jwtIssuer,
-                ValidAudience = jwtAudience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-                ClockSkew = TimeSpan.FromMinutes(1),
-            };
+            options.LoginPath = "/Account/Login";
+            options.LogoutPath = "/Account/Logout";
+            options.AccessDeniedPath = "/Account/Login";
+            options.Cookie.Name = "Dorm.Auth";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.ExpireTimeSpan = TimeSpan.FromDays(14);
+            options.SlidingExpiration = true;
         });
 
     builder.Services.AddAuthorization(options =>
@@ -87,31 +64,6 @@ try
     builder.Services.AddControllersWithViews(o =>
     {
         o.Filters.Add<ValidationFilter>();
-    });
-
-    // ─── Swagger ───────────────────────────────────────────────────────────
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(options =>
-    {
-        options.SwaggerDoc("v1", new OpenApiInfo
-        {
-            Title = "Dorm API",
-            Version = "v1",
-            Description = "Dorm — bilingual student housing platform. See docs/BUILD_BRIEF.md for the spec."
-        });
-
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            Name = "Authorization",
-            Type = SecuritySchemeType.Http,
-            Scheme = "Bearer",
-            BearerFormat = "JWT",
-            In = ParameterLocation.Header,
-            Description = "Paste the JWT access token here (Swagger adds the 'Bearer ' prefix).",
-        });
-
-        // Apply the Bearer scheme to every operation via a small filter.
-        options.OperationFilter<Dorm.API.Swagger.BearerSecurityOperationFilter>();
     });
 
     var app = builder.Build();
@@ -135,14 +87,6 @@ try
     app.UseMiddleware<GlobalExceptionMiddleware>();
 
     app.UseSerilogRequestLogging();
-
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dorm API v1"));
-    }
-
-    app.UseCors(CorsPolicy);
 
     // Serve static files from wwwroot (templates, JS, CSS, images).
     app.UseStaticFiles();

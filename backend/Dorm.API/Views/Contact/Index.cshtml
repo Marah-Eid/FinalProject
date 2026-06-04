@@ -1,6 +1,9 @@
 @{
     Layout = "_BrowseLayout";
     ViewData["Title"] = "Contact Us";
+    var isAuth = User.Identity?.IsAuthenticated == true;
+    var userName = isAuth ? User.FindFirstValue("FullName") ?? "" : "";
+    var userEmail = isAuth ? User.FindFirstValue(ClaimTypes.Email) ?? "" : "";
 }
 
 @section Styles {
@@ -107,11 +110,11 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Your Name</label>
-                                <input type="text" class="form-control" id="cf-name" placeholder="Full name" required />
+                                <input type="text" class="form-control" id="cf-name" placeholder="Full name" required value="@userName" />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Email</label>
-                                <input type="email" class="form-control" id="cf-email" placeholder="you@example.com" required />
+                                <input type="email" class="form-control" id="cf-email" placeholder="you@example.com" required value="@userEmail" />
                             </div>
                         </div>
                         <div class="mb-3">
@@ -140,20 +143,11 @@
 
 @section Scripts {
 <script>
-auth.initAuth().then(function () {
-    var user = auth.getUser()
-    if (user) {
-        document.getElementById('cf-name').value = user.fullName || ''
-        document.getElementById('cf-email').value = user.email || ''
-    }
-})
-
 document.getElementById('contact-form').addEventListener('submit', function (e) {
     e.preventDefault()
     var btn = document.getElementById('cf-btn')
     btn.disabled = true
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending...'
-    // Simulate send (no backend endpoint for contact form)
     setTimeout(function () {
         document.getElementById('contact-form').reset()
         document.getElementById('contact-success').classList.remove('d-none')

@@ -1,3 +1,10 @@
+@{
+    var isAuth = User.Identity?.IsAuthenticated == true;
+    var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+    var fullName = User.FindFirstValue("FullName") ?? "User";
+    var email = User.FindFirstValue(ClaimTypes.Email) ?? "";
+    var initial = fullName.Length > 0 ? fullName[0].ToString().ToUpper() : "U";
+}
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -118,61 +125,42 @@
         <div class="nav-section">
             <div class="nav-label">Menu</div>
             <div class="nav-item">
-                <a href="/Dashboard" data-page="dashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+                <a href="/Dashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
             </div>
 
-            <!-- Student items -->
-            <div class="nav-item d-none" data-role="student">
-                <a href="/Quiz" data-page="quiz"><i class="bi bi-clipboard-check"></i> Quiz</a>
-            </div>
-            <div class="nav-item d-none" data-role="student">
-                <a href="/Browse" data-page="browse"><i class="bi bi-search"></i> Browse</a>
-            </div>
-            <div class="nav-item d-none" data-role="student">
-                <a href="/StudentApps" data-page="studentapps"><i class="bi bi-file-text"></i> My Applications</a>
-            </div>
+            @if (role == "Owner")
+            {
+                <div class="nav-item"><a href="/OwnerListings"><i class="bi bi-building"></i> My Listings</a></div>
+                <div class="nav-item"><a href="/OwnerApps"><i class="bi bi-people"></i> Applications</a></div>
+            }
 
-            <!-- Owner items -->
-            <div class="nav-item d-none" data-role="owner">
-                <a href="/OwnerListings" data-page="ownerlistings"><i class="bi bi-building"></i> My Listings</a>
-            </div>
-            <div class="nav-item d-none" data-role="owner">
-                <a href="/OwnerApps" data-page="ownerapps"><i class="bi bi-people"></i> Applications</a>
-            </div>
+            <div class="nav-item"><a href="/Chat"><i class="bi bi-chat-dots"></i> Messages</a></div>
+            <div class="nav-item"><a href="/Payment"><i class="bi bi-credit-card"></i> Payments</a></div>
 
-            <!-- Shared -->
-            <div class="nav-item">
-                <a href="/Chat" data-page="chat"><i class="bi bi-chat-dots"></i> Messages</a>
-            </div>
-            <div class="nav-item">
-                <a href="/Payment" data-page="payment"><i class="bi bi-credit-card"></i> Payments</a>
-            </div>
-
-            <!-- Admin -->
-            <div class="nav-item d-none" data-role="admin">
-                <a href="/Admin" data-page="admin"><i class="bi bi-shield-check"></i> Admin Panel</a>
-            </div>
-            <div class="nav-item d-none" data-role="admin">
-                <a href="/Admin#testimonials" data-page="testimonials"><i class="bi bi-chat-square-text"></i> Testimonials</a>
-            </div>
+            @if (role == "Admin")
+            {
+                <div class="nav-item"><a href="/Admin"><i class="bi bi-shield-check"></i> Admin Panel</a></div>
+                <div class="nav-item"><a href="/Admin#testimonials"><i class="bi bi-chat-square-text"></i> Testimonials</a></div>
+            }
 
             <div class="nav-label">Account</div>
+            <div class="nav-item"><a href="/Profile"><i class="bi bi-person-gear"></i> Edit Profile</a></div>
+            <div class="nav-item"><a href="/"><i class="bi bi-house"></i> Back to site</a></div>
             <div class="nav-item">
-                <a href="/Profile" data-page="profile"><i class="bi bi-person-gear"></i> Edit Profile</a>
-            </div>
-            <div class="nav-item">
-                <a href="/" ><i class="bi bi-house"></i> Back to site</a>
-            </div>
-            <div class="nav-item">
-                <a href="#" onclick="auth.logout();return false;"><i class="bi bi-box-arrow-left"></i> Logout</a>
+                <form method="post" asp-action="Logout" asp-controller="Account" style="margin:0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" style="display:flex;align-items:center;gap:.75rem;padding:.6rem 1.25rem;color:#475569;background:none;border:none;font-size:.875rem;font-weight:500;width:100%;cursor:pointer;border-left:3px solid transparent;transition:all .15s">
+                        <i class="bi bi-box-arrow-left" style="font-size:1.1rem;width:20px;text-align:center"></i> Logout
+                    </button>
+                </form>
             </div>
         </div>
         <div style="padding:1rem 1.25rem;border-top:1px solid #f1f5f9">
             <div class="d-flex align-items-center gap-2">
-                <div style="width:32px;height:32px;border-radius:50%;background:#F97316;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.75rem" id="user-avatar">U</div>
+                <div style="width:32px;height:32px;border-radius:50%;background:#F97316;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.75rem">@initial</div>
                 <div>
-                    <div style="font-size:.8rem;font-weight:600;color:#1e293b" id="user-name">User</div>
-                    <div style="font-size:.7rem;color:#94a3b8" id="user-email"></div>
+                    <div style="font-size:.8rem;font-weight:600;color:#1e293b">@fullName</div>
+                    <div style="font-size:.7rem;color:#94a3b8">@email</div>
                 </div>
             </div>
         </div>
@@ -195,37 +183,13 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/utils.js"></script>
-    <script src="~/js/api.js"></script>
-    <script src="~/js/auth.js"></script>
 
     <script>
-    // Show role-specific nav items + highlight active + populate user info
-    auth.initAuth().then(function () {
-        var user = auth.getUser()
-        if (!user) { window.location.href = '/Account/Login'; return }
-
-        var roleName = ''
-        if (user.role === 0) roleName = 'student'
-        else if (user.role === 1) roleName = 'owner'
-        else if (user.role === 2) roleName = 'admin'
-
-        document.querySelectorAll('[data-role]').forEach(function (el) {
-            if (el.dataset.role === roleName) el.classList.remove('d-none')
-        })
-
-        var name = user.fullName || 'User'
-        document.getElementById('user-name').textContent = name
-        document.getElementById('user-email').textContent = user.email || ''
-        document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase()
-
-        // Highlight active nav
-        var path = window.location.pathname.toLowerCase()
-        document.querySelectorAll('.nav-item a[data-page]').forEach(function (link) {
-            var href = (link.getAttribute('href') || '').toLowerCase()
-            if (href && path === href) link.classList.add('active')
-            else if (link.dataset.page === 'dashboard' && (path === '/dashboard' || path === '/dashboard/')) link.classList.add('active')
-        })
+    // Highlight active nav
+    var path = window.location.pathname.toLowerCase()
+    document.querySelectorAll('.nav-item a').forEach(function (link) {
+        var href = (link.getAttribute('href') || '').toLowerCase()
+        if (href && path === href) link.classList.add('active')
     })
 
     function toggleSidebar() {

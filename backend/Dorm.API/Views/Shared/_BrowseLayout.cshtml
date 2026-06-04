@@ -1,3 +1,12 @@
+@{
+    var isAuth = User.Identity?.IsAuthenticated == true;
+    var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+    var fullName = User.FindFirstValue("FullName") ?? "User";
+    var email = User.FindFirstValue(ClaimTypes.Email) ?? "";
+    var initials = string.Join("", fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(n => n[0])).ToUpper();
+    if (initials.Length > 2) initials = initials.Substring(0, 2);
+    if (initials.Length == 0) initials = "U";
+}
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -87,16 +96,6 @@
         .profile-menu .pm-logout:hover { background: #fef2f2; color: #ef4444 !important; }
         .profile-menu .pm-logout i { color: #ef4444; }
 
-        /* Notification dot */
-        .nav-msg-link { position: relative; }
-        .msg-badge {
-            position: absolute; top: -4px; right: -8px;
-            width: 16px; height: 16px; border-radius: 50%;
-            background: #F97316; color: #fff; font-size: .6rem; font-weight: 700;
-            display: none; align-items: center; justify-content: center;
-        }
-        .msg-badge.show { display: flex; }
-
         /* Footer */
         .site-footer {
             background: #0f172a; padding: 3rem 0 1.5rem; color: #94a3b8;
@@ -123,50 +122,54 @@
                 <a href="/">Home</a>
                 <a href="/Browse">Browse</a>
                 <a href="/About">About & Contact</a>
-                <a href="/Chat" class="nav-msg-link d-none" id="nav-messages">
-                    Messages <span class="msg-badge" id="msg-badge">0</span>
-                </a>
 
-                <!-- Logged-out state -->
-                <a href="/Account/Login" class="btn-nav-login" id="nav-login">Log in</a>
+                @if (isAuth)
+                {
+                    <a href="/Chat">Messages</a>
 
-                <!-- Logged-in state: profile avatar dropdown -->
-                <div class="profile-dropdown d-none" id="nav-profile">
-                    <button class="profile-toggle" id="profile-toggle" onclick="toggleProfileMenu()">
-                        <div class="profile-avatar" id="profile-avatar">U</div>
-                        <i class="bi bi-chevron-down chevron"></i>
-                    </button>
-                    <div class="profile-menu" id="profile-menu">
-                        <div class="profile-menu-header">
-                            <div class="pm-name" id="pm-name">User</div>
-                            <div class="pm-email" id="pm-email"></div>
+                    <div class="profile-dropdown" id="nav-profile">
+                        <button class="profile-toggle" id="profile-toggle" onclick="toggleProfileMenu()">
+                            <div class="profile-avatar">@initials</div>
+                            <i class="bi bi-chevron-down chevron"></i>
+                        </button>
+                        <div class="profile-menu" id="profile-menu">
+                            <div class="profile-menu-header">
+                                <div class="pm-name">@fullName</div>
+                                <div class="pm-email">@email</div>
+                            </div>
+
+                            @if (role == "Student")
+                            {
+                                <a href="/Saved"><i class="bi bi-heart"></i> Saved Apartments</a>
+                                <a href="/Quiz"><i class="bi bi-clipboard-check"></i> Lifestyle Quiz</a>
+                                <a href="/StudentApps"><i class="bi bi-file-text"></i> My Applications</a>
+                                <a href="/Chat"><i class="bi bi-chat-dots"></i> Messages</a>
+                                <a href="/Payment"><i class="bi bi-credit-card"></i> Payments</a>
+                            }
+                            else if (role == "Owner")
+                            {
+                                <a href="/Dashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+                                <a href="/OwnerListings"><i class="bi bi-building"></i> My Listings</a>
+                                <a href="/OwnerApps"><i class="bi bi-people"></i> Applications</a>
+                                <a href="/Chat"><i class="bi bi-chat-dots"></i> Messages</a>
+                                <a href="/Payment"><i class="bi bi-credit-card"></i> Payments</a>
+                            }
+
+                            <div class="pm-divider"></div>
+                            <a href="/Profile"><i class="bi bi-person-gear"></i> Edit Profile</a>
+                            <a href="/WriteReview"><i class="bi bi-pencil-square"></i> Write a Review</a>
+                            <div class="pm-divider"></div>
+                            <form method="post" asp-action="Logout" asp-controller="Account" style="margin:0">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="pm-logout"><i class="bi bi-box-arrow-left"></i> Log out</button>
+                            </form>
                         </div>
-
-                        <!-- Student links -->
-                        <div id="pm-student-links" class="d-none">
-                            <a href="/Saved"><i class="bi bi-heart"></i> Saved Apartments</a>
-                            <a href="/Quiz"><i class="bi bi-clipboard-check"></i> Lifestyle Quiz</a>
-                            <a href="/StudentApps"><i class="bi bi-file-text"></i> My Applications</a>
-                            <a href="/Chat"><i class="bi bi-chat-dots"></i> Messages</a>
-                            <a href="/Payment"><i class="bi bi-credit-card"></i> Payments</a>
-                        </div>
-
-                        <!-- Owner links -->
-                        <div id="pm-owner-links" class="d-none">
-                            <a href="/Dashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
-                            <a href="/OwnerListings"><i class="bi bi-building"></i> My Listings</a>
-                            <a href="/OwnerApps"><i class="bi bi-people"></i> Applications</a>
-                            <a href="/Chat"><i class="bi bi-chat-dots"></i> Messages</a>
-                            <a href="/Payment"><i class="bi bi-credit-card"></i> Payments</a>
-                        </div>
-
-                        <div class="pm-divider"></div>
-                        <a href="/Profile"><i class="bi bi-person-gear"></i> Edit Profile</a>
-                        <a href="/WriteReview"><i class="bi bi-pencil-square"></i> Write a Review</a>
-                        <div class="pm-divider"></div>
-                        <button class="pm-logout" onclick="auth.logout()"><i class="bi bi-box-arrow-left"></i> Log out</button>
                     </div>
-                </div>
+                }
+                else
+                {
+                    <a href="/Account/Login" class="btn-nav-login">Log in</a>
+                }
             </div>
         </div>
     </nav>
@@ -186,7 +189,10 @@
                     <a href="/" class="me-3">Home</a>
                     <a href="/Browse" class="me-3">Browse</a>
                     <a href="/About" class="me-3">About & Contact</a>
-                    <a href="/Account/Login">Log in</a>
+                    @if (!isAuth)
+                    {
+                        <a href="/Account/Login">Log in</a>
+                    }
                 </div>
             </div>
             <div class="text-center mt-4" style="border-top:1px solid rgba(255,255,255,.06);padding-top:1rem">
@@ -196,42 +202,8 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/utils.js"></script>
-    <script src="~/js/api.js"></script>
-    <script src="~/js/auth.js"></script>
 
     <script>
-    auth.initAuth().then(function () {
-        var user = auth.getUser()
-        if (user) {
-            document.getElementById('nav-login').classList.add('d-none')
-            document.getElementById('nav-profile').classList.remove('d-none')
-            document.getElementById('nav-messages').classList.remove('d-none')
-
-            var name = user.fullName || 'User'
-            var initials = name.split(' ').map(function(n){ return n[0] }).join('').substring(0,2).toUpperCase()
-            document.getElementById('profile-avatar').textContent = initials
-            document.getElementById('pm-name').textContent = name
-            document.getElementById('pm-email').textContent = user.email || ''
-
-            if (user.role === 0) {
-                document.getElementById('pm-student-links').classList.remove('d-none')
-            } else if (user.role === 1) {
-                document.getElementById('pm-owner-links').classList.remove('d-none')
-            }
-
-            // Fetch unread message count
-            api.get('/conversations').then(function (convos) {
-                var unread = (convos || []).reduce(function (n, c) { return n + (c.unreadCount || 0) }, 0)
-                if (unread > 0) {
-                    var badge = document.getElementById('msg-badge')
-                    badge.textContent = unread > 9 ? '9+' : unread
-                    badge.classList.add('show')
-                }
-            }).catch(function () {})
-        }
-    })
-
     // Highlight active nav link
     var currentPath = window.location.pathname.toLowerCase()
     document.querySelectorAll('.top-nav .nav-links > a').forEach(function (link) {
@@ -246,7 +218,6 @@
         toggle.classList.toggle('open')
     }
 
-    // Close dropdown when clicking outside
     document.addEventListener('click', function (e) {
         var dropdown = document.getElementById('nav-profile')
         if (dropdown && !dropdown.contains(e.target)) {

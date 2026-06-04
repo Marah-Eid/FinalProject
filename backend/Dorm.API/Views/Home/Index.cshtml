@@ -1,5 +1,6 @@
 @{
     ViewData["Title"] = "Home";
+    var testimonials = (IReadOnlyList<Dorm.Application.DTOs.Testimonials.TestimonialDto>)(ViewBag.Testimonials ?? Array.Empty<Dorm.Application.DTOs.Testimonials.TestimonialDto>());
 }
 
 @section Styles {
@@ -596,23 +597,6 @@
     </div>
 </section>
 
-<!-- Suggested for logged-in students -->
-<section id="home-suggested" class="d-none" style="background:#0f172a;padding:4rem 0">
-    <div class="container">
-        <div class="d-flex align-items-center gap-2 mb-1">
-            <i class="bi bi-stars" style="color:#F97316;font-size:1.15rem"></i>
-            <h3 style="font-weight:800;font-size:1.3rem;color:#f8fafc;margin:0">Suggested Near Your University</h3>
-        </div>
-        <p style="color:#64748b;font-size:.9rem;margin-bottom:1.5rem">Apartments close to your campus, picked for you.</p>
-        <div class="row g-3" id="home-suggested-list"></div>
-        <div class="text-center mt-3">
-            <a href="/Browse" style="color:#F97316;font-weight:600;font-size:.9rem;text-decoration:none">
-                See all apartments <i class="bi bi-arrow-right"></i>
-            </a>
-        </div>
-    </div>
-</section>
-
 <!-- Testimonials -->
 <section class="testi-section">
     <div class="container">
@@ -621,16 +605,52 @@
             <h2 class="section-title">Hear from Our Community</h2>
             <p class="section-subtitle">Real feedback from students and owners on the platform.</p>
         </div>
-        <div id="testimonials-loading" class="text-center py-4">
-            <div class="spinner-border spinner-border-sm" style="color:#94a3b8"></div>
-        </div>
-        <div id="testimonials-track" class="testi-track d-none"></div>
-        <div id="testimonials-empty" class="d-none text-center py-4">
-            <div style="width:56px;height:56px;border-radius:50%;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;margin-bottom:.75rem">
-                <i class="bi bi-chat-quote" style="font-size:1.3rem;color:#94a3b8"></i>
+        @if (testimonials.Count == 0)
+        {
+            <div class="text-center py-4">
+                <div style="width:56px;height:56px;border-radius:50%;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;margin-bottom:.75rem">
+                    <i class="bi bi-chat-quote" style="font-size:1.3rem;color:#94a3b8"></i>
+                </div>
+                <p style="color:#94a3b8;font-size:.9rem;margin:0">No testimonials yet. Be the first to share!</p>
             </div>
-            <p style="color:#94a3b8;font-size:.9rem;margin:0">No testimonials yet. Be the first to share!</p>
-        </div>
+        }
+        else
+        {
+            <div class="testi-track">
+                @foreach (var t in testimonials)
+                {
+                    var initials = string.Join("", t.UserName.Split(' ').Select(n => n.Length > 0 ? n[0].ToString() : "")).ToUpper();
+                    if (initials.Length > 2) initials = initials.Substring(0, 2);
+                    <div class="testi-card">
+                        <i class="bi bi-quote testi-quote-icon"></i>
+                        <div class="testi-user">
+                            <div class="testi-avatar">@initials</div>
+                            <div>
+                                <div class="testi-user-name">@t.UserName</div>
+                                @if (!string.IsNullOrEmpty(t.UserRole))
+                                {
+                                    <div class="testi-user-role"><span style="width:4px;height:4px;border-radius:50%;background:#cbd5e1;display:inline-block"></span> @t.UserRole</div>
+                                }
+                            </div>
+                        </div>
+                        <div class="testi-stars">
+                            @for (var i = 1; i <= 5; i++)
+                            {
+                                if (i <= t.Stars)
+                                {
+                                    <i class="bi bi-star-fill" style="font-size:.85rem;color:#F97316"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-star" style="font-size:.85rem;color:#e2e8f0"></i>
+                                }
+                            }
+                        </div>
+                        <p class="testi-text">"@t.Text"</p>
+                    </div>
+                }
+            </div>
+        }
     </div>
 </section>
 
@@ -662,7 +682,6 @@
             }
         })
     }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' })
-
     reveals.forEach(function (el) { observer.observe(el) })
 })();
 
@@ -671,7 +690,6 @@
     var counted = false
     var counters = document.querySelectorAll('.num[data-count]')
     if (!counters.length) return
-
     function animateCounters() {
         if (counted) return
         counted = true
@@ -679,28 +697,23 @@
             var target = parseInt(el.getAttribute('data-count'))
             var suffix = el.getAttribute('data-suffix') || ''
             var duration = 1600
-            var start = 0
             var startTime = null
-
             function step(timestamp) {
                 if (!startTime) startTime = timestamp
                 var progress = Math.min((timestamp - startTime) / duration, 1)
                 var eased = 1 - Math.pow(1 - progress, 3)
-                var current = Math.round(eased * target)
-                el.textContent = current + suffix
+                el.textContent = Math.round(eased * target) + suffix
                 if (progress < 1) requestAnimationFrame(step)
             }
             requestAnimationFrame(step)
         })
     }
-
     if (!('IntersectionObserver' in window)) { animateCounters(); return }
     var observer = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
             if (entry.isIntersecting) { animateCounters(); observer.disconnect() }
         })
     }, { threshold: 0.3 })
-
     var statsSection = document.querySelector('.stats-section')
     if (statsSection) observer.observe(statsSection)
 })();
@@ -723,72 +736,5 @@
         })
     })
 })();
-
-// ---- Testimonials ----
-function loadTestimonials() {
-    api.get('/testimonials/approved').then(function (list) {
-        document.getElementById('testimonials-loading').classList.add('d-none')
-        if (!list || list.length === 0) {
-            document.getElementById('testimonials-empty').classList.remove('d-none')
-            return
-        }
-        var track = document.getElementById('testimonials-track')
-        track.classList.remove('d-none')
-        track.innerHTML = list.map(function (t) {
-            var stars = ''
-            for (var i = 1; i <= 5; i++) {
-                stars += '<i class="bi ' + (i <= t.stars ? 'bi-star-fill' : 'bi-star') + '" style="color:' + (i <= t.stars ? '#F97316' : '#e2e8f0') + '"></i>'
-            }
-            var initials = escapeHtml((t.userName || 'U').split(' ').map(function(n){return n[0]}).join('').substring(0,2).toUpperCase())
-            var roleDot = t.userRole ? '<span style="width:4px;height:4px;border-radius:50%;background:#cbd5e1;display:inline-block"></span> ' : ''
-            return '<div class="testi-card">' +
-                '<i class="bi bi-quote testi-quote-icon"></i>' +
-                '<div class="testi-user">' +
-                '<div class="testi-avatar">' + initials + '</div>' +
-                '<div>' +
-                '<div class="testi-user-name">' + escapeHtml(t.userName || 'User') + '</div>' +
-                '<div class="testi-user-role">' + roleDot + escapeHtml(t.userRole || '') + '</div>' +
-                '</div></div>' +
-                '<div class="testi-stars">' + stars + '</div>' +
-                '<p class="testi-text">"' + escapeHtml(t.text) + '"</p>' +
-                '</div>'
-        }).join('')
-    }).catch(function () {
-        document.getElementById('testimonials-loading').classList.add('d-none')
-        document.getElementById('testimonials-empty').classList.remove('d-none')
-    })
-}
-loadTestimonials()
-
-// ---- Suggested apartments + testimonial form for logged-in users ----
-auth.initAuth().then(function () {
-    var user = auth.getUser()
-    if (!user || user.role !== 0 || user.university == null) return
-    api.get('/apartments', { query: { university: user.university, pageSize: 4, sort: 'newest' } }).then(function (data) {
-        var items = (data.items || data || []).slice(0, 4)
-        if (items.length === 0) return
-        document.getElementById('home-suggested').classList.remove('d-none')
-        document.getElementById('home-suggested-list').innerHTML = items.map(function (apt, idx) {
-            var photo = apt.mainPhotoUrl ? apt.mainPhotoUrl : '/property/images/img_' + ((idx % 8) + 1) + '.jpg'
-            var matchHtml = ''
-            if (apt.compatibilityScore != null) {
-                matchHtml = '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;border:2px solid ' +
-                    (apt.compatibilityScore >= 75 ? '#10b981' : apt.compatibilityScore >= 50 ? '#eab308' : '#94a3b8') + ';color:' +
-                    (apt.compatibilityScore >= 75 ? '#10b981' : apt.compatibilityScore >= 50 ? '#eab308' : '#94a3b8') + '">' + apt.compatibilityScore + '%</div>'
-            }
-            return '<div class="col-md-6 col-xl-3">' +
-                '<a href="/Apartment/Detail/' + apt.id + '" style="text-decoration:none">' +
-                '<div style="background:#1e293b;border-radius:14px;overflow:hidden;transition:transform .3s,box-shadow .3s;border:1px solid rgba(255,255,255,.06)" onmouseenter="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 12px 30px rgba(0,0,0,.3)\'" onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'\'">' +
-                '<img src="' + photo + '" alt="' + escapeHtml(apt.title) + '" style="width:100%;height:160px;object-fit:cover;display:block" />' +
-                '<div style="padding:.85rem 1rem">' +
-                '<div style="font-weight:700;font-size:.9rem;color:#f8fafc;margin-bottom:.2rem">' + escapeHtml(apt.title) + '</div>' +
-                '<div style="font-size:.78rem;color:#64748b;margin-bottom:.5rem"><i class="bi bi-geo-alt-fill"></i> ' + escapeHtml(apt.neighborhood || '') + '</div>' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.06);padding-top:.6rem">' +
-                '<div style="font-size:1rem;font-weight:800;color:#f8fafc">' + apt.fullRent + ' <span style="font-size:.72rem;font-weight:400;color:#64748b">JOD/mo</span></div>' +
-                matchHtml +
-                '</div></div></div></a></div>'
-        }).join('')
-    }).catch(function () {})
-});
 </script>
 }

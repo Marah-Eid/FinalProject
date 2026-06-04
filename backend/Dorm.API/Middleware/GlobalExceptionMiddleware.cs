@@ -3,15 +3,6 @@ using FluentValidation;
 
 namespace Dorm.API.Middleware;
 
-/// <summary>
-/// Translates unhandled exceptions into a consistent JSON error envelope:
-///     { "error": { "code": "...", "message": "...", "details": {...}? } }
-///
-/// Recognised exception types:
-///   • FluentValidation.ValidationException → 400, code=validation_failed, details grouped by field
-///   • ApiException subclasses (NotFound, Conflict, Unauthorized, Forbidden, BadRequest) → status+code per subclass
-///   • Everything else → 500, code=internal_error (and we log the stack trace)
-/// </summary>
 public sealed class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext ctx)
@@ -25,20 +16,51 @@ public sealed class GlobalExceptionMiddleware(RequestDelegate next, ILogger<Glob
             var details = fvEx.Errors
                 .GroupBy(e => string.IsNullOrEmpty(e.PropertyName) ? "_" : e.PropertyName)
                 .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
-            await WriteAsync(ctx, 400, "validation_failed", "Validation failed.", details);
+
+            if (IsApiRequest(ctx))
+            {
+                await WriteJsonAsync(ctx, 400, "validation_failed", "Validation failed.", details);
+            }
+            else
+            {
+                foreach (var (key, msgs) in details)
+                    foreach (var msg in msgs)
+                        ctx.Items[$"Error_{key}"] = msg;
+                ctx.Response.StatusCode = 400;
+            }
         }
         catch (ApiException apiEx)
         {
-            await WriteAsync(ctx, apiEx.StatusCode, apiEx.Code, apiEx.Message);
+            if (IsApiRequest(ctx))
+            {
+                await WriteJsonAsync(ctx, apiEx.StatusCode, apiEx.Code, apiEx.Message);
+            }
+            else
+            {
+                if (apiEx.StatusCode == 401 || apiEx.StatusCode == 403)
+                    ctx.Response.Redirect("/Account/Login");
+                else if (apiEx.StatusCode == 404)
+                    ctx.Response.StatusCode = 404;
+                else
+                    ctx.Response.StatusCode = apiEx.StatusCode;
+            }
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled exception on {Method} {Path}", ctx.Request.Method, ctx.Request.Path);
-            await WriteAsync(ctx, 500, "internal_error", "An unexpected error occurred.");
+
+            if (IsApiRequest(ctx))
+                await WriteJsonAsync(ctx, 500, "internal_error", "An unexpected error occurred.");
+            else
+                ctx.Response.StatusCode = 500;
         }
     }
 
-    private static Task WriteAsync(
+    private static bool IsApiRequest(HttpContext ctx) =>
+        ctx.Request.Path.StartsWithSegments("/api") ||
+        ctx.Request.Headers.Accept.Any(a => a != null && a.Contains("application/json"));
+
+    private static Task WriteJsonAsync(
         HttpContext ctx, int status, string code, string message,
         IDictionary<string, string[]>? details = null)
     {

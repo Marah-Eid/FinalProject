@@ -1,6 +1,9 @@
+@using Dorm.Domain.Enums
+@using Dorm.Application.DTOs.Apartments
 @{
     Layout = "_DashboardLayout";
     ViewData["Title"] = "My Listings";
+    var listings = (IReadOnlyList<ApartmentListItemDto>)(ViewBag.Listings ?? Array.Empty<ApartmentListItemDto>());
 }
 
 @section Styles {
@@ -34,13 +37,9 @@
         border-radius: 6px; padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
         text-decoration: none; transition: all .15s; display: inline-flex; align-items: center; gap: .25rem;
     }
-    .btn-view {
-        background: #fff; color: #475569; border: 1px solid #e2e8f0;
-    }
+    .btn-view { background: #fff; color: #475569; border: 1px solid #e2e8f0; }
     .btn-view:hover { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
-    .btn-edit {
-        background: #fff; color: #F97316; border: 1px solid #fed7aa;
-    }
+    .btn-edit { background: #fff; color: #F97316; border: 1px solid #fed7aa; }
     .btn-edit:hover { background: #fff7ed; color: #ea6c10; border-color: #F97316; }
 
     .empty-ol { text-align: center; padding: 3.5rem 1rem; }
@@ -57,59 +56,64 @@
     </div>
     <a href="/OwnerListings/New" class="btn-new"><i class="bi bi-plus-lg"></i> New Listing</a>
 </div>
-<div>
-    <div class="ol-card">
-        <div id="listings-container">
-            <div class="text-center py-5"><div class="spinner-border" style="color:#94a3b8"></div></div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" style="border-radius:8px">@success</div>
+}
+
+<div class="ol-card">
+    @if (listings.Count == 0)
+    {
+        <div class="empty-ol">
+            <i class="bi bi-building"></i>
+            <h5>No listings yet</h5>
+            <p>List your first apartment to start receiving applications.</p>
+            <a href="/OwnerListings/New" class="btn-new"><i class="bi bi-plus-lg"></i> New Listing</a>
         </div>
-    </div>
-</div>
-
-@section Scripts {
-<script>
-var GENDER_LABELS = { 0: 'Male Only', 1: 'Female Only', 2: 'Mixed' }
-
-auth.initAuth().then(loadListings)
-
-async function loadListings() {
-    var container = document.getElementById('listings-container')
-    try {
-        var data = await api.get('/apartments/mine')
-        var listings = data.items || data || []
-
-        if (listings.length === 0) {
-            container.innerHTML = '<div class="empty-ol"><i class="bi bi-building"></i><h5>No listings yet</h5>' +
-                '<p>List your first apartment to start receiving applications.</p>' +
-                '<a href="/OwnerListings/New" class="btn-new"><i class="bi bi-plus-lg"></i> New Listing</a></div>'
-            return
-        }
-
-        container.innerHTML = '<div class="table-responsive"><table class="table table-hover align-middle mb-0">' +
-            '<thead><tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">' +
-            '<th>Apartment</th><th>Location</th><th class="text-center">Rent</th><th class="text-center">Spots</th><th class="text-center">Gender</th><th class="text-end">Actions</th>' +
-            '</tr></thead><tbody>' +
-            listings.map(function (apt) {
-                var photoUrl = apt.mainPhotoUrl || ''
-                var spotsOpen = apt.availableSpots > 0
-
-                return '<tr><td><div class="d-flex align-items-center gap-3">' +
-                    '<div class="listing-thumb">' +
-                    (photoUrl
-                        ? '<img src="' + photoUrl + '" alt="" />'
-                        : '<div class="listing-thumb-placeholder"><i class="bi bi-building" style="color:#94a3b8"></i></div>') +
-                    '</div>' +
-                    '<span class="fw-semibold" style="font-size:.88rem">' + escapeHtml(apt.title) + '</span></div></td>' +
-                    '<td style="color:#94a3b8;font-size:.82rem">' + escapeHtml(apt.neighborhood || '') + '</td>' +
-                    '<td class="text-center"><span class="fw-bold" style="font-size:.92rem;color:#1e293b">' + apt.fullRent + ' JOD</span></td>' +
-                    '<td class="text-center"><span class="spots-badge ' + (spotsOpen ? 'spots-open' : 'spots-full') + '">' + apt.availableSpots + ' / ' + apt.totalSpots + '</span></td>' +
-                    '<td class="text-center"><span class="gender-badge">' + (GENDER_LABELS[apt.genderType] || '') + '</span></td>' +
-                    '<td class="text-end"><a href="/OwnerListings/Edit/' + apt.id + '" class="btn-edit me-1"><i class="bi bi-pencil"></i>Edit</a>' +
-                    '<a href="/Apartment/Detail/' + apt.id + '" class="btn-view"><i class="bi bi-eye"></i>View</a></td></tr>'
-            }).join('') +
-            '</tbody></table></div>'
-    } catch (e) {
-        container.innerHTML = '<div class="text-center py-5"><p style="color:#ef4444">Failed to load listings.</p></div>'
     }
-}
-</script>
-}
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">
+                        <th>Apartment</th><th>Location</th><th class="text-center">Rent</th><th class="text-center">Spots</th><th class="text-center">Gender</th><th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var apt in listings)
+                {
+                    var genderLabel = apt.GenderType switch { GenderType.MaleOnly => "Male Only", GenderType.FemaleOnly => "Female Only", _ => "Mixed" };
+                    var spotsOpen = apt.AvailableSpots > 0;
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="listing-thumb">
+                                    @if (!string.IsNullOrEmpty(apt.MainPhotoUrl))
+                                    {
+                                        <img src="@apt.MainPhotoUrl" alt="" />
+                                    }
+                                    else
+                                    {
+                                        <div class="listing-thumb-placeholder"><i class="bi bi-building" style="color:#94a3b8"></i></div>
+                                    }
+                                </div>
+                                <span class="fw-semibold" style="font-size:.88rem">@apt.Title</span>
+                            </div>
+                        </td>
+                        <td style="color:#94a3b8;font-size:.82rem">@apt.Neighborhood</td>
+                        <td class="text-center"><span class="fw-bold" style="font-size:.92rem;color:#1e293b">@apt.FullRent JOD</span></td>
+                        <td class="text-center"><span class="spots-badge @(spotsOpen ? "spots-open" : "spots-full")">@apt.AvailableSpots / @apt.TotalSpots</span></td>
+                        <td class="text-center"><span class="gender-badge">@genderLabel</span></td>
+                        <td class="text-end">
+                            <a href="/OwnerListings/Edit/@apt.Id" class="btn-edit me-1"><i class="bi bi-pencil"></i>Edit</a>
+                            <a href="/Apartment/Detail/@apt.Id" class="btn-view"><i class="bi bi-eye"></i>View</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

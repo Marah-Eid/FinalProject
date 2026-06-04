@@ -1,7 +1,10 @@
+@using Dorm.Domain.Enums
+@using Dorm.Application.DTOs.Apartments
 @{
     Layout = "_DashboardLayout";
     ViewData["Title"] = "Edit Listing";
     var apartmentId = ViewData["ApartmentId"]?.ToString();
+    var apt = (ApartmentDetailDto)ViewBag.Apartment;
 }
 
 @section Styles {
@@ -73,16 +76,23 @@
     <div class="nl-card">
         <div class="alert alert-danger d-none" id="nl-error" style="border-radius:8px"></div>
         <div class="alert alert-success d-none" id="nl-success" style="border-radius:8px"></div>
-        <div id="edit-loading" class="text-center py-5"><div class="spinner-border" style="color:#94a3b8"></div></div>
-        <form id="nl-form" novalidate style="display:none">
+        <form id="nl-form" novalidate>
+            @Html.AntiForgeryToken()
             <h6 class="nl-section">Basics</h6>
-            <div class="mb-3"><label class="form-label">Title</label><input type="text" class="form-control" id="nl-title" required /></div>
-            <div class="mb-3"><label class="form-label">Description <span class="text-danger">*</span></label><textarea class="form-control" id="nl-description" rows="3" required minlength="20" placeholder="At least 20 characters"></textarea></div>
+            <div class="mb-3"><label class="form-label">Title</label><input type="text" class="form-control" id="nl-title" required value="@apt.Title" /></div>
+            <div class="mb-3"><label class="form-label">Description <span class="text-danger">*</span></label><textarea class="form-control" id="nl-description" rows="3" required minlength="20" placeholder="At least 20 characters">@apt.Description</textarea></div>
             <div class="row g-3 mb-4">
                 <div class="col-sm-4"><label class="form-label">City</label>
-                    <select class="form-select" id="nl-city" required><option value="">—</option><option value="0">Amman</option><option value="1">Irbid</option><option value="2">Zarqa</option><option value="3">Madaba</option><option value="4">Salt</option><option value="5">Karak</option><option value="6">Mafraq</option><option value="7">Aqaba</option></select></div>
-                <div class="col-sm-4"><label class="form-label">Neighborhood</label><input type="text" class="form-control" id="nl-neighborhood" required /></div>
-                <div class="col-sm-4"><label class="form-label">Address Detail <span class="text-danger">*</span></label><input type="text" class="form-control" id="nl-address" required /></div>
+                    <select class="form-select" id="nl-city" required>
+                        <option value="">—</option>
+                        @foreach (var c in Enum.GetValues<City>())
+                        {
+                            if (apt.City == c) { <option value="@((int)c)" selected>@c</option> }
+                            else { <option value="@((int)c)">@c</option> }
+                        }
+                    </select></div>
+                <div class="col-sm-4"><label class="form-label">Neighborhood</label><input type="text" class="form-control" id="nl-neighborhood" required value="@apt.Neighborhood" /></div>
+                <div class="col-sm-4"><label class="form-label">Address Detail <span class="text-danger">*</span></label><input type="text" class="form-control" id="nl-address" required value="@apt.AddressDetail" /></div>
             </div>
 
             <h6 class="nl-section">Location</h6>
@@ -90,44 +100,81 @@
                 <div class="col-sm-6"><label class="form-label">Nearest University</label>
                     <select class="form-select" id="nl-university">
                         <option value="">—</option>
-                        <option value="0">JU</option><option value="1">GJU</option><option value="2">PSUT</option>
-                        <option value="3">YU</option><option value="4">HU</option><option value="5">MU</option>
-                        <option value="6">ZU</option><option value="7">BAU</option><option value="8">JUST</option><option value="9">AAU</option>
-                        <option value="10">AABU</option><option value="11">UOP</option><option value="12">MEU</option><option value="13">ASU</option>
-                        <option value="14">WISE</option><option value="15">PU</option><option value="16">Isra</option><option value="17">Jadara</option>
-                        <option value="18">Tafila</option><option value="19">AHU</option>
+                        @foreach (var u in Enum.GetValues<University>())
+                        {
+                            if (apt.NearestUniversity == u) { <option value="@((int)u)" selected>@u</option> }
+                            else { <option value="@((int)u)">@u</option> }
+                        }
                     </select></div>
-                <div class="col-sm-6"><label class="form-label">Walking Minutes</label><input type="number" class="form-control" id="nl-distance" min="1" /></div>
+                <div class="col-sm-6"><label class="form-label">Walking Minutes</label><input type="number" class="form-control" id="nl-distance" min="1" value="@(apt.DistanceMinutes > 0 ? apt.DistanceMinutes : "")" /></div>
             </div>
             <div id="nl-map" style="height:200px;background:#f1f5f9" class="mb-4"></div>
-            <input type="hidden" id="nl-lat" /><input type="hidden" id="nl-lng" />
+            <input type="hidden" id="nl-lat" value="@apt.Latitude" /><input type="hidden" id="nl-lng" value="@apt.Longitude" />
 
             <h6 class="nl-section">Pricing & Spots</h6>
             <div class="row g-3 mb-4">
-                <div class="col-sm-4"><label class="form-label">Full Rent (JOD)</label><input type="number" class="form-control" id="nl-rent" min="0" required /></div>
-                <div class="col-sm-4"><label class="form-label">Total Spots</label><input type="number" class="form-control" id="nl-totalSpots" min="1" required /></div>
-                <div class="col-sm-4"><label class="form-label">Available</label><input type="number" class="form-control" id="nl-availableSpots" min="0" required /></div>
+                <div class="col-sm-4"><label class="form-label">Full Rent (JOD)</label><input type="number" class="form-control" id="nl-rent" min="0" required value="@apt.FullRent" /></div>
+                <div class="col-sm-4"><label class="form-label">Total Spots</label><input type="number" class="form-control" id="nl-totalSpots" min="1" required value="@apt.TotalSpots" /></div>
+                <div class="col-sm-4"><label class="form-label">Available</label><input type="number" class="form-control" id="nl-availableSpots" min="0" required value="@apt.AvailableSpots" /></div>
             </div>
 
             <h6 class="nl-section">House Rules</h6>
             <div class="row g-3 mb-3">
                 <div class="col-sm-4"><label class="form-label">Gender Policy</label>
-                    <select class="form-select" id="nl-gender" required><option value="0">Male Only</option><option value="1">Female Only</option><option value="2">Mixed</option></select></div>
+                    <select class="form-select" id="nl-gender" required>
+                        @foreach (var g in Enum.GetValues<GenderType>())
+                        {
+                            if (apt.GenderType == g) { <option value="@((int)g)" selected>@g</option> }
+                            else { <option value="@((int)g)">@g</option> }
+                        }
+                    </select></div>
                 <div class="col-sm-4"><label class="form-label">Smoking</label>
-                    <select class="form-select" id="nl-smoking"><option value="0">Yes</option><option value="1">No</option><option value="2">Outside Only</option></select></div>
+                    <select class="form-select" id="nl-smoking">
+                        @foreach (var s in Enum.GetValues<SmokingRule>())
+                        {
+                            if (apt.SmokingRule == s) { <option value="@((int)s)" selected>@s</option> }
+                            else { <option value="@((int)s)">@s</option> }
+                        }
+                    </select></div>
                 <div class="col-sm-4"><label class="form-label">Guests</label>
-                    <select class="form-select" id="nl-guests"><option value="0">Yes</option><option value="1">No</option><option value="2">Limited</option></select></div>
+                    <select class="form-select" id="nl-guests">
+                        @foreach (var g in Enum.GetValues<GuestsRule>())
+                        {
+                            if (apt.GuestsRule == g) { <option value="@((int)g)" selected>@g</option> }
+                            else { <option value="@((int)g)">@g</option> }
+                        }
+                    </select></div>
             </div>
             <div class="form-check mb-4">
-                <input type="checkbox" class="form-check-input" id="nl-furnished" />
+                <input type="checkbox" class="form-check-input" id="nl-furnished" @(apt.IsFurnished ? "checked" : "") />
                 <label class="form-check-label" for="nl-furnished" style="font-size:.88rem">Furnished</label>
             </div>
 
             <h6 class="nl-section">Amenities</h6>
-            <div class="d-flex flex-wrap gap-2 mb-4" id="nl-amenities"></div>
+            <div class="d-flex flex-wrap gap-2 mb-4" id="nl-amenities">
+                @foreach (var a in Enum.GetValues<AmenityType>())
+                {
+                    <div class="amenity-chip @(apt.Amenities.Contains(a) ? "selected" : "")" data-key="@((int)a)" onclick="this.classList.toggle('selected')">@a</div>
+                }
+            </div>
 
             <h6 class="nl-section">Photos</h6>
-            <div id="existing-photos" class="d-flex flex-wrap gap-2 mb-3"></div>
+            <div id="existing-photos" class="d-flex flex-wrap gap-2 mb-3">
+                @if (apt.Photos.Count == 0)
+                {
+                    <p style="color:#94a3b8;font-size:.82rem">No photos yet.</p>
+                }
+                else
+                {
+                    @foreach (var p in apt.Photos)
+                    {
+                        <div class="photo-thumb" id="photo-@p.Id">
+                            <img src="@p.PhotoUrl" alt="" />
+                            <button type="button" class="remove-btn" onclick="deleteExistingPhoto('@p.Id')">&times;</button>
+                        </div>
+                    }
+                }
+            </div>
             <div id="nl-photo-zone" style="border:2px dashed #e2e8f0;border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:1rem"
                  ondragover="event.preventDefault();this.style.borderColor='#F97316'"
                  ondragleave="this.style.borderColor='#e2e8f0'"
@@ -141,8 +188,9 @@
 
             <h6 class="nl-section">Status</h6>
             <div class="mb-4">
-                <div class="toggle-active is-active" id="nl-active-toggle" onclick="toggleActive()">
-                    <i class="bi bi-check-circle-fill"></i> <span>Active</span>
+                <div class="toggle-active @(apt.IsActive ? "is-active" : "is-inactive")" id="nl-active-toggle" onclick="toggleActive()">
+                    <i class="bi @(apt.IsActive ? "bi-check-circle-fill" : "bi-x-circle-fill")"></i>
+                    <span>@(apt.IsActive ? "Active" : "Inactive")</span>
                 </div>
             </div>
 
@@ -154,171 +202,91 @@
 @section Scripts {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-var APARTMENT_ID = '@apartmentId'
-var AMENITIES = [
-    { key:0, label:'WiFi' }, { key:1, label:'AC' }, { key:2, label:'Heating' },
-    { key:3, label:'Washing Machine' }, { key:4, label:'Parking' },
-    { key:5, label:'Furnished' }, { key:6, label:'Elevator' },
-    { key:7, label:'Balcony' }, { key:8, label:'Kitchen' },
-    { key:9, label:'Private Bathroom' }
-]
-
-var existingPhotos = []
-var selectedFiles = []
-var isActive = true
-var mapInstance = null
-var marker = null
-
-function toggleAmenity(el) { el.classList.toggle('selected') }
+var APARTMENT_ID = '@apartmentId';
+var csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+var isActive = @(apt.IsActive ? "true" : "false");
+var selectedFiles = [];
+var mapInstance = null;
+var marker = null;
 
 function toggleActive() {
-    isActive = !isActive
-    var el = document.getElementById('nl-active-toggle')
+    isActive = !isActive;
+    var el = document.getElementById('nl-active-toggle');
     if (isActive) {
-        el.className = 'toggle-active is-active'
-        el.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Active</span>'
+        el.className = 'toggle-active is-active';
+        el.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Active</span>';
     } else {
-        el.className = 'toggle-active is-inactive'
-        el.innerHTML = '<i class="bi bi-x-circle-fill"></i> <span>Inactive</span>'
+        el.className = 'toggle-active is-inactive';
+        el.innerHTML = '<i class="bi bi-x-circle-fill"></i> <span>Inactive</span>';
     }
 }
 
 function addFiles(fileList) {
-    var totalPhotos = existingPhotos.length + selectedFiles.length
     for (var i = 0; i < fileList.length; i++) {
-        if (totalPhotos + selectedFiles.length >= 10) break
-        var f = fileList[i]
-        if (!f.type.match(/^image\/(jpeg|png|webp)$/)) continue
-        selectedFiles.push(f)
+        if (selectedFiles.length >= 10) break;
+        var f = fileList[i];
+        if (!f.type.match(/^image\/(jpeg|png|webp)$/)) continue;
+        selectedFiles.push(f);
     }
-    renderNewPreviews()
+    renderNewPreviews();
 }
 
 function removeNewFile(idx) {
-    selectedFiles.splice(idx, 1)
-    renderNewPreviews()
+    selectedFiles.splice(idx, 1);
+    renderNewPreviews();
 }
 
 function renderNewPreviews() {
-    var container = document.getElementById('nl-photo-preview')
+    var container = document.getElementById('nl-photo-preview');
     container.innerHTML = selectedFiles.map(function (f, i) {
-        var url = URL.createObjectURL(f)
+        var url = URL.createObjectURL(f);
         return '<div class="photo-thumb">' +
             '<img src="' + url + '" alt="" />' +
             '<button type="button" class="remove-btn" onclick="removeNewFile(' + i + ')">&times;</button>' +
-            '</div>'
-    }).join('')
-}
-
-function renderExistingPhotos() {
-    var container = document.getElementById('existing-photos')
-    if (existingPhotos.length === 0) {
-        container.innerHTML = '<p style="color:#94a3b8;font-size:.82rem">No photos yet.</p>'
-        return
-    }
-    container.innerHTML = existingPhotos.map(function (p) {
-        return '<div class="photo-thumb">' +
-            '<img src="' + escapeHtml(p.photoUrl) + '" alt="" />' +
-            '<button type="button" class="remove-btn" onclick="deleteExistingPhoto(\'' + p.id + '\')">&times;</button>' +
-            '</div>'
-    }).join('')
+            '</div>';
+    }).join('');
 }
 
 async function deleteExistingPhoto(photoId) {
     try {
-        await api.delete('/apartments/' + APARTMENT_ID + '/photos/' + photoId)
-        existingPhotos = existingPhotos.filter(function (p) { return p.id !== photoId })
-        renderExistingPhotos()
+        var res = await fetch('/OwnerListings/' + APARTMENT_ID + '/Photos/' + photoId + '/Delete', {
+            method: 'POST',
+            headers: { 'RequestVerificationToken': csrfToken }
+        });
+        if (!res.ok) throw new Error('Failed');
+        var el = document.getElementById('photo-' + photoId);
+        if (el) el.remove();
     } catch (err) {
-        alert('Failed to delete photo: ' + (err.message || 'Unknown error'))
+        alert('Failed to delete photo.');
     }
 }
 
-function populateForm(apt) {
-    document.getElementById('nl-title').value = apt.title || ''
-    document.getElementById('nl-description').value = apt.description || ''
-    document.getElementById('nl-city').value = apt.city != null ? apt.city : ''
-    document.getElementById('nl-neighborhood').value = apt.neighborhood || ''
-    document.getElementById('nl-address').value = apt.addressDetail || ''
-    document.getElementById('nl-rent').value = apt.fullRent || ''
-    document.getElementById('nl-totalSpots').value = apt.totalSpots || ''
-    document.getElementById('nl-availableSpots').value = apt.availableSpots != null ? apt.availableSpots : ''
-    document.getElementById('nl-gender').value = apt.genderType != null ? apt.genderType : 0
-    document.getElementById('nl-smoking').value = apt.smokingRule != null ? apt.smokingRule : 0
-    document.getElementById('nl-guests').value = apt.guestsRule != null ? apt.guestsRule : 0
-    document.getElementById('nl-furnished').checked = !!apt.isFurnished
-    document.getElementById('nl-university').value = apt.nearestUniversity != null ? apt.nearestUniversity : ''
-    document.getElementById('nl-distance').value = apt.distanceMinutes || ''
-
-    if (apt.latitude && apt.longitude) {
-        document.getElementById('nl-lat').value = apt.latitude
-        document.getElementById('nl-lng').value = apt.longitude
-        if (mapInstance) {
-            var latlng = L.latLng(apt.latitude, apt.longitude)
-            mapInstance.setView(latlng, 14)
-            marker = L.marker(latlng).addTo(mapInstance)
-        }
+setTimeout(function () {
+    var el = document.getElementById('nl-map');
+    if (!el || !window.L) return;
+    var initLat = parseFloat(document.getElementById('nl-lat').value) || 31.95;
+    var initLng = parseFloat(document.getElementById('nl-lng').value) || 35.93;
+    var hasCoords = initLat !== 31.95 || initLng !== 35.93;
+    var zoom = hasCoords ? 14 : 10;
+    mapInstance = L.map(el).setView([initLat, initLng], zoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(mapInstance);
+    if (hasCoords) {
+        marker = L.marker([initLat, initLng]).addTo(mapInstance);
     }
-
-    var amenitySet = (apt.amenities || []).map(function (a) { return typeof a === 'number' ? a : a })
-    document.querySelectorAll('.amenity-chip').forEach(function (el) {
-        if (amenitySet.indexOf(parseInt(el.dataset.key)) >= 0) el.classList.add('selected')
-    })
-
-    existingPhotos = apt.photos || []
-    renderExistingPhotos()
-
-    isActive = apt.isActive !== false
-    if (!isActive) {
-        var el = document.getElementById('nl-active-toggle')
-        el.className = 'toggle-active is-inactive'
-        el.innerHTML = '<i class="bi bi-x-circle-fill"></i> <span>Inactive</span>'
-    }
-}
-
-var amenDiv = document.getElementById('nl-amenities')
-amenDiv.innerHTML = AMENITIES.map(function (a) {
-    return '<div class="amenity-chip" data-key="' + a.key + '" onclick="toggleAmenity(this)">' + a.label + '</div>'
-}).join('')
-
-auth.initAuth().then(async function () {
-    try {
-        var apt = await api.get('/apartments/' + APARTMENT_ID)
-
-        setTimeout(function () {
-            var el = document.getElementById('nl-map')
-            if (!el || !window.L) return
-            var center = (apt.latitude && apt.longitude) ? [apt.latitude, apt.longitude] : [31.95, 35.93]
-            var zoom = (apt.latitude && apt.longitude) ? 14 : 10
-            mapInstance = L.map(el).setView(center, zoom)
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(mapInstance)
-            if (apt.latitude && apt.longitude) {
-                marker = L.marker([apt.latitude, apt.longitude]).addTo(mapInstance)
-            }
-            mapInstance.on('click', function (e) {
-                if (marker) mapInstance.removeLayer(marker)
-                marker = L.marker(e.latlng).addTo(mapInstance)
-                document.getElementById('nl-lat').value = e.latlng.lat
-                document.getElementById('nl-lng').value = e.latlng.lng
-            })
-        }, 300)
-
-        populateForm(apt)
-        document.getElementById('edit-loading').style.display = 'none'
-        document.getElementById('nl-form').style.display = 'block'
-    } catch (err) {
-        document.getElementById('edit-loading').innerHTML =
-            '<i class="bi bi-exclamation-circle" style="font-size:2rem;color:#ef4444"></i>' +
-            '<p class="mt-2" style="color:#ef4444">' + escapeHtml(err.message || 'Failed to load listing.') + '</p>'
-    }
-})
+    mapInstance.on('click', function (e) {
+        if (marker) mapInstance.removeLayer(marker);
+        marker = L.marker(e.latlng).addTo(mapInstance);
+        document.getElementById('nl-lat').value = e.latlng.lat;
+        document.getElementById('nl-lng').value = e.latlng.lng;
+    });
+}, 300);
 
 document.getElementById('nl-form').addEventListener('submit', async function (e) {
-    e.preventDefault()
-    var errBox = document.getElementById('nl-error')
-    var successBox = document.getElementById('nl-success')
-    errBox.classList.add('d-none')
-    successBox.classList.add('d-none')
+    e.preventDefault();
+    var errBox = document.getElementById('nl-error');
+    var successBox = document.getElementById('nl-success');
+    errBox.classList.add('d-none');
+    successBox.classList.add('d-none');
 
     var body = {
         title: document.getElementById('nl-title').value.trim(),
@@ -335,80 +303,85 @@ document.getElementById('nl-form').addEventListener('submit', async function (e)
         isFurnished: document.getElementById('nl-furnished').checked,
         amenities: [],
         isActive: isActive
-    }
+    };
 
-    document.querySelectorAll('.amenity-chip.selected').forEach(function (el) { body.amenities.push(parseInt(el.dataset.key)) })
+    document.querySelectorAll('.amenity-chip.selected').forEach(function (el) { body.amenities.push(parseInt(el.dataset.key)); });
 
-    var uni = document.getElementById('nl-university').value
-    if (uni) body.nearestUniversity = parseInt(uni)
-    else body.nearestUniversity = 0
-    var dist = document.getElementById('nl-distance').value
-    if (dist) body.distanceMinutes = parseInt(dist)
-    else body.distanceMinutes = 0
-    var lat = document.getElementById('nl-lat').value
-    var lng = document.getElementById('nl-lng').value
-    if (lat && lng) { body.latitude = parseFloat(lat); body.longitude = parseFloat(lng) }
-    else { body.latitude = 0; body.longitude = 0 }
+    var uni = document.getElementById('nl-university').value;
+    body.nearestUniversity = uni ? parseInt(uni) : 0;
+    var dist = document.getElementById('nl-distance').value;
+    body.distanceMinutes = dist ? parseInt(dist) : 0;
+    var lat = document.getElementById('nl-lat').value;
+    var lng = document.getElementById('nl-lng').value;
+    body.latitude = (lat && lng) ? parseFloat(lat) : 0;
+    body.longitude = (lat && lng) ? parseFloat(lng) : 0;
 
-    var errors = []
-    if (!body.title || body.title.length < 5) errors.push('Title must be at least 5 characters.')
-    if (!body.description || body.description.length < 20) errors.push('Description must be at least 20 characters.')
-    if (isNaN(body.city)) errors.push('Please select a city.')
-    if (!body.neighborhood) errors.push('Neighborhood is required.')
-    if (!body.addressDetail) errors.push('Address detail is required.')
-    if (isNaN(body.fullRent) || body.fullRent <= 0) errors.push('Rent must be greater than 0.')
-    if (isNaN(body.totalSpots) || body.totalSpots < 1) errors.push('Total spots must be at least 1.')
-    if (isNaN(body.availableSpots)) errors.push('Available spots is required.')
+    var errors = [];
+    if (!body.title || body.title.length < 5) errors.push('Title must be at least 5 characters.');
+    if (!body.description || body.description.length < 20) errors.push('Description must be at least 20 characters.');
+    if (isNaN(body.city)) errors.push('Please select a city.');
+    if (!body.neighborhood) errors.push('Neighborhood is required.');
+    if (!body.addressDetail) errors.push('Address detail is required.');
+    if (isNaN(body.fullRent) || body.fullRent <= 0) errors.push('Rent must be greater than 0.');
+    if (isNaN(body.totalSpots) || body.totalSpots < 1) errors.push('Total spots must be at least 1.');
+    if (isNaN(body.availableSpots)) errors.push('Available spots is required.');
     if (errors.length) {
-        errBox.innerHTML = errors.join('<br>')
-        errBox.classList.remove('d-none')
-        return
+        errBox.innerHTML = errors.join('<br>');
+        errBox.classList.remove('d-none');
+        return;
     }
 
-    var btn = document.getElementById('nl-submit')
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...'
+    var btn = document.getElementById('nl-submit');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
 
     try {
-        await api.put('/apartments/' + APARTMENT_ID, { body: body })
+        var res = await fetch('/OwnerListings/Update?id=' + APARTMENT_ID, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+            var err = await res.json().catch(function () { return {}; });
+            throw { message: err.error?.message || 'Failed to update listing.', details: err.error?.details };
+        }
 
         if (selectedFiles.length > 0) {
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading photos...'
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading photos...';
             for (var i = 0; i < selectedFiles.length; i++) {
-                var fd = new FormData()
-                fd.append('file', selectedFiles[i])
-                var photo = await api.post('/apartments/' + APARTMENT_ID + '/photos', { formData: fd })
-                existingPhotos.push(photo)
+                var fd = new FormData();
+                fd.append('file', selectedFiles[i]);
+                fd.append('__RequestVerificationToken', csrfToken);
+                await fetch('/OwnerListings/' + APARTMENT_ID + '/Photos', { method: 'POST', body: fd });
             }
-            selectedFiles = []
-            renderNewPreviews()
-            renderExistingPhotos()
+            selectedFiles = [];
+            renderNewPreviews();
         }
 
-        successBox.textContent = 'Listing updated successfully!'
-        successBox.classList.remove('d-none')
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-        btn.disabled = false
-        btn.textContent = 'Save Changes'
+        successBox.textContent = 'Listing updated successfully!';
+        successBox.classList.remove('d-none');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
     } catch (err) {
-        var msg = err.message || 'Something went wrong. Please try again.'
+        var msg = err.message || 'Something went wrong. Please try again.';
         if (err.details) {
-            var detailMsgs = []
+            var detailMsgs = [];
             if (Array.isArray(err.details)) {
-                detailMsgs = err.details.map(function(d) { return d.message || d })
+                detailMsgs = err.details.map(function(d) { return d.message || d; });
             } else {
                 Object.keys(err.details).forEach(function(k) {
-                    var vals = err.details[k]
-                    if (Array.isArray(vals)) detailMsgs = detailMsgs.concat(vals)
-                })
+                    var vals = err.details[k];
+                    if (Array.isArray(vals)) detailMsgs = detailMsgs.concat(vals);
+                });
             }
-            if (detailMsgs.length) msg = detailMsgs.join('<br>')
+            if (detailMsgs.length) msg = detailMsgs.join('<br>');
         }
-        errBox.innerHTML = msg
-        errBox.classList.remove('d-none')
-        btn.disabled = false
-        btn.textContent = 'Save Changes'
+        errBox.innerHTML = msg;
+        errBox.classList.remove('d-none');
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
     }
-})
+});
 </script>
 }

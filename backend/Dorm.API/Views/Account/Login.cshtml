@@ -6,54 +6,28 @@
 <h1 class="auth-title">Welcome back</h1>
 <p class="auth-subtitle mb-4">Log in to find your next campus home.</p>
 
-<div class="alert alert-danger d-none" id="login-error" style="border-radius:8px"></div>
+@if (ViewData["Error"] is string error)
+{
+    <div class="alert alert-danger" style="border-radius:8px">@error</div>
+}
 
-<form id="login-form" novalidate>
+<form method="post" asp-action="Login" asp-controller="Account">
+    @Html.AntiForgeryToken()
+    @if (ViewData["ReturnUrl"] is string returnUrl)
+    {
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+    }
     <div class="mb-3">
         <label class="form-label" style="font-size:.85rem;font-weight:600;color:#475569">Email</label>
-        <input type="email" class="form-control" placeholder="you@example.com" id="login-email" required style="padding:.7rem .9rem;border-radius:8px" />
+        <input type="email" class="form-control" name="email" placeholder="you@example.com" value="@ViewData["Email"]" required style="padding:.7rem .9rem;border-radius:8px" />
     </div>
     <div class="mb-4">
         <label class="form-label" style="font-size:.85rem;font-weight:600;color:#475569">Password</label>
-        <input type="password" class="form-control" placeholder="Enter your password" id="login-password" required style="padding:.7rem .9rem;border-radius:8px" />
+        <input type="password" class="form-control" name="password" placeholder="Enter your password" required style="padding:.7rem .9rem;border-radius:8px" />
     </div>
-    <button class="btn btn-primary w-100" type="submit" id="login-btn" style="padding:.7rem;border-radius:8px;font-weight:600">Log in</button>
+    <button class="btn btn-primary w-100" type="submit" style="padding:.7rem;border-radius:8px;font-weight:600">Log in</button>
 </form>
 
 <div class="text-center mt-4">
     <p style="color:#64748b;font-size:.9rem">Don't have an account? <a href="/Account/Register">Sign up</a></p>
 </div>
-
-@section Scripts {
-<script>
-document.getElementById('login-form').addEventListener('submit', async function (e) {
-    e.preventDefault()
-    var errBox = document.getElementById('login-error')
-    errBox.classList.add('d-none')
-
-    var email = document.getElementById('login-email').value.trim()
-    var password = document.getElementById('login-password').value
-
-    if (!email || !password) {
-        errBox.textContent = 'Please fill in all fields.'
-        errBox.classList.remove('d-none')
-        return
-    }
-
-    var btn = document.getElementById('login-btn')
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...'
-
-    try {
-        var user = await auth.login(email, password)
-        if (user.role === 2) window.location.href = '/Admin'
-        else window.location.href = '/Dashboard'
-    } catch (err) {
-        errBox.textContent = err.message || 'Invalid email or password.'
-        errBox.classList.remove('d-none')
-        btn.disabled = false
-        btn.textContent = 'Log in'
-    }
-})
-</script>
-}

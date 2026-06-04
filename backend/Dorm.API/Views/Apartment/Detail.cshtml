@@ -1,7 +1,36 @@
+@using Dorm.Domain.Enums
+@using Dorm.Application.DTOs.Apartments
 @{
     Layout = "_BrowseLayout";
-    ViewData["Title"] = "Apartment";
-    var apartmentId = ViewData["ApartmentId"];
+    var apt = (ApartmentDetailDto)ViewBag.Apartment;
+    ViewData["Title"] = apt.Title;
+    var isAuth = User.Identity?.IsAuthenticated == true;
+    var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var isOwner = isAuth && role == "Owner" && apt.Owner != null && userId == apt.Owner.Id.ToString();
+    var compat = ViewBag.Compatibility as Dorm.Application.DTOs.Compatibility.CompatibilityBreakdownDto;
+    var isSaved = (bool?)ViewBag.IsSaved ?? false;
+    var photos = apt.Photos ?? new List<ApartmentPhotoDto>();
+    var mainPhoto = photos.Count > 0 ? photos[0].PhotoUrl : "/property/images/img_1.jpg";
+
+    var genderLabel = apt.GenderType switch { GenderType.MaleOnly => "Male Only", GenderType.FemaleOnly => "Female Only", _ => "Mixed" };
+    var smokingLabel = apt.SmokingRule switch { SmokingRule.Yes => "Yes", SmokingRule.No => "No", SmokingRule.Outside => "Outside Only", _ => "No" };
+    var guestsLabel = apt.GuestsRule switch { GuestsRule.Yes => "Yes", GuestsRule.No => "No", GuestsRule.Limited => "Limited", _ => "No" };
+
+    var amenityLabels = new Dictionary<AmenityType, string> {
+        { AmenityType.WiFi, "WiFi" }, { AmenityType.AC, "AC" }, { AmenityType.Heating, "Heating" },
+        { AmenityType.WashingMachine, "Washing Machine" }, { AmenityType.Parking, "Parking" },
+        { AmenityType.Furnished, "Furnished" }, { AmenityType.Elevator, "Elevator" },
+        { AmenityType.Balcony, "Balcony" }, { AmenityType.Kitchen, "Kitchen" },
+        { AmenityType.PrivateBathroom, "Private Bathroom" }
+    };
+    var amenityIcons = new Dictionary<AmenityType, string> {
+        { AmenityType.WiFi, "bi-wifi" }, { AmenityType.AC, "bi-snow" }, { AmenityType.Heating, "bi-thermometer-sun" },
+        { AmenityType.WashingMachine, "bi-droplet" }, { AmenityType.Parking, "bi-car-front" },
+        { AmenityType.Furnished, "bi-lamp" }, { AmenityType.Elevator, "bi-arrow-up-square" },
+        { AmenityType.Balcony, "bi-sun" }, { AmenityType.Kitchen, "bi-cup-hot" },
+        { AmenityType.PrivateBathroom, "bi-droplet-half" }
+    };
 }
 
 @section Styles {
@@ -19,27 +48,6 @@
         transition: opacity .2s;
     }
     .gallery-thumb:hover, .gallery-thumb.active { opacity: 1; }
-
-    .photo-mgmt { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 1.25rem; margin-top: 1rem; }
-    .photo-mgmt h6 { font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin-bottom: .75rem; }
-    .photo-mgmt-grid { display: flex; flex-wrap: wrap; gap: .5rem; }
-    .photo-mgmt-item {
-        position: relative; width: 90px; height: 90px; border-radius: 8px;
-        overflow: hidden; border: 1px solid #e2e8f0;
-    }
-    .photo-mgmt-item img { width: 100%; height: 100%; object-fit: cover; }
-    .photo-mgmt-item .del-btn {
-        position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
-        border-radius: 50%; background: rgba(239,68,68,.9); color: #fff;
-        border: none; font-size: .7rem; cursor: pointer; display: flex;
-        align-items: center; justify-content: center;
-    }
-    .photo-add-zone {
-        width: 90px; height: 90px; border: 2px dashed #e2e8f0; border-radius: 8px;
-        display: flex; align-items: center; justify-content: center; cursor: pointer;
-        color: #94a3b8; font-size: 1.5rem; transition: border-color .2s;
-    }
-    .photo-add-zone:hover { border-color: #F97316; color: #F97316; }
 
     .detail-card {
         background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
@@ -81,7 +89,6 @@
     .tenant-name { font-weight: 600; color: #1e293b; font-size: .88rem; }
     .tenant-info { font-size: .78rem; color: #94a3b8; }
 
-    /* sidebar sticky card */
     .price-card {
         background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
         padding: 1.5rem; position: sticky; top: 100px;
@@ -106,7 +113,7 @@
     .btn-apply {
         background: #F97316; color: #fff; border: none; border-radius: 10px;
         font-weight: 600; font-size: .95rem; padding: .75rem; width: 100%;
-        transition: all .2s; position: relative; overflow: hidden;
+        transition: all .2s;
     }
     .btn-apply:hover { background: #ea6c10; color: #fff; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(249,115,22,.25); }
 
@@ -126,17 +133,7 @@
     .btn-save-detail:hover { border-color: #ef4444; color: #ef4444; }
     .btn-save-detail.saved { background: rgba(239,68,68,.08); color: #ef4444; border-color: #ef4444; }
 
-    .not-found { text-align: center; padding: 5rem 1rem; }
-    .not-found i { font-size: 3.5rem; color: #cbd5e1; }
-    .not-found h4 { font-weight: 700; color: #1e293b; margin-top: 1rem; }
-    .not-found p { color: #94a3b8; }
-
     #apt-map { border-radius: 12px; }
-
-    @@keyframes fadeUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
-    .fade-up { animation: fadeUp .5s both; }
-    .fade-up-d1 { animation-delay: .1s; }
-    .fade-up-d2 { animation-delay: .2s; }
 </style>
 }
 
@@ -147,9 +144,140 @@
 </div>
 
 <div class="detail-body">
-    <div class="container" id="apt-container">
-        <div class="text-center py-5">
-            <div class="spinner-border" style="color:#94a3b8" role="status"></div>
+    <div class="container">
+        @if (TempData["Success"] is string success)
+        {
+            <div class="alert alert-success" style="border-radius:8px">@success</div>
+        }
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="gallery-wrap">
+                    <img src="@mainPhoto" alt="@apt.Title" class="gallery-main" id="gallery-main" />
+                    @if (photos.Count > 1)
+                    {
+                        <div class="gallery-thumbs">
+                            @foreach (var p in photos)
+                            {
+                                <img src="@p.PhotoUrl" alt="" class="gallery-thumb @(p == photos[0] ? "active" : "")" onclick="switchPhoto(this,'@p.PhotoUrl')" />
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="mt-4">
+                    <h1 class="detail-title">@apt.Title</h1>
+                    <div class="detail-loc"><i class="bi bi-geo-alt-fill"></i> @apt.Neighborhood</div>
+                    @if (!string.IsNullOrEmpty(apt.Description))
+                    {
+                        <p class="detail-desc">@apt.Description</p>
+                    }
+                </div>
+
+                <div class="detail-card">
+                    <h5>Details</h5>
+                    <div class="info-grid">
+                        <div class="info-item"><div class="ii-icon"><i class="bi bi-door-open"></i></div><div><strong>@apt.AvailableSpots / @apt.TotalSpots</strong> spots</div></div>
+                        <div class="info-item"><div class="ii-icon"><i class="bi bi-gender-ambiguous"></i></div><div><strong>@genderLabel</strong></div></div>
+                        <div class="info-item"><div class="ii-icon"><i class="bi bi-wind"></i></div><div>Smoking: <strong>@smokingLabel</strong></div></div>
+                        <div class="info-item"><div class="ii-icon"><i class="bi bi-people"></i></div><div>Guests: <strong>@guestsLabel</strong></div></div>
+                        <div class="info-item"><div class="ii-icon"><i class="bi bi-mortarboard"></i></div><div>Near: <strong>@apt.NearestUniversity</strong></div></div>
+                        @if (apt.DistanceMinutes > 0)
+                        {
+                            <div class="info-item"><div class="ii-icon"><i class="bi bi-signpost-2"></i></div><div><strong>@apt.DistanceMinutes min</strong> walk</div></div>
+                        }
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <h5>Amenities</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (apt.Amenities.Count == 0)
+                        {
+                            <span style="color:#94a3b8;font-size:.88rem">None listed</span>
+                        }
+                        else
+                        {
+                            @foreach (var a in apt.Amenities)
+                            {
+                                <span class="amenity-badge"><i class="bi @(amenityIcons.GetValueOrDefault(a, "bi-check"))"></i> @(amenityLabels.GetValueOrDefault(a, a.ToString()))</span>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <h5>Current Tenants</h5>
+                    @if (apt.CurrentTenants.Count == 0)
+                    {
+                        <p style="color:#94a3b8;font-size:.88rem">No tenants yet — be the first!</p>
+                    }
+                    else
+                    {
+                        @foreach (var tn in apt.CurrentTenants)
+                        {
+                            var init = !string.IsNullOrEmpty(tn.FirstName) ? tn.FirstName[0].ToString().ToUpper() : "U";
+                            <div class="tenant-row">
+                                <div class="tenant-avatar">@init</div>
+                                <div>
+                                    <div class="tenant-name">@tn.FirstName</div>
+                                    <div class="tenant-info">@tn.Major @(tn.Year > 0 ? $" · Year {tn.Year}" : "")</div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="detail-card">
+                    <h5>Location</h5>
+                    <p style="color:#94a3b8;font-size:.8rem;margin-bottom:.75rem">Approximate location shown for privacy.</p>
+                    <div id="apt-map" style="height:240px"></div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="price-card">
+                    <div class="price">@apt.FullRent <span>JOD / month</span></div>
+                    <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+                        <span class="gender-tag"><i class="bi bi-person"></i> @genderLabel</span>
+                        @if (isAuth && role == "Student")
+                        {
+                            <form method="post" asp-action="ToggleSave" asp-controller="Apartment" asp-route-id="@apt.Id" style="display:inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-save-detail @(isSaved ? "saved" : "")">
+                                    <i class="bi @(isSaved ? "bi-heart-fill" : "bi-heart")"></i> @(isSaved ? "Saved" : "Save")
+                                </button>
+                            </form>
+                        }
+                    </div>
+
+                    @if (compat != null && compat.Score > 0)
+                    {
+                        var cls = compat.Score >= 75 ? "compat-high" : compat.Score >= 50 ? "compat-mid" : "compat-low";
+                        <div class="text-center mb-3">
+                            <div class="compat-ring @cls">@(compat.Score)%</div>
+                            <p style="font-size:.82rem;color:#64748b;margin:0">Compatibility Match</p>
+                        </div>
+                    }
+
+                    @if (!isAuth)
+                    {
+                        <a href="/Account/Login" class="btn-apply d-block text-center text-decoration-none"><i class="bi bi-box-arrow-in-right me-1"></i> Log in to Apply</a>
+                    }
+                    else if (role == "Student")
+                    {
+                        <form method="post" asp-action="Apply" asp-controller="Apartment" asp-route-id="@apt.Id">
+                            @Html.AntiForgeryToken()
+                            <textarea class="form-control mb-2" name="message" rows="3" placeholder="Write a short message to the owner (20–500 chars)..." style="border-radius:10px;font-size:.88rem;resize:none" required minlength="20" maxlength="500"></textarea>
+                            <button type="submit" class="btn-apply"><i class="bi bi-send me-1"></i> Apply Now</button>
+                        </form>
+                    }
+                    else if (role == "Owner")
+                    {
+                        <p class="text-center" style="font-size:.85rem;color:#94a3b8;margin:0">Owners cannot apply to apartments.</p>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -157,262 +285,18 @@
 @section Scripts {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-var aptId = '@apartmentId';
-var GENDER_LABELS = { 0: 'Male Only', 1: 'Female Only', 2: 'Mixed' }
-var SMOKING_LABELS = { 0: 'Yes', 1: 'No', 2: 'Outside Only' }
-var GUESTS_LABELS = { 0: 'Yes', 1: 'No', 2: 'Limited' }
-var UNI_LABELS = ['JU','GJU','PSUT','YU','HU','MU','ZU','BAU','JUST','AAU','AABU','UOP','MEU','ASU','WISE','PU','Isra','Jadara','Tafila','AHU']
-var AMENITY_LABELS = {
-    0:'WiFi', 1:'AC', 2:'Heating', 3:'Washing Machine',
-    4:'Parking', 5:'Furnished', 6:'Elevator',
-    7:'Balcony', 8:'Kitchen', 9:'Private Bathroom'
-}
-var AMENITY_ICONS = {
-    0:'bi-wifi', 1:'bi-snow', 2:'bi-thermometer-sun', 3:'bi-droplet',
-    4:'bi-car-front', 5:'bi-lamp', 6:'bi-arrow-up-square', 7:'bi-sun',
-    8:'bi-cup-hot', 9:'bi-droplet-half'
-}
-
-auth.initAuth().then(loadApartment)
-
-function loadApartment() {
-    var container = document.getElementById('apt-container')
-
-    api.get('/apartments/' + aptId).then(function (apt) {
-        var user = auth.getUser()
-        var photos = apt.photos || []
-
-        // gallery
-        var mainPhoto = photos.length > 0 ? photos[0].photoUrl : '/property/images/img_1.jpg'
-        var galleryHtml = '<div class="gallery-wrap fade-up">' +
-            '<img src="' + mainPhoto + '" alt="' + escapeHtml(apt.title) + '" class="gallery-main" id="gallery-main" />'
-        if (photos.length > 1) {
-            galleryHtml += '<div class="gallery-thumbs">' +
-                photos.map(function (p, i) {
-                    var url = p.photoUrl
-                    return '<img src="' + url + '" alt="" class="gallery-thumb' + (i===0?' active':'') + '" onclick="switchPhoto(this,\'' + url + '\')" />'
-                }).join('') + '</div>'
-        }
-        galleryHtml += '</div>'
-
-        var isOwner = user && user.role === 1 && apt.owner && apt.owner.id === user.id
-        if (isOwner) {
-            galleryHtml += '<div class="photo-mgmt" id="photo-mgmt"><h6>Manage Photos</h6>' +
-                '<div class="photo-mgmt-grid" id="photo-mgmt-grid"></div>' +
-                '<input type="file" id="detail-photo-input" accept="image/jpeg,image/png,image/webp" multiple style="display:none" /></div>'
-        }
-
-        // amenities
-        var amenitiesHtml = (apt.amenities || []).map(function (a) {
-            return '<span class="amenity-badge"><i class="bi ' + (AMENITY_ICONS[a]||'bi-check') + '"></i> ' + (AMENITY_LABELS[a]||a) + '</span>'
-        }).join(' ')
-
-        // tenants
-        var tenantsHtml = ''
-        if (apt.currentTenants && apt.currentTenants.length > 0) {
-            tenantsHtml = apt.currentTenants.map(function (tn) {
-                var init = (tn.firstName || 'U').charAt(0).toUpperCase()
-                return '<div class="tenant-row">' +
-                    '<div class="tenant-avatar">' + init + '</div>' +
-                    '<div><div class="tenant-name">' + escapeHtml(tn.firstName) + '</div>' +
-                    '<div class="tenant-info">' + (tn.major || '') + (tn.year ? ' · Year ' + tn.year : '') + '</div></div></div>'
-            }).join('')
-        } else {
-            tenantsHtml = '<p style="color:#94a3b8;font-size:.88rem">No tenants yet — be the first!</p>'
-        }
-
-        container.innerHTML =
-            '<div class="row g-4">' +
-            '<div class="col-lg-8">' +
-            galleryHtml +
-            '<div class="mt-4 fade-up fade-up-d1">' +
-            '<h1 class="detail-title">' + escapeHtml(apt.title) + '</h1>' +
-            '<div class="detail-loc"><i class="bi bi-geo-alt-fill"></i> ' + escapeHtml(apt.neighborhood || '') + '</div>' +
-            (apt.description ? '<p class="detail-desc">' + escapeHtml(apt.description) + '</p>' : '') +
-            '</div>' +
-
-            '<div class="detail-card fade-up fade-up-d2"><h5>Details</h5>' +
-            '<div class="info-grid">' +
-            '<div class="info-item"><div class="ii-icon"><i class="bi bi-door-open"></i></div><div><strong>' + apt.availableSpots + ' / ' + apt.totalSpots + '</strong> spots</div></div>' +
-            '<div class="info-item"><div class="ii-icon"><i class="bi bi-gender-ambiguous"></i></div><div><strong>' + (GENDER_LABELS[apt.genderType]||'') + '</strong></div></div>' +
-            '<div class="info-item"><div class="ii-icon"><i class="bi bi-wind"></i></div><div>Smoking: <strong>' + (SMOKING_LABELS[apt.smokingRule]||'No') + '</strong></div></div>' +
-            '<div class="info-item"><div class="ii-icon"><i class="bi bi-people"></i></div><div>Guests: <strong>' + (GUESTS_LABELS[apt.guestsRule]||'No') + '</strong></div></div>' +
-            (apt.nearestUniversity != null ? '<div class="info-item"><div class="ii-icon"><i class="bi bi-mortarboard"></i></div><div>Near: <strong>' + (UNI_LABELS[apt.nearestUniversity]||'') + '</strong></div></div>' : '') +
-            (apt.distanceMinutes ? '<div class="info-item"><div class="ii-icon"><i class="bi bi-signpost-2"></i></div><div><strong>' + apt.distanceMinutes + ' min</strong> walk</div></div>' : '') +
-            '</div></div>' +
-
-            '<div class="detail-card fade-up fade-up-d2"><h5>Amenities</h5>' +
-            '<div class="d-flex flex-wrap gap-2">' + (amenitiesHtml || '<span style="color:#94a3b8;font-size:.88rem">None listed</span>') + '</div></div>' +
-
-            '<div class="detail-card fade-up fade-up-d2"><h5>Current Tenants</h5>' + tenantsHtml + '</div>' +
-
-            '<div class="detail-card fade-up fade-up-d2"><h5>Location</h5>' +
-            '<p style="color:#94a3b8;font-size:.8rem;margin-bottom:.75rem">Approximate location shown for privacy.</p>' +
-            '<div id="apt-map" style="height:240px"></div></div>' +
-
-            '</div>' +
-
-            '<div class="col-lg-4">' +
-            '<div class="price-card fade-up fade-up-d1">' +
-            '<div class="price">' + apt.fullRent + ' <span>JOD / month</span></div>' +
-            '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">' +
-            '<span class="gender-tag"><i class="bi bi-person"></i> ' + (GENDER_LABELS[apt.genderType]||'') + '</span>' +
-            '<button class="btn-save-detail" id="save-btn" onclick="toggleDetailSave()"><i class="bi bi-heart"></i> Save</button></div>' +
-            '<div id="compatibility-area" class="mb-3"></div>' +
-            '<div id="apply-area"></div>' +
-            '</div></div></div>'
-
-        // Apply button logic
-        var applyArea = document.getElementById('apply-area')
-        if (!user) {
-            applyArea.innerHTML = '<a href="/Account/Login" class="btn-apply d-block text-center text-decoration-none"><i class="bi bi-box-arrow-in-right me-1"></i> Log in to Apply</a>'
-        } else if (user.role === 0) {
-            applyArea.innerHTML =
-                '<div id="apply-form-wrap">' +
-                '<textarea class="form-control mb-2" id="apply-msg" rows="3" placeholder="Write a short message to the owner (20–500 chars)..." style="border-radius:10px;font-size:.88rem;resize:none"></textarea>' +
-                '<div class="d-flex justify-content-between align-items-center mb-2"><span style="font-size:.75rem;color:#94a3b8" id="apply-chars">0 / 500</span></div>' +
-                '<button class="btn-apply" id="apply-btn" onclick="applyNow()"><i class="bi bi-send me-1"></i> Apply Now</button>' +
-                '</div>' +
-                '<div id="apply-success" class="d-none text-center" style="padding:1rem 0">' +
-                '<i class="bi bi-check-circle-fill" style="font-size:2rem;color:#10b981"></i>' +
-                '<p class="fw-bold mt-2 mb-1" style="color:#1e293b">Application Sent!</p>' +
-                '<p style="font-size:.85rem;color:#94a3b8">The owner will review your request.</p>' +
-                '<a href="/StudentApps" style="color:#F97316;font-weight:600;font-size:.85rem">View my applications</a></div>'
-            document.getElementById('apply-msg').addEventListener('input', function () {
-                document.getElementById('apply-chars').textContent = this.value.length + ' / 500'
-            })
-        } else if (user.role === 1) {
-            applyArea.innerHTML = '<p class="text-center" style="font-size:.85rem;color:#94a3b8;margin:0">Owners cannot apply to apartments.</p>'
-        }
-
-        if (apt.latitude && apt.longitude) {
-            setTimeout(function () {
-                var map = L.map('apt-map').setView([apt.latitude, apt.longitude], 14)
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map)
-                L.marker([apt.latitude, apt.longitude]).addTo(map)
-            }, 200)
-        }
-
-        // Check saved state
-        if (user) {
-            api.get('/saved/ids').then(function (ids) {
-                if ((ids || []).indexOf(aptId) !== -1) {
-                    var sb = document.getElementById('save-btn')
-                    if (sb) { sb.classList.add('saved'); sb.innerHTML = '<i class="bi bi-heart-fill"></i> Saved' }
-                }
-            }).catch(function(){})
-        }
-
-        if (isOwner) {
-            renderPhotoMgmt(photos)
-            document.getElementById('detail-photo-input').addEventListener('change', async function () {
-                var files = this.files
-                for (var i = 0; i < files.length; i++) {
-                    var fd = new FormData()
-                    fd.append('file', files[i])
-                    await api.post('/apartments/' + aptId + '/photos', { formData: fd })
-                }
-                this.value = ''
-                var refreshed = await api.get('/apartments/' + aptId)
-                photos = refreshed.photos || []
-                renderPhotoMgmt(photos)
-                refreshGallery(photos, refreshed.title)
-            })
-        }
-
-        if (user && user.role === 0 && user.quizCompleted) {
-            api.get('/apartments/' + aptId + '/compatibility').then(function (c) {
-                var cls = c.score >= 75 ? 'compat-high' : c.score >= 50 ? 'compat-mid' : 'compat-low'
-                document.getElementById('compatibility-area').innerHTML =
-                    '<div class="text-center">' +
-                    '<div class="compat-ring ' + cls + '">' + c.score + '%</div>' +
-                    '<p style="font-size:.82rem;color:#64748b;margin:0">Compatibility Match</p></div>'
-            }).catch(function () {})
-        }
-    }).catch(function () {
-        container.innerHTML = '<div class="not-found"><i class="bi bi-building-x"></i><h4>Apartment not found</h4>' +
-            '<p>This listing may have been removed or you don\'t have access.</p>' +
-            '<a href="/Browse" class="btn-apply" style="width:auto;display:inline-block;padding:.6rem 1.5rem;border-radius:8px">Back to Browse</a></div>'
-    })
-}
-
-function renderPhotoMgmt(photos) {
-    var grid = document.getElementById('photo-mgmt-grid')
-    if (!grid) return
-    grid.innerHTML = photos.map(function (p) {
-        return '<div class="photo-mgmt-item">' +
-            '<img src="' + p.photoUrl + '" alt="" />' +
-            '<button class="del-btn" onclick="deletePhoto(\'' + p.id + '\')">&times;</button></div>'
-    }).join('') +
-    (photos.length < 10 ? '<div class="photo-add-zone" onclick="document.getElementById(\'detail-photo-input\').click()"><i class="bi bi-plus-lg"></i></div>' : '')
-}
-
-async function deletePhoto(photoId) {
-    if (!confirm('Remove this photo?')) return
-    await api.delete('/apartments/' + aptId + '/photos/' + photoId)
-    var refreshed = await api.get('/apartments/' + aptId)
-    var photos = refreshed.photos || []
-    renderPhotoMgmt(photos)
-    refreshGallery(photos, refreshed.title)
-}
-
-function refreshGallery(photos, title) {
-    var mainPhoto = photos.length > 0 ? photos[0].photoUrl : '/property/images/img_1.jpg'
-    var mainImg = document.getElementById('gallery-main')
-    if (mainImg) mainImg.src = mainPhoto
-    var thumbs = document.querySelector('.gallery-thumbs')
-    if (thumbs && photos.length > 1) {
-        thumbs.innerHTML = photos.map(function (p, i) {
-            return '<img src="' + p.photoUrl + '" alt="" class="gallery-thumb' + (i===0?' active':'') + '" onclick="switchPhoto(this,\'' + p.photoUrl + '\')" />'
-        }).join('')
-    } else if (thumbs && photos.length <= 1) {
-        thumbs.innerHTML = ''
-    }
-}
-
 function switchPhoto(thumb, url) {
     document.getElementById('gallery-main').src = url
     document.querySelectorAll('.gallery-thumb').forEach(function(t) { t.classList.remove('active') })
     thumb.classList.add('active')
 }
 
-function toggleDetailSave() {
-    var user = auth.getUser()
-    if (!user) { window.location.href = '/Account/Login'; return }
-    var btn = document.getElementById('save-btn')
-    api.post('/saved/' + aptId).then(function (res) {
-        if (res.saved) {
-            btn.classList.add('saved')
-            btn.innerHTML = '<i class="bi bi-heart-fill"></i> Saved'
-        } else {
-            btn.classList.remove('saved')
-            btn.innerHTML = '<i class="bi bi-heart"></i> Save'
-        }
-    }).catch(function () {})
-}
-
-async function applyNow() {
-    var msg = document.getElementById('apply-msg').value.trim()
-    if (msg.length < 20) {
-        alert('Please write at least 20 characters.')
-        return
-    }
-    if (msg.length > 500) {
-        alert('Message must be 500 characters or fewer.')
-        return
-    }
-    var btn = document.getElementById('apply-btn')
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending...'
-    try {
-        await api.post('/apartments/' + aptId + '/apply', { body: { message: msg } })
-        document.getElementById('apply-form-wrap').classList.add('d-none')
-        document.getElementById('apply-success').classList.remove('d-none')
-    } catch (err) {
-        btn.disabled = false
-        btn.innerHTML = '<i class="bi bi-send me-1"></i> Apply Now'
-        alert(err.message || 'Failed to apply. You may have already applied to this apartment.')
-    }
+var lat = @(apt.Latitude != 0 ? apt.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture) : "0")
+var lng = @(apt.Longitude != 0 ? apt.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture) : "0")
+if (lat && lng) {
+    var map = L.map('apt-map').setView([lat, lng], 14)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map)
+    L.marker([lat, lng]).addTo(map)
 }
 </script>
 }

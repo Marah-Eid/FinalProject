@@ -35,7 +35,6 @@
         transition: background .2s; cursor: pointer; margin-top: 1rem;
     }
     .btn-submit-review:hover { background: #1e293b; }
-    .btn-submit-review:disabled { opacity: .5; cursor: not-allowed; }
 
     .review-success {
         text-align: center; padding: 2rem 1rem;
@@ -43,13 +42,6 @@
     .review-success i { font-size: 2rem; color: #10b981; }
     .review-success h3 { font-weight: 700; font-size: 1.1rem; color: #1e293b; margin: .6rem 0 .25rem; }
     .review-success p { color: #64748b; font-size: .88rem; margin: 0; }
-
-    .review-login {
-        text-align: center; padding: 2rem 1rem;
-        color: #64748b; font-size: .9rem;
-    }
-    .review-login a { color: #F97316; font-weight: 600; text-decoration: none; }
-    .review-login a:hover { text-decoration: underline; }
 </style>
 }
 
@@ -57,103 +49,67 @@
     <h1>Write a Review</h1>
     <p class="sub">Share your experience with Dorm. Your review will appear on the homepage after approval.</p>
 
-    <div id="review-loading" class="text-center py-4">
-        <div class="spinner-border spinner-border-sm" style="color:#94a3b8"></div>
-    </div>
-
-    <div id="review-login" class="review-card d-none">
-        <div class="review-login">
-            <i class="bi bi-person-circle" style="font-size:2rem;color:#94a3b8"></i>
-            <p style="margin-top:.75rem">You need to be logged in to write a review.</p>
-            <a href="/Account/Login">Log in</a> or <a href="/Account/Register">Sign up</a>
-        </div>
-    </div>
-
-    <div id="review-form-card" class="review-card d-none">
-        <div class="alert alert-danger d-none" id="review-error" style="border-radius:8px;font-size:.85rem"></div>
-
-        <div id="review-form-wrap">
-            <label style="font-size:.82rem;font-weight:600;color:#475569;display:block;margin-bottom:.35rem">Rating</label>
-            <div class="star-row" id="review-stars">
-                <i class="bi bi-star" data-star="1"></i>
-                <i class="bi bi-star" data-star="2"></i>
-                <i class="bi bi-star" data-star="3"></i>
-                <i class="bi bi-star" data-star="4"></i>
-                <i class="bi bi-star" data-star="5"></i>
+    @if (TempData["Success"] is string success)
+    {
+        <div class="review-card">
+            <div class="review-success">
+                <i class="bi bi-check-circle-fill"></i>
+                <h3>Thank you!</h3>
+                <p>@success</p>
+                <a href="/" style="display:inline-block;margin-top:1rem;color:#F97316;font-weight:600;text-decoration:none;font-size:.88rem">
+                    <i class="bi bi-arrow-left"></i> Back to Home
+                </a>
             </div>
-
-            <label style="font-size:.82rem;font-weight:600;color:#475569;display:block;margin-bottom:.35rem">Your review</label>
-            <textarea class="review-textarea" id="review-text" placeholder="How has Dorm helped you? (10-500 characters)"></textarea>
-            <div class="char-count" id="review-chars">0 / 500</div>
-
-            <button class="btn-submit-review" id="review-btn">
-                <i class="bi bi-send"></i> Submit Review
-            </button>
         </div>
+    }
+    else
+    {
+        <div class="review-card">
+            @if (ViewData["Error"] is string error)
+            {
+                <div class="alert alert-danger" style="border-radius:8px;font-size:.85rem">@error</div>
+            }
 
-        <div id="review-success" class="review-success d-none">
-            <i class="bi bi-check-circle-fill"></i>
-            <h3>Thank you!</h3>
-            <p>Your review is pending admin approval and will appear on the homepage soon.</p>
-            <a href="/" style="display:inline-block;margin-top:1rem;color:#F97316;font-weight:600;text-decoration:none;font-size:.88rem">
-                <i class="bi bi-arrow-left"></i> Back to Home
-            </a>
+            <form method="post" asp-action="Submit" asp-controller="WriteReview">
+                @Html.AntiForgeryToken()
+
+                <label style="font-size:.82rem;font-weight:600;color:#475569;display:block;margin-bottom:.35rem">Rating</label>
+                <div class="star-row" id="review-stars">
+                    <i class="bi bi-star" data-star="1"></i>
+                    <i class="bi bi-star" data-star="2"></i>
+                    <i class="bi bi-star" data-star="3"></i>
+                    <i class="bi bi-star" data-star="4"></i>
+                    <i class="bi bi-star" data-star="5"></i>
+                </div>
+                <input type="hidden" name="stars" id="stars-input" value="0" />
+
+                <label style="font-size:.82rem;font-weight:600;color:#475569;display:block;margin-bottom:.35rem">Your review</label>
+                <textarea class="review-textarea" name="text" id="review-text" placeholder="How has Dorm helped you? (10-500 characters)" required minlength="10" maxlength="500"></textarea>
+                <div class="char-count" id="review-chars">0 / 500</div>
+
+                <button type="submit" class="btn-submit-review">
+                    <i class="bi bi-send"></i> Submit Review
+                </button>
+            </form>
         </div>
-    </div>
+    }
 </div>
 
 @section Scripts {
 <script>
 var reviewStars = 0
-
-auth.initAuth().then(function () {
-    document.getElementById('review-loading').classList.add('d-none')
-    var user = auth.getUser()
-    if (!user) {
-        document.getElementById('review-login').classList.remove('d-none')
-        return
-    }
-    document.getElementById('review-form-card').classList.remove('d-none')
-})
-
 document.querySelectorAll('#review-stars i').forEach(function (star) {
     star.addEventListener('click', function () {
         reviewStars = parseInt(this.getAttribute('data-star'))
+        document.getElementById('stars-input').value = reviewStars
         document.querySelectorAll('#review-stars i').forEach(function (s) {
             var v = parseInt(s.getAttribute('data-star'))
             s.className = v <= reviewStars ? 'bi bi-star-fill active' : 'bi bi-star'
         })
     })
 })
-
 document.getElementById('review-text').addEventListener('input', function () {
     document.getElementById('review-chars').textContent = this.value.length + ' / 500'
-})
-
-document.getElementById('review-btn').addEventListener('click', function () {
-    var text = document.getElementById('review-text').value.trim()
-    var errEl = document.getElementById('review-error')
-    errEl.classList.add('d-none')
-
-    if (reviewStars < 1) { errEl.textContent = 'Please select a star rating.'; errEl.classList.remove('d-none'); return }
-    if (text.length < 10 || text.length > 500) { errEl.textContent = 'Review must be 10-500 characters.'; errEl.classList.remove('d-none'); return }
-
-    var btn = document.getElementById('review-btn')
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Submitting...'
-
-    api.post('/testimonials', { body: { text: text, stars: reviewStars } }).then(function () {
-        document.getElementById('review-form-wrap').classList.add('d-none')
-        document.getElementById('review-success').classList.remove('d-none')
-    }).catch(function (err) {
-        var msg = 'Could not submit review.'
-        if (err && err.error && err.error.message) msg = err.error.message
-        else if (err && err.message) msg = err.message
-        errEl.textContent = msg
-        errEl.classList.remove('d-none')
-        btn.disabled = false
-        btn.innerHTML = '<i class="bi bi-send"></i> Submit Review'
-    })
 })
 </script>
 }

@@ -1,6 +1,7 @@
 @{
-    Layout = "_DashboardLayout";
+    Layout = "_BrowseLayout";
     ViewData["Title"] = "My Applications";
+    var apps = (IReadOnlyList<Dorm.Application.DTOs.Applications.ApplicationDto>)(ViewBag.Applications ?? Array.Empty<Dorm.Application.DTOs.Applications.ApplicationDto>());
 }
 
 @section Styles {
@@ -12,20 +13,9 @@
         background: #0f172a; color: #fff; border: none; border-radius: 8px;
         padding: .5rem 1rem; font-weight: 600; font-size: .82rem;
         text-decoration: none; display: inline-flex; align-items: center; gap: .3rem;
-        transition: all .2s;
     }
     .btn-browse-sm:hover { background: #1e293b; color: #fff; }
-
     .apps-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
-    .filter-tabs { padding: 1rem 1.25rem; border-bottom: 1px solid #f8fafc; }
-    .filter-tab {
-        padding: .35rem .8rem; border-radius: 6px; font-size: .78rem; font-weight: 600;
-        border: 1px solid #e2e8f0; background: #fff; color: #64748b;
-        cursor: pointer; transition: all .15s;
-    }
-    .filter-tab:hover { border-color: #cbd5e1; color: #1e293b; }
-    .filter-tab.active { background: #0f172a; color: #fff; border-color: #0f172a; }
-
     .match-ring {
         width: 38px; height: 38px; border-radius: 50%;
         display: inline-flex; align-items: center; justify-content: center;
@@ -34,31 +24,11 @@
     .match-ring.high { border: 2.5px solid #10b981; color: #10b981; background: rgba(16,185,129,.06); }
     .match-ring.mid  { border: 2.5px solid #eab308; color: #eab308; background: rgba(234,179,8,.06); }
     .match-ring.low  { border: 2.5px solid #94a3b8; color: #94a3b8; background: rgba(148,163,184,.06); }
-
     .btn-withdraw {
         background: #fff; color: #ef4444; border: 1px solid #fecaca; border-radius: 6px;
         padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
-        transition: all .15s;
     }
     .btn-withdraw:hover { background: #fef2f2; border-color: #ef4444; }
-    .btn-msg {
-        background: #fff; color: #3b82f6; border: 1px solid #bfdbfe; border-radius: 6px;
-        padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
-        text-decoration: none; transition: all .15s;
-    }
-    .btn-msg:hover { background: #eff6ff; border-color: #3b82f6; }
-    .btn-pay {
-        background: #F97316; color: #fff; border: none; border-radius: 6px;
-        padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
-        cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: .25rem;
-    }
-    .btn-pay:hover { background: #ea6c10; }
-    .btn-pay:disabled { opacity: .5; cursor: not-allowed; }
-    .badge-paid {
-        display: inline-flex; align-items: center; gap: .25rem;
-        font-size: .72rem; font-weight: 600; color: #10b981;
-    }
-
     .empty-apps { text-align: center; padding: 3.5rem 1rem; }
     .empty-apps i { font-size: 2.5rem; color: #cbd5e1; }
     .empty-apps h5 { font-weight: 700; color: #1e293b; margin-top: .75rem; }
@@ -73,121 +43,83 @@
     </div>
     <a href="/Browse" class="btn-browse-sm"><i class="bi bi-search"></i> Browse</a>
 </div>
-<div>
-    <div class="apps-card">
-            <div class="filter-tabs d-flex flex-wrap gap-2" id="status-btns">
-                <button class="filter-tab active" onclick="filterApps('all',this)">All</button>
-                <button class="filter-tab" onclick="filterApps('pending',this)">Pending</button>
-                <button class="filter-tab" onclick="filterApps('accepted',this)">Accepted</button>
-                <button class="filter-tab" onclick="filterApps('rejected',this)">Rejected</button>
-            </div>
-            <div id="apps-list">
-                <div class="text-center py-5"><div class="spinner-border" style="color:#94a3b8"></div></div>
-            </div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" style="border-radius:8px">@success</div>
+}
+
+<div class="apps-card">
+    @if (apps.Count == 0)
+    {
+        <div class="empty-apps">
+            <i class="bi bi-inbox"></i>
+            <h5>No applications</h5>
+            <p>Browse apartments and apply to get started.</p>
+            <a href="/Browse" class="btn-browse-sm">Browse apartments</a>
         </div>
-    </div>
-
-@section Scripts {
-<script>
-var allApps = []
-var paidAppIds = new Set()
-var currentFilter = 'all'
-var STATUS_KEYS = { 0: 'Pending', 1: 'Accepted', 2: 'Rejected', 3: 'Withdrawn' }
-var STATUS_COLORS = { 0: 'warning', 1: 'success', 2: 'danger', 3: 'secondary' }
-var STATUS_ICONS = { 0: 'bi-clock', 1: 'bi-check-circle-fill', 2: 'bi-x-circle-fill', 3: 'bi-arrow-return-left' }
-
-auth.initAuth().then(async function () {
-    try {
-        var payments = await api.get('/payments/history')
-        var list = payments.items || payments || []
-        list.forEach(function (p) {
-            if (p.type === 0 && p.status === 1 && p.relatedEntityId) paidAppIds.add(p.relatedEntityId)
-        })
-    } catch (e) {}
-    loadApps()
-})
-
-function filterApps(f, btn) {
-    currentFilter = f
-    document.querySelectorAll('#status-btns .filter-tab').forEach(function (b) { b.classList.remove('active') })
-    btn.classList.add('active')
-    renderApps()
-}
-
-async function loadApps() {
-    try {
-        allApps = await api.get('/applications/mine')
-        allApps = allApps || []
-        renderApps()
-    } catch (e) {
-        document.getElementById('apps-list').innerHTML = '<div class="text-center py-5"><p style="color:#ef4444">Failed to load applications.</p></div>'
     }
-}
-
-function renderApps() {
-    var statusMap = { 0: 'pending', 1: 'accepted', 2: 'rejected', 3: 'withdrawn' }
-    var items = currentFilter === 'all' ? allApps : allApps.filter(function (a) { return statusMap[a.status] === currentFilter })
-    var container = document.getElementById('apps-list')
-
-    if (items.length === 0) {
-        container.innerHTML = '<div class="empty-apps"><i class="bi bi-inbox"></i><h5>No applications</h5>' +
-            '<p>Browse apartments and apply to get started.</p>' +
-            '<a href="/Browse" class="btn-browse-sm">Browse apartments</a></div>'
-        return
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">
+                        <th>Apartment</th><th>Date</th><th class="text-center">Match</th><th class="text-center">Status</th><th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var app in apps)
+                {
+                    var statusText = app.Status switch { Dorm.Domain.Enums.ApplicationStatus.Pending => "Pending", Dorm.Domain.Enums.ApplicationStatus.Accepted => "Accepted", Dorm.Domain.Enums.ApplicationStatus.Rejected => "Rejected", Dorm.Domain.Enums.ApplicationStatus.Withdrawn => "Withdrawn", _ => "Pending" };
+                    var statusColor = app.Status switch { Dorm.Domain.Enums.ApplicationStatus.Pending => "warning", Dorm.Domain.Enums.ApplicationStatus.Accepted => "success", Dorm.Domain.Enums.ApplicationStatus.Rejected => "danger", Dorm.Domain.Enums.ApplicationStatus.Withdrawn => "secondary", _ => "secondary" };
+                    var statusIcon = app.Status switch { Dorm.Domain.Enums.ApplicationStatus.Pending => "bi-clock", Dorm.Domain.Enums.ApplicationStatus.Accepted => "bi-check-circle-fill", Dorm.Domain.Enums.ApplicationStatus.Rejected => "bi-x-circle-fill", Dorm.Domain.Enums.ApplicationStatus.Withdrawn => "bi-arrow-return-left", _ => "bi-clock" };
+                    var matchCls = app.CompatibilityScore >= 75 ? "high" : app.CompatibilityScore >= 50 ? "mid" : "low";
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width:36px;height:36px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center"><i class="bi bi-building" style="color:#94a3b8;font-size:.85rem"></i></div>
+                                <div>
+                                    <a href="/Apartment/Detail/@app.ApartmentId" class="fw-semibold text-decoration-none" style="color:#1e293b;font-size:.88rem">@app.ApartmentTitle</a>
+                                    @if (!string.IsNullOrEmpty(app.Message))
+                                    {
+                                        <br /><span style="color:#94a3b8;font-size:.75rem;font-style:italic">"@(app.Message.Length > 50 ? app.Message.Substring(0, 50) + "..." : app.Message)"</span>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td style="color:#94a3b8;font-size:.82rem">@app.CreatedAt.ToString("MMM d, yyyy")</td>
+                        <td class="text-center">
+                            @if (app.CompatibilityScore > 0)
+                            {
+                                <div class="match-ring @matchCls">@(app.CompatibilityScore)%</div>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-@statusColor bg-opacity-10 text-@statusColor" style="font-size:.72rem"><i class="bi @statusIcon me-1"></i>@statusText</span>
+                        </td>
+                        <td class="text-end">
+                            @if (app.Status == Dorm.Domain.Enums.ApplicationStatus.Pending)
+                            {
+                                <form method="post" asp-action="Withdraw" asp-controller="StudentApps" style="display:inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@app.Id" />
+                                    <button type="submit" class="btn-withdraw"><i class="bi bi-x-lg me-1"></i>Withdraw</button>
+                                </form>
+                            }
+                            @if (app.Status == Dorm.Domain.Enums.ApplicationStatus.Accepted)
+                            {
+                                <a href="/Chat" class="btn-browse-sm" style="font-size:.78rem;padding:.3rem .7rem"><i class="bi bi-chat-dots me-1"></i>Message</a>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     }
-
-    container.innerHTML = '<div class="table-responsive"><table class="table table-hover align-middle mb-0">' +
-        '<thead><tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">' +
-        '<th>Apartment</th><th>Date</th><th class="text-center">Match</th><th class="text-center">Status</th><th class="text-end">Actions</th>' +
-        '</tr></thead><tbody>' +
-        items.map(function (app) {
-            var dateStr = app.createdAt ? new Date(app.createdAt).toLocaleDateString() : ''
-            var matchHtml = '—'
-            if (app.compatibilityScore != null) {
-                var cls = app.compatibilityScore >= 75 ? 'high' : app.compatibilityScore >= 50 ? 'mid' : 'low'
-                matchHtml = '<div class="match-ring ' + cls + '">' + app.compatibilityScore + '%</div>'
-            }
-            return '<tr><td><div class="d-flex align-items-center gap-2">' +
-                '<div style="width:36px;height:36px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center"><i class="bi bi-building" style="color:#94a3b8;font-size:.85rem"></i></div>' +
-                '<div><a href="/Apartment/Detail/' + app.apartmentId + '" class="fw-semibold text-decoration-none" style="color:#1e293b;font-size:.88rem">' + escapeHtml(app.apartmentTitle || '') + '</a>' +
-                (app.message ? '<br/><span style="color:#94a3b8;font-size:.75rem;font-style:italic">"' + escapeHtml(app.message.substring(0,50)) + (app.message.length>50?'…':'') + '"</span>' : '') +
-                '</div></div></td>' +
-                '<td style="color:#94a3b8;font-size:.82rem">' + dateStr + '</td>' +
-                '<td class="text-center">' + matchHtml + '</td>' +
-                '<td class="text-center"><span class="badge bg-' + (STATUS_COLORS[app.status]||'secondary') + ' bg-opacity-10 text-' + (STATUS_COLORS[app.status]||'secondary') + '" style="font-size:.72rem"><i class="bi ' + (STATUS_ICONS[app.status]||'bi-clock') + ' me-1"></i>' + (STATUS_KEYS[app.status]||'Pending') + '</span></td>' +
-                '<td class="text-end"><div class="d-flex justify-content-end gap-1 align-items-center">' +
-                (app.status === 0 ? '<button class="btn-withdraw" onclick="withdrawApp(\'' + app.id + '\',this)"><i class="bi bi-x-lg me-1"></i>Withdraw</button>' : '') +
-                (app.status === 1 && paidAppIds.has(app.id) ? '<span class="badge-paid"><i class="bi bi-check-circle-fill"></i> Paid</span>' : '') +
-                (app.status === 1 && !paidAppIds.has(app.id) ? '<button class="btn-pay" onclick="payCommission(\'' + app.id + '\',this)"><i class="bi bi-credit-card"></i> Pay 15 JOD</button>' : '') +
-                (app.status === 1 ? '<a href="/Chat" class="btn-msg"><i class="bi bi-chat-dots me-1"></i>Message</a>' : '') +
-                '</div></td></tr>'
-        }).join('') +
-        '</tbody></table></div>'
-}
-
-async function withdrawApp(id, btn) {
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'
-    try { await api.delete('/applications/' + id); loadApps() }
-    catch (e) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-x-lg me-1"></i>Withdraw' }
-}
-
-async function payCommission(appId, btn) {
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...'
-    try {
-        var result = await api.post('/payments/checkout', { body: { type: 0, relatedEntityId: appId } })
-        if (result.checkoutUrl) {
-            window.location.href = result.checkoutUrl
-        } else {
-            paidAppIds.add(appId)
-            renderApps()
-        }
-    } catch (err) {
-        alert(err.message || 'Payment failed. Please try again.')
-        btn.disabled = false
-        btn.innerHTML = '<i class="bi bi-credit-card"></i> Pay 15 JOD'
-    }
-}
-</script>
-}
+</div>
