@@ -2,124 +2,189 @@
     Layout = "_BrowseLayout";
     ViewData["Title"] = "My Applications";
     var apps = (IReadOnlyList<Dorm.Application.DTOs.Applications.ApplicationDto>)(ViewBag.Applications ?? Array.Empty<Dorm.Application.DTOs.Applications.ApplicationDto>());
+    var pending = apps.Count(a => a.Status == Dorm.Domain.Enums.ApplicationStatus.Pending);
+    var accepted = apps.Count(a => a.Status == Dorm.Domain.Enums.ApplicationStatus.Accepted);
 }
 
 @section Styles {
 <style>
-    .apps-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .apps-header h3 { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: .15rem; }
-    .apps-header p { color: #64748b; font-size: .9rem; margin: 0; }
-    .btn-browse-sm {
-        background: #0f172a; color: #fff; border: none; border-radius: 8px;
-        padding: .5rem 1rem; font-weight: 600; font-size: .82rem;
-        text-decoration: none; display: inline-flex; align-items: center; gap: .3rem;
+    .sa-page { max-width: 880px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+    .sa-header { margin-bottom: 1.5rem; }
+    .sa-header h2 { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: .25rem; }
+    .sa-header p { color: #64748b; font-size: .9rem; margin: 0; }
+
+    .sa-stats { display: flex; gap: .75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .sa-stat {
+        background: #fff; border-radius: 12px; border: 1px solid #f1f5f9;
+        padding: .75rem 1.25rem; display: flex; align-items: center; gap: .65rem;
+        min-width: 140px;
     }
-    .btn-browse-sm:hover { background: #1e293b; color: #fff; }
-    .apps-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .sa-stat-icon {
+        width: 36px; height: 36px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;
+    }
+    .sa-stat-label { font-size: .72rem; color: #94a3b8; font-weight: 500; }
+    .sa-stat-value { font-size: 1.1rem; font-weight: 800; color: #1e293b; }
+
+    .sa-card {
+        background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+        padding: 1.25rem; margin-bottom: .75rem;
+        display: flex; align-items: center; gap: 1rem;
+        transition: box-shadow .2s, transform .15s;
+    }
+    .sa-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.05); transform: translateY(-1px); }
+
+    .sa-card-icon {
+        width: 48px; height: 48px; border-radius: 12px; background: #f1f5f9;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        font-size: 1.1rem; color: #94a3b8;
+    }
+    .sa-card-body { flex: 1; min-width: 0; }
+    .sa-card-title {
+        font-weight: 700; font-size: .92rem; color: #1e293b;
+        text-decoration: none; display: block;
+    }
+    .sa-card-title:hover { color: #F97316; }
+    .sa-card-meta { font-size: .78rem; color: #94a3b8; margin-top: .15rem; }
+    .sa-card-msg { font-size: .78rem; color: #94a3b8; font-style: italic; margin-top: .2rem; }
+
+    .sa-card-right { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
+
     .match-ring {
-        width: 38px; height: 38px; border-radius: 50%;
-        display: inline-flex; align-items: center; justify-content: center;
-        font-size: .7rem; font-weight: 800;
+        width: 42px; height: 42px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .72rem; font-weight: 800;
     }
     .match-ring.high { border: 2.5px solid #10b981; color: #10b981; background: rgba(16,185,129,.06); }
     .match-ring.mid  { border: 2.5px solid #eab308; color: #eab308; background: rgba(234,179,8,.06); }
     .match-ring.low  { border: 2.5px solid #94a3b8; color: #94a3b8; background: rgba(148,163,184,.06); }
+
+    .status-badge {
+        font-size: .72rem; font-weight: 600; padding: .3rem .7rem; border-radius: 6px;
+        display: inline-flex; align-items: center; gap: .25rem; white-space: nowrap;
+    }
+    .status-pending { background: rgba(234,179,8,.1); color: #eab308; }
+    .status-accepted { background: rgba(16,185,129,.1); color: #10b981; }
+    .status-rejected { background: rgba(239,68,68,.1); color: #ef4444; }
+    .status-withdrawn { background: rgba(148,163,184,.1); color: #94a3b8; }
+
     .btn-withdraw {
-        background: #fff; color: #ef4444; border: 1px solid #fecaca; border-radius: 6px;
-        padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
+        background: #fff; color: #ef4444; border: 1px solid #fecaca; border-radius: 8px;
+        padding: .35rem .75rem; font-size: .78rem; font-weight: 600;
+        cursor: pointer; transition: all .15s;
     }
     .btn-withdraw:hover { background: #fef2f2; border-color: #ef4444; }
-    .empty-apps { text-align: center; padding: 3.5rem 1rem; }
-    .empty-apps i { font-size: 2.5rem; color: #cbd5e1; }
-    .empty-apps h5 { font-weight: 700; color: #1e293b; margin-top: .75rem; }
-    .empty-apps p { color: #94a3b8; font-size: .88rem; }
+    .btn-msg {
+        background: #0f172a; color: #fff; border: none; border-radius: 8px;
+        padding: .35rem .75rem; font-size: .78rem; font-weight: 600;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .25rem;
+        transition: all .15s;
+    }
+    .btn-msg:hover { background: #1e293b; color: #fff; }
+
+    .empty-apps {
+        text-align: center; padding: 4rem 1rem;
+        background: #fff; border-radius: 16px; border: 1px solid #e2e8f0;
+    }
+    .empty-apps-icon {
+        width: 64px; height: 64px; border-radius: 50%; background: #f1f5f9;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; color: #cbd5e1; margin-bottom: 1rem;
+    }
+    .empty-apps h5 { font-weight: 800; color: #1e293b; margin-bottom: .25rem; }
+    .empty-apps p { color: #94a3b8; font-size: .88rem; max-width: 320px; margin: 0 auto; }
+    .btn-browse {
+        margin-top: 1rem; background: #F97316; color: #fff; border: none; border-radius: 10px;
+        padding: .6rem 1.5rem; font-weight: 600; font-size: .88rem;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .3rem;
+    }
+    .btn-browse:hover { background: #ea6c10; color: #fff; }
+
+    @@media (max-width: 575px) {
+        .sa-card { flex-direction: column; align-items: flex-start; gap: .75rem; }
+        .sa-card-right { width: 100%; justify-content: space-between; }
+    }
 </style>
 }
 
-<div class="apps-header">
-    <div>
-        <h3>My Applications</h3>
+<div class="sa-page">
+    <div class="sa-header">
+        <h2>My Applications</h2>
         <p>Track the status of apartments you've applied to.</p>
     </div>
-    <a href="/Browse" class="btn-browse-sm"><i class="bi bi-search"></i> Browse</a>
-</div>
 
-@if (TempData["Success"] is string success)
-{
-    <div class="alert alert-success" style="border-radius:8px">@success</div>
-}
-
-<div class="apps-card">
-    @if (apps.Count == 0)
+    @if (TempData["Success"] is string success)
     {
-        <div class="empty-apps">
-            <i class="bi bi-inbox"></i>
-            <h5>No applications</h5>
-            <p>Browse apartments and apply to get started.</p>
-            <a href="/Browse" class="btn-browse-sm">Browse apartments</a>
+        <div class="alert alert-success" style="border-radius:10px">@success</div>
+    }
+
+    @if (apps.Count > 0)
+    {
+        <div class="sa-stats">
+            <div class="sa-stat">
+                <div class="sa-stat-icon" style="background:rgba(59,130,246,.08);color:#3b82f6"><i class="bi bi-file-text"></i></div>
+                <div><div class="sa-stat-label">Total</div><div class="sa-stat-value">@apps.Count</div></div>
+            </div>
+            <div class="sa-stat">
+                <div class="sa-stat-icon" style="background:rgba(234,179,8,.08);color:#eab308"><i class="bi bi-clock"></i></div>
+                <div><div class="sa-stat-label">Pending</div><div class="sa-stat-value">@pending</div></div>
+            </div>
+            <div class="sa-stat">
+                <div class="sa-stat-icon" style="background:rgba(16,185,129,.08);color:#10b981"><i class="bi bi-check-circle"></i></div>
+                <div><div class="sa-stat-label">Accepted</div><div class="sa-stat-value">@accepted</div></div>
+            </div>
+            <div class="sa-stat" style="margin-left:auto">
+                <a href="/Browse" style="color:#F97316;font-weight:600;font-size:.85rem;text-decoration:none;display:flex;align-items:center;gap:.3rem"><i class="bi bi-search"></i> Browse more</a>
+            </div>
         </div>
+
+        @foreach (var app in apps)
+        {
+            var statusText = app.Status switch { Dorm.Domain.Enums.ApplicationStatus.Pending => "Pending", Dorm.Domain.Enums.ApplicationStatus.Accepted => "Accepted", Dorm.Domain.Enums.ApplicationStatus.Rejected => "Rejected", Dorm.Domain.Enums.ApplicationStatus.Withdrawn => "Withdrawn", _ => "Pending" };
+            var statusCls = app.Status switch { Dorm.Domain.Enums.ApplicationStatus.Pending => "status-pending", Dorm.Domain.Enums.ApplicationStatus.Accepted => "status-accepted", Dorm.Domain.Enums.ApplicationStatus.Rejected => "status-rejected", _ => "status-withdrawn" };
+            var statusIcon = app.Status switch { Dorm.Domain.Enums.ApplicationStatus.Pending => "bi-clock", Dorm.Domain.Enums.ApplicationStatus.Accepted => "bi-check-circle-fill", Dorm.Domain.Enums.ApplicationStatus.Rejected => "bi-x-circle-fill", Dorm.Domain.Enums.ApplicationStatus.Withdrawn => "bi-arrow-return-left", _ => "bi-clock" };
+            var matchCls = app.CompatibilityScore >= 75 ? "high" : app.CompatibilityScore >= 50 ? "mid" : "low";
+
+            <div class="sa-card">
+                <div class="sa-card-icon"><i class="bi bi-building"></i></div>
+                <div class="sa-card-body">
+                    <a href="/Apartment/Detail/@app.ApartmentId" class="sa-card-title">@app.ApartmentTitle</a>
+                    <div class="sa-card-meta">Applied @app.CreatedAt.ToString("MMM d, yyyy")</div>
+                    @if (!string.IsNullOrEmpty(app.Message))
+                    {
+                        <div class="sa-card-msg">"@(app.Message.Length > 60 ? app.Message.Substring(0, 60) + "..." : app.Message)"</div>
+                    }
+                </div>
+                <div class="sa-card-right">
+                    @if (app.CompatibilityScore > 0)
+                    {
+                        <div class="match-ring @matchCls">@(app.CompatibilityScore)%</div>
+                    }
+                    <span class="status-badge @statusCls"><i class="bi @statusIcon"></i> @statusText</span>
+                    @if (app.Status == Dorm.Domain.Enums.ApplicationStatus.Pending)
+                    {
+                        <form method="post" asp-action="Withdraw" asp-controller="StudentApps" style="margin:0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@app.Id" />
+                            <button type="submit" class="btn-withdraw"><i class="bi bi-x-lg"></i></button>
+                        </form>
+                    }
+                    @if (app.Status == Dorm.Domain.Enums.ApplicationStatus.Accepted)
+                    {
+                        <a href="/Chat" class="btn-msg"><i class="bi bi-chat-dots"></i> Chat</a>
+                    }
+                </div>
+            </div>
+        }
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">
-                        <th>Apartment</th><th>Date</th><th class="text-center">Match</th><th class="text-center">Status</th><th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var app in apps)
-                {
-                    var statusText = app.Status switch { Dorm.Domain.Enums.ApplicationStatus.Pending => "Pending", Dorm.Domain.Enums.ApplicationStatus.Accepted => "Accepted", Dorm.Domain.Enums.ApplicationStatus.Rejected => "Rejected", Dorm.Domain.Enums.ApplicationStatus.Withdrawn => "Withdrawn", _ => "Pending" };
-                    var statusColor = app.Status switch { Dorm.Domain.Enums.ApplicationStatus.Pending => "warning", Dorm.Domain.Enums.ApplicationStatus.Accepted => "success", Dorm.Domain.Enums.ApplicationStatus.Rejected => "danger", Dorm.Domain.Enums.ApplicationStatus.Withdrawn => "secondary", _ => "secondary" };
-                    var statusIcon = app.Status switch { Dorm.Domain.Enums.ApplicationStatus.Pending => "bi-clock", Dorm.Domain.Enums.ApplicationStatus.Accepted => "bi-check-circle-fill", Dorm.Domain.Enums.ApplicationStatus.Rejected => "bi-x-circle-fill", Dorm.Domain.Enums.ApplicationStatus.Withdrawn => "bi-arrow-return-left", _ => "bi-clock" };
-                    var matchCls = app.CompatibilityScore >= 75 ? "high" : app.CompatibilityScore >= 50 ? "mid" : "low";
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div style="width:36px;height:36px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center"><i class="bi bi-building" style="color:#94a3b8;font-size:.85rem"></i></div>
-                                <div>
-                                    <a href="/Apartment/Detail/@app.ApartmentId" class="fw-semibold text-decoration-none" style="color:#1e293b;font-size:.88rem">@app.ApartmentTitle</a>
-                                    @if (!string.IsNullOrEmpty(app.Message))
-                                    {
-                                        <br /><span style="color:#94a3b8;font-size:.75rem;font-style:italic">"@(app.Message.Length > 50 ? app.Message.Substring(0, 50) + "..." : app.Message)"</span>
-                                    }
-                                </div>
-                            </div>
-                        </td>
-                        <td style="color:#94a3b8;font-size:.82rem">@app.CreatedAt.ToString("MMM d, yyyy")</td>
-                        <td class="text-center">
-                            @if (app.CompatibilityScore > 0)
-                            {
-                                <div class="match-ring @matchCls">@(app.CompatibilityScore)%</div>
-                            }
-                            else
-                            {
-                                <span>—</span>
-                            }
-                        </td>
-                        <td class="text-center">
-                            <span class="badge bg-@statusColor bg-opacity-10 text-@statusColor" style="font-size:.72rem"><i class="bi @statusIcon me-1"></i>@statusText</span>
-                        </td>
-                        <td class="text-end">
-                            @if (app.Status == Dorm.Domain.Enums.ApplicationStatus.Pending)
-                            {
-                                <form method="post" asp-action="Withdraw" asp-controller="StudentApps" style="display:inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@app.Id" />
-                                    <button type="submit" class="btn-withdraw"><i class="bi bi-x-lg me-1"></i>Withdraw</button>
-                                </form>
-                            }
-                            @if (app.Status == Dorm.Domain.Enums.ApplicationStatus.Accepted)
-                            {
-                                <a href="/Chat" class="btn-browse-sm" style="font-size:.78rem;padding:.3rem .7rem"><i class="bi bi-chat-dots me-1"></i>Message</a>
-                            }
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+        <div class="empty-apps">
+            <div class="empty-apps-icon"><i class="bi bi-inbox"></i></div>
+            <h5>No applications yet</h5>
+            <p>Browse apartments and apply to find your next home with compatible roommates.</p>
+            <a href="/Browse" class="btn-browse"><i class="bi bi-search"></i> Browse Apartments</a>
         </div>
     }
 </div>

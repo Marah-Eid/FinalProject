@@ -259,17 +259,20 @@ document.getElementById('nl-form').addEventListener('submit', async function (e)
 
     try {
         if (feeRequired) {
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing 10 JOD listing fee...';
-            var payRes = await fetch('/Payment/Checkout', {
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing listing fee...';
+            var payRes = await fetch('/OwnerListings/PayListingFee', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'type=1&__RequestVerificationToken=' + encodeURIComponent(csrfToken),
-                redirect: 'manual'
+                body: '__RequestVerificationToken=' + encodeURIComponent(csrfToken)
             });
-            if (payRes.status === 0 || payRes.type === 'opaqueredirect' || (payRes.status >= 300 && payRes.status < 400)) {
+            var payData = await payRes.json();
+            if (payData.redirectUrl) {
                 sessionStorage.setItem('pendingListing', JSON.stringify(body));
-                var loc = payRes.headers.get('Location');
-                if (loc) { window.location.href = loc; return; }
+                window.location.href = payData.redirectUrl;
+                return;
+            }
+            if (!payData.paid) {
+                throw { message: 'Payment failed. Please try again.' };
             }
             feeRequired = false;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating listing...';

@@ -3,61 +3,144 @@
     Layout = User.FindFirstValue(ClaimTypes.Role) == "Student" ? "_BrowseLayout" : "_DashboardLayout";
     ViewData["Title"] = "Messages";
     var conversations = (IReadOnlyList<ConversationDto>)(ViewBag.Conversations ?? Array.Empty<ConversationDto>());
+    var totalUnread = conversations.Sum(c => c.UnreadCount);
 }
 
 @section Styles {
 <style>
-    .msg-header h3 { font-size: 1.4rem; font-weight: 800; color: #1e293b; }
-    .msg-panel { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
-    .convo-list { max-height: 70vh; overflow-y: auto; }
-    .convo-item {
-        display: flex; align-items: center; gap: .75rem;
-        padding: .85rem 1rem; border-bottom: 1px solid #f8fafc;
-        text-decoration: none; color: #1e293b; transition: background .15s;
-    }
-    .convo-item:hover { background: #f8fafc; color: #1e293b; }
-    .convo-avatar {
-        width: 38px; height: 38px; border-radius: 50%; background: #f1f5f9;
-        display: flex; align-items: center; justify-content: center;
-        font-weight: 700; font-size: .8rem; color: #64748b; flex-shrink: 0;
-    }
-    .convo-name { font-weight: 600; font-size: .88rem; }
-    .convo-preview { font-size: .78rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: #F97316; flex-shrink: 0; }
+    .chat-page { max-width: 700px; margin: 0 auto; padding: 2rem 1rem 4rem; }
 
-    .chat-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; padding: 3rem 1rem; }
-    .chat-empty i { font-size: 2.5rem; color: #cbd5e1; }
+    .chat-header { margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .chat-header h2 { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin: 0; }
+    .chat-header .unread-count {
+        background: #F97316; color: #fff; font-size: .72rem; font-weight: 700;
+        padding: .2rem .55rem; border-radius: 10px;
+    }
+
+    .convo-list-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+
+    .convo-item {
+        display: flex; align-items: center; gap: .85rem;
+        padding: 1rem 1.25rem; border-bottom: 1px solid #f8fafc;
+        text-decoration: none; color: #1e293b; transition: all .15s;
+        position: relative;
+    }
+    .convo-item:last-child { border-bottom: none; }
+    .convo-item:hover { background: #f8fafc; }
+    .convo-item.unread { background: rgba(249,115,22,.02); }
+
+    .convo-avatar {
+        width: 44px; height: 44px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: .85rem; flex-shrink: 0;
+        position: relative;
+    }
+    .convo-avatar-circle {
+        width: 100%; height: 100%; border-radius: 50%;
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        display: flex; align-items: center; justify-content: center;
+        color: #64748b;
+    }
+    .convo-item.unread .convo-avatar-circle {
+        background: linear-gradient(135deg, #F97316, #fb923c);
+        color: #fff;
+    }
+    .convo-unread-badge {
+        position: absolute; top: -2px; right: -2px;
+        width: 18px; height: 18px; border-radius: 50%;
+        background: #F97316; color: #fff; font-size: .6rem; font-weight: 800;
+        display: flex; align-items: center; justify-content: center;
+        border: 2px solid #fff;
+    }
+
+    .convo-body { flex: 1; min-width: 0; }
+    .convo-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .15rem; }
+    .convo-name { font-weight: 700; font-size: .88rem; color: #1e293b; }
+    .convo-item.unread .convo-name { color: #0f172a; }
+    .convo-time { font-size: .7rem; color: #94a3b8; flex-shrink: 0; }
+    .convo-apartment { font-size: .72rem; color: #94a3b8; margin-bottom: .2rem; display: flex; align-items: center; gap: .25rem; }
+    .convo-preview {
+        font-size: .82rem; color: #94a3b8; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis;
+    }
+    .convo-item.unread .convo-preview { color: #475569; font-weight: 500; }
+
+    .convo-chevron { color: #cbd5e1; font-size: .7rem; flex-shrink: 0; }
+
+    .empty-chat {
+        text-align: center; padding: 4rem 1.5rem;
+        background: #fff; border-radius: 16px; border: 1px solid #e2e8f0;
+    }
+    .empty-chat-icon {
+        width: 64px; height: 64px; border-radius: 50%; background: #f1f5f9;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; color: #cbd5e1; margin-bottom: 1rem;
+    }
+    .empty-chat h5 { font-weight: 800; color: #1e293b; }
+    .empty-chat p { color: #94a3b8; font-size: .88rem; max-width: 320px; margin: 0 auto; }
 </style>
 }
 
-<div class="msg-header mb-4">
-    <h3>Messages</h3>
-</div>
+<div class="chat-page">
+    <div class="chat-header">
+        <div class="d-flex align-items: center; gap: .5rem">
+            <h2>Messages</h2>
+            @if (totalUnread > 0)
+            {
+                <span class="unread-count ms-2">@totalUnread new</span>
+            }
+        </div>
+    </div>
 
-<div class="msg-panel convo-list">
     @if (conversations.Count == 0)
     {
-        <div class="chat-empty">
-            <i class="bi bi-chat-dots"></i>
-            <p class="mt-2" style="font-size:.9rem">No conversations yet.</p>
+        <div class="empty-chat">
+            <div class="empty-chat-icon"><i class="bi bi-chat-dots"></i></div>
+            <h5>No messages yet</h5>
+            <p>When you apply to an apartment or an owner messages you, conversations will appear here.</p>
         </div>
     }
     else
     {
-        @foreach (var c in conversations)
-        {
-            var init = !string.IsNullOrEmpty(c.OtherUserName) ? c.OtherUserName[0].ToString().ToUpper() : "U";
-            <a href="/Chat/@c.Id" class="convo-item">
-                <div class="convo-avatar">@init</div>
-                <div class="flex-grow-1" style="min-width:0">
-                    <div class="convo-name">@c.OtherUserName</div>
-                    <div class="convo-preview">@(c.LastMessageContent ?? "No messages yet")</div>
-                </div>
-                @if (c.UnreadCount > 0)
-                {
-                    <div class="unread-dot"></div>
-                }
-            </a>
-        }
+        <div class="convo-list-card">
+            @foreach (var c in conversations)
+            {
+                var init = string.Join("", (c.OtherUserName ?? "U").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(n => n[0])).ToUpper();
+                if (init.Length == 0) init = "U";
+                var hasUnread = c.UnreadCount > 0;
+                var timeAgo = (DateTime.UtcNow - c.LastMessageAt).TotalMinutes < 60
+                    ? $"{(int)(DateTime.UtcNow - c.LastMessageAt).TotalMinutes}m ago"
+                    : (DateTime.UtcNow - c.LastMessageAt).TotalHours < 24
+                        ? $"{(int)(DateTime.UtcNow - c.LastMessageAt).TotalHours}h ago"
+                        : c.LastMessageAt.ToString("MMM d");
+                <a href="/Chat/@c.Id" class="convo-item @(hasUnread ? "unread" : "")">
+                    <div class="convo-avatar">
+                        <div class="convo-avatar-circle">@init</div>
+                        @if (hasUnread)
+                        {
+                            <div class="convo-unread-badge">@c.UnreadCount</div>
+                        }
+                    </div>
+                    <div class="convo-body">
+                        <div class="convo-top">
+                            <span class="convo-name">@c.OtherUserName</span>
+                            <span class="convo-time">@timeAgo</span>
+                        </div>
+                        <div class="convo-apartment"><i class="bi bi-building"></i> @c.ApartmentTitle</div>
+                        <div class="convo-preview">
+                            @if (c.LastMessageSenderId == null)
+                            {
+                                <text>No messages yet</text>
+                            }
+                            else
+                            {
+                                @(c.LastMessageContent ?? "")
+                            }
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right convo-chevron"></i>
+                </a>
+            }
+        </div>
     }
 </div>

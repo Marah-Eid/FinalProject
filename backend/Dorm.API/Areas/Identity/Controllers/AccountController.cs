@@ -96,6 +96,9 @@ public class AccountController(
             if (user is not null)
                 await SignInCookieAsync(user);
 
+            if (role == UserRole.Student)
+                return Redirect("/Quiz");
+
             return RedirectToDashboard(role);
         }
         catch (FluentValidation.ValidationException vex)

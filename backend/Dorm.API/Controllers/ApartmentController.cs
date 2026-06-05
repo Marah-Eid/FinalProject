@@ -56,8 +56,23 @@ public class ApartmentController(
     public async Task<IActionResult> Apply(Guid id, string message, CancellationToken ct)
     {
         var studentId = currentUser.UserId!.Value;
-        await applications.ApplyAsync(studentId, id, new ApplyRequest(message ?? ""), ct);
-        TempData["Success"] = "Application submitted successfully!";
+        try
+        {
+            await applications.ApplyAsync(studentId, id, new ApplyRequest(message ?? ""), ct);
+            TempData["Success"] = "Application submitted successfully!";
+        }
+        catch (BadRequestException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+        catch (ConflictException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+        catch (ForbiddenException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
         return RedirectToAction("Detail", new { id });
     }
 

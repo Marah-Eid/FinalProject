@@ -1,6 +1,9 @@
 ﻿using Dorm.Application.Abstractions;
 using Dorm.Application.DTOs.Apartments;
+using Dorm.Application.DTOs.Payments;
 using Dorm.Application.Services.Apartments;
+using Dorm.Application.Services.Payments;
+using Dorm.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +12,7 @@ namespace Dorm.API.Controllers;
 [Authorize(Policy = AuthPolicies.Owner)]
 public class OwnerListingsController(
     IApartmentService apartments,
+    IPaymentsAppService payments,
     ICurrentUser currentUser) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -83,6 +87,19 @@ public class OwnerListingsController(
         var ownerId = currentUser.UserId!.Value;
         await apartments.DeletePhotoAsync(id, photoId, ownerId, ct);
         return Json(new { success = true });
+    }
+
+    [HttpPost("OwnerListings/PayListingFee")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PayListingFee(CancellationToken ct)
+    {
+        var ownerId = currentUser.UserId!.Value;
+        var result = await payments.CheckoutAsync(ownerId, new CheckoutRequest(PaymentType.ListingFee, null), ct);
+
+        if (!string.IsNullOrEmpty(result.CheckoutUrl))
+            return Json(new { paid = false, redirectUrl = result.CheckoutUrl });
+
+        return Json(new { paid = true });
     }
 
     [HttpGet("OwnerListings/RequiresListingFee")]

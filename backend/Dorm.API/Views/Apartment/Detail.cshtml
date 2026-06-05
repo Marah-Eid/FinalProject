@@ -110,6 +110,16 @@
     .compat-mid  { border: 4px solid #eab308; color: #eab308; background: rgba(234,179,8,.06); }
     .compat-low  { border: 4px solid #94a3b8; color: #94a3b8; background: rgba(148,163,184,.06); }
 
+    .compat-breakdown { margin-top: .75rem; }
+    .compat-pill {
+        display: inline-flex; align-items: center; gap: .25rem;
+        padding: .2rem .55rem; border-radius: 6px;
+        font-size: .72rem; font-weight: 600; margin: .15rem .1rem;
+    }
+    .compat-pill-match { background: rgba(16,185,129,.08); color: #10b981; }
+    .compat-pill-diff { background: rgba(239,68,68,.08); color: #ef4444; }
+    .compat-label { font-size: .72rem; font-weight: 600; color: #94a3b8; margin-bottom: .25rem; text-transform: uppercase; letter-spacing: .04em; }
+
     .btn-apply {
         background: #F97316; color: #fff; border: none; border-radius: 10px;
         font-weight: 600; font-size: .95rem; padding: .75rem; width: 100%;
@@ -148,6 +158,10 @@
         @if (TempData["Success"] is string success)
         {
             <div class="alert alert-success" style="border-radius:8px">@success</div>
+        }
+        @if (TempData["Error"] is string error)
+        {
+            <div class="alert alert-danger" style="border-radius:8px">@error</div>
         }
 
         <div class="row g-4">
@@ -254,10 +268,64 @@
                     @if (compat != null && compat.Score > 0)
                     {
                         var cls = compat.Score >= 75 ? "compat-high" : compat.Score >= 50 ? "compat-mid" : "compat-low";
+                        var qNames = new Dictionary<Dorm.Domain.Enums.QuizQuestionKey, string> {
+                            { Dorm.Domain.Enums.QuizQuestionKey.SleepSchedule, "Sleep" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.Cleanliness, "Cleanliness" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.Smoking, "Smoking" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.StudyHabits, "Study" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.SocialStyle, "Social" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.Guests, "Guests" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.Cooking, "Cooking" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.PetTolerance, "Pets" },
+                        };
+                        var qIcons = new Dictionary<Dorm.Domain.Enums.QuizQuestionKey, string> {
+                            { Dorm.Domain.Enums.QuizQuestionKey.SleepSchedule, "bi-moon-stars" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.Cleanliness, "bi-sparkle" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.Smoking, "bi-wind" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.StudyHabits, "bi-book" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.SocialStyle, "bi-people" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.Guests, "bi-person-plus" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.Cooking, "bi-cup-hot" },
+                            { Dorm.Domain.Enums.QuizQuestionKey.PetTolerance, "bi-emoji-smile" },
+                        };
                         <div class="text-center mb-3">
                             <div class="compat-ring @cls">@(compat.Score)%</div>
-                            <p style="font-size:.82rem;color:#64748b;margin:0">Compatibility Match</p>
+                            <p style="font-size:.82rem;color:#64748b;margin:0">
+                                @if (compat.TenantsCount == 0)
+                                {
+                                    <text>No tenants yet — you'd be the first!</text>
+                                }
+                                else
+                                {
+                                    <text>Compatibility with @compat.TenantsCount tenant@(compat.TenantsCount > 1 ? "s" : "")</text>
+                                }
+                            </p>
                         </div>
+                        @if (compat.MatchedOn.Count > 0 || compat.DifferedOn.Count > 0)
+                        {
+                            <div class="compat-breakdown mb-3">
+                                @if (compat.MatchedOn.Count > 0)
+                                {
+                                    <div class="compat-label"><i class="bi bi-check-circle me-1" style="color:#10b981"></i> You match on</div>
+                                    <div class="mb-2">
+                                        @foreach (var q in compat.MatchedOn)
+                                        {
+                                            <span class="compat-pill compat-pill-match"><i class="bi @(qIcons.GetValueOrDefault(q, "bi-check"))"></i> @(qNames.GetValueOrDefault(q, q.ToString()))</span>
+                                        }
+                                    </div>
+                                }
+                                @if (compat.DifferedOn.Count > 0)
+                                {
+                                    <div class="compat-label"><i class="bi bi-x-circle me-1" style="color:#ef4444"></i> You differ on</div>
+                                    <div>
+                                        @foreach (var q in compat.DifferedOn)
+                                        {
+                                            <span class="compat-pill compat-pill-diff"><i class="bi @(qIcons.GetValueOrDefault(q, "bi-x"))"></i> @(qNames.GetValueOrDefault(q, q.ToString()))</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
                     }
 
                     @if (!isAuth)

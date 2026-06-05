@@ -2,29 +2,51 @@
 @using Dorm.Application.DTOs.Quiz
 @{
     Layout = "_BrowseLayout";
-    ViewData["Title"] = "Quiz";
+    ViewData["Title"] = "Lifestyle Quiz";
     var questionsDto = (QuizQuestionsDto)ViewBag.Questions;
     var myAnswersDto = (QuizMyAnswersDto)ViewBag.MyAnswers;
     var questions = questionsDto.Questions;
     var existingAnswers = myAnswersDto.Answers;
+    var isFirstTime = existingAnswers.Count == 0;
 }
 
 @section Styles {
 <style>
-    .quiz-header { margin-bottom: 1.5rem; }
-    .quiz-header h3 { font-size: 1.4rem; font-weight: 800; color: #1e293b; }
-    .quiz-header p { color: #64748b; font-size: .9rem; }
+    .quiz-page { max-width: 640px; margin: 0 auto; padding: 2.5rem 1rem 4rem; }
 
-    .quiz-card { border: none; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; }
-    .quiz-card .card-body { padding: 2rem; }
+    .quiz-welcome {
+        text-align: center; padding: 2.5rem 1.5rem; margin-bottom: 2rem;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-radius: 16px; color: #f8fafc;
+    }
+    .quiz-welcome-icon {
+        width: 64px; height: 64px; border-radius: 16px;
+        background: rgba(249,115,22,.15); color: #F97316;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; margin-bottom: 1rem;
+    }
+    .quiz-welcome h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: .5rem; }
+    .quiz-welcome p { color: #94a3b8; font-size: .9rem; margin: 0 auto; max-width: 420px; line-height: 1.6; }
+    .btn-start-quiz {
+        margin-top: 1.25rem; background: #F97316; color: #fff; border: none;
+        border-radius: 10px; padding: .7rem 2rem; font-weight: 700; font-size: .95rem;
+        cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: .4rem;
+    }
+    .btn-start-quiz:hover { background: #ea6c10; transform: translateY(-1px); }
 
-    .progress-wrap { margin-bottom: 1.5rem; }
-    .progress-bar-bg { height: 5px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+    .quiz-card {
+        background: #fff; border-radius: 16px; border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 16px rgba(0,0,0,.04); overflow: hidden;
+    }
+    .quiz-card-body { padding: 2rem; }
+
+    .progress-wrap { margin-bottom: 1.75rem; }
+    .progress-bar-bg { height: 6px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
     .progress-bar-fill {
         height: 100%; background: linear-gradient(90deg, #F97316, #fb923c);
         border-radius: 10px; transition: width .4s cubic-bezier(.22,1,.36,1);
     }
-    .progress-text { display: flex; justify-content: space-between; margin-top: .5rem; }
+    .progress-text { display: flex; justify-content: space-between; align-items: center; margin-top: .6rem; }
     .progress-text span { font-size: .75rem; font-weight: 600; color: #94a3b8; }
     .progress-dots { display: flex; gap: .4rem; }
     .progress-dot {
@@ -32,10 +54,16 @@
         transition: background .3s, transform .3s;
     }
     .progress-dot.done { background: #F97316; }
-    .progress-dot.active { background: #F97316; transform: scale(1.3); }
+    .progress-dot.active { background: #F97316; transform: scale(1.4); }
 
-    .q-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: .25rem; }
-    .q-help { font-size: .9rem; color: #64748b; margin-bottom: 1.5rem; }
+    .q-icon-wrap {
+        width: 48px; height: 48px; border-radius: 12px;
+        background: rgba(249,115,22,.08); color: #F97316;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; margin-bottom: 1rem;
+    }
+    .q-title { font-size: 1.2rem; font-weight: 800; color: #1e293b; margin-bottom: .25rem; }
+    .q-help { font-size: .88rem; color: #64748b; margin-bottom: 1.5rem; line-height: 1.5; }
 
     .q-slide { animation: slideIn .35s cubic-bezier(.22,1,.36,1); }
     @@keyframes slideIn {
@@ -45,67 +73,86 @@
 
     .opt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
     .opt-card {
-        background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px;
+        background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 14px;
         padding: 1.25rem 1rem; text-align: center; cursor: pointer;
         transition: all .25s cubic-bezier(.22,1,.36,1);
     }
     .opt-card:hover {
         border-color: #cbd5e1; background: #fff;
-        transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.06);
+        transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,.06);
     }
     .opt-card.selected {
         border-color: #F97316; background: rgba(249,115,22,.04);
         box-shadow: 0 0 0 3px rgba(249,115,22,.1);
     }
-    .opt-card .opt-label { font-weight: 700; font-size: .92rem; color: #1e293b; }
     .opt-card .opt-check {
-        width: 20px; height: 20px; border-radius: 50%; border: 2px solid #e2e8f0;
+        width: 22px; height: 22px; border-radius: 50%; border: 2px solid #e2e8f0;
         display: inline-flex; align-items: center; justify-content: center;
-        margin-bottom: .5rem; transition: all .2s;
+        margin-bottom: .6rem; transition: all .2s;
     }
     .opt-card.selected .opt-check {
         background: #F97316; border-color: #F97316; color: #fff;
     }
+    .opt-card .opt-label { font-weight: 700; font-size: .88rem; color: #1e293b; }
 
     .quiz-nav { display: flex; justify-content: space-between; margin-top: 2rem; }
     .btn-quiz-prev {
         background: #f1f5f9; color: #475569; border: none; border-radius: 10px;
         padding: .65rem 1.5rem; font-weight: 600; font-size: .88rem;
         display: inline-flex; align-items: center; gap: .3rem;
-        transition: all .2s;
+        cursor: pointer; transition: all .2s;
     }
     .btn-quiz-prev:hover { background: #e2e8f0; }
     .btn-quiz-next {
         background: #0f172a; color: #fff; border: none; border-radius: 10px;
         padding: .65rem 1.5rem; font-weight: 600; font-size: .88rem;
         display: inline-flex; align-items: center; gap: .3rem;
-        transition: all .2s;
+        cursor: pointer; transition: all .2s;
     }
     .btn-quiz-next:hover { background: #1e293b; transform: translateY(-1px); }
     .btn-quiz-next:disabled { opacity: .4; cursor: not-allowed; transform: none; }
     .btn-quiz-submit {
         background: #F97316; color: #fff; border: none; border-radius: 10px;
-        padding: .65rem 1.5rem; font-weight: 600; font-size: .88rem;
-        display: inline-flex; align-items: center; gap: .3rem;
-        transition: all .2s;
+        padding: .65rem 1.5rem; font-weight: 700; font-size: .95rem;
+        display: inline-flex; align-items: center; gap: .4rem;
+        cursor: pointer; transition: all .2s;
     }
     .btn-quiz-submit:hover { background: #ea6c10; transform: translateY(-1px); }
     .btn-quiz-submit:disabled { opacity: .4; cursor: not-allowed; transform: none; }
 
+    .quiz-success {
+        text-align: center; padding: 2rem 1rem; animation: slideIn .4s ease;
+    }
+    .quiz-success-icon {
+        width: 56px; height: 56px; border-radius: 50%;
+        background: rgba(16,185,129,.1); color: #10b981;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; margin-bottom: 1rem;
+    }
+
     @@media (max-width: 575px) {
         .opt-grid { grid-template-columns: 1fr; }
+        .quiz-card-body { padding: 1.25rem; }
     }
 </style>
 }
 
-<div style="max-width:720px">
-    <div class="quiz-header">
-        <h3>Lifestyle Quiz</h3>
-        <p>Eight short questions — your answers stay private and power your match scores.</p>
+<div class="quiz-page">
+    <div id="quiz-welcome" style="display:@(isFirstTime ? "block" : "none")">
+        <div class="quiz-welcome">
+            <div class="quiz-welcome-icon"><i class="bi bi-clipboard-check"></i></div>
+            <h2>Find Your Perfect Roommate</h2>
+            <p>Answer 8 quick questions about your lifestyle. We'll use your answers to calculate compatibility scores with potential roommates — so you find people you'll actually get along with.</p>
+            <button class="btn-start-quiz" onclick="startQuiz()"><i class="bi bi-arrow-right"></i> Let's Go</button>
+        </div>
+        <div class="text-center" style="margin-top:1rem">
+            <p style="color:#94a3b8;font-size:.82rem"><i class="bi bi-shield-check me-1"></i> Your answers are private and only used for matching.</p>
+        </div>
     </div>
-    <div>
-        <div class="quiz-card card">
-            <div class="card-body">
+
+    <div id="quiz-main" style="display:@(isFirstTime ? "none" : "block")">
+        <div class="quiz-card">
+            <div class="quiz-card-body">
                 @Html.AntiForgeryToken()
                 <div id="quiz-progress" class="progress-wrap"></div>
                 <div id="quiz-content"></div>
@@ -118,7 +165,6 @@
 @section Scripts {
 <script>
 var csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
-
 var Q_KEY_NAMES = ['SleepSchedule','Cleanliness','Smoking','StudyHabits','SocialStyle','Guests','Cooking','PetTolerance'];
 
 var questions = [
@@ -135,6 +181,7 @@ var answers = {};
 }
 
 var currentQ = 0;
+var isFirstTime = @(isFirstTime ? "true" : "false");
 
 var Q_TITLES = {
     SleepSchedule: 'Sleep Schedule', Cleanliness: 'Cleanliness', Smoking: 'Smoking',
@@ -167,7 +214,13 @@ var Q_ICONS = {
     Cooking: 'bi-cup-hot', PetTolerance: 'bi-emoji-smile'
 };
 
-renderQuestion();
+if (!isFirstTime) renderQuestion();
+
+function startQuiz() {
+    document.getElementById('quiz-welcome').style.display = 'none';
+    document.getElementById('quiz-main').style.display = 'block';
+    renderQuestion();
+}
 
 function renderQuestion() {
     if (questions.length === 0) return;
@@ -183,13 +236,14 @@ function renderQuestion() {
     document.getElementById('quiz-progress').innerHTML =
         '<div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + pct + '%"></div></div>' +
         '<div class="progress-text"><span>Question ' + (currentQ+1) + ' of ' + questions.length + '</span>' +
-        '<div class="progress-dots">' + dots + '</div></span></div>';
+        '<div class="progress-dots">' + dots + '</div></div>';
 
     var content = document.getElementById('quiz-content');
     var labels = OPT_LABELS[qKey] || {};
     content.innerHTML =
         '<div class="q-slide">' +
-        '<h4 class="q-title"><i class="bi ' + (Q_ICONS[qKey]||'bi-question-circle') + ' me-2" style="color:#F97316"></i>' + (Q_TITLES[qKey]||qKey) + '</h4>' +
+        '<div class="q-icon-wrap"><i class="bi ' + (Q_ICONS[qKey]||'bi-question-circle') + '"></i></div>' +
+        '<h4 class="q-title">' + (Q_TITLES[qKey]||qKey) + '</h4>' +
         '<p class="q-help">' + (Q_HELP[qKey]||'') + '</p>' +
         '<div class="opt-grid">' +
         opts.map(function (opt) {
@@ -207,7 +261,7 @@ function renderQuestion() {
         : '<span></span>';
     var nextBtn = currentQ < questions.length - 1
         ? '<button class="btn-quiz-next" onclick="nextQ()" ' + (!answers[qKey]?'disabled':'') + '>Next <i class="bi bi-chevron-right"></i></button>'
-        : '<button class="btn-quiz-submit" onclick="submitQuiz()" ' + (!answers[qKey]?'disabled':'') + '>Submit <i class="bi bi-check2"></i></button>';
+        : '<button class="btn-quiz-submit" onclick="submitQuiz()" ' + (!answers[qKey]?'disabled':'') + '><i class="bi bi-check2-circle"></i> Submit Quiz</button>';
     nav.innerHTML = prevBtn + nextBtn;
 }
 
@@ -216,6 +270,9 @@ function nextQ() { if (currentQ < questions.length - 1) { currentQ++; renderQues
 function prevQ() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
 
 async function submitQuiz() {
+    var btn = document.querySelector('.btn-quiz-submit');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...'; }
+
     var payload = Object.keys(answers).map(function (k) {
         var idx = Q_KEY_NAMES.indexOf(k);
         return { questionKey: idx >= 0 ? idx : 0, answerValue: answers[k] };
@@ -230,8 +287,19 @@ async function submitQuiz() {
             var err = await res.json().catch(function () { return {}; });
             throw new Error(err.error?.message || 'Something went wrong.');
         }
-        window.location.href = '/Browse';
+
+        var content = document.getElementById('quiz-content');
+        document.getElementById('quiz-progress').style.display = 'none';
+        document.getElementById('quiz-nav').style.display = 'none';
+        content.innerHTML =
+            '<div class="quiz-success">' +
+            '<div class="quiz-success-icon"><i class="bi bi-check-lg"></i></div>' +
+            '<h4 style="font-weight:800;color:#1e293b;margin-bottom:.25rem">Quiz Complete!</h4>' +
+            '<p style="color:#64748b;font-size:.9rem;margin-bottom:1.25rem">Your lifestyle profile is saved. Now browse apartments and see your compatibility scores.</p>' +
+            '<a href="/Browse" style="background:#F97316;color:#fff;border:none;border-radius:10px;padding:.65rem 2rem;font-weight:700;font-size:.9rem;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem"><i class="bi bi-search"></i> Browse Apartments</a>' +
+            '</div>';
     } catch (err) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-check2-circle"></i> Submit Quiz'; }
         document.getElementById('quiz-content').insertAdjacentHTML('afterbegin',
             '<div class="alert alert-danger" style="border-radius:10px">' + (err.message || 'Something went wrong.') + '</div>');
     }
