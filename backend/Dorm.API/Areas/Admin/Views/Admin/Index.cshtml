@@ -3,7 +3,6 @@
 @using Dorm.Application.DTOs.Reports
 @using Dorm.Application.DTOs.Testimonials
 @{
-    Layout = "_DashboardLayout";
     ViewData["Title"] = "Admin Panel";
     var dashboard = (AdminDashboardDto)ViewBag.Dashboard;
     var users = (IReadOnlyList<AdminUserDto>)(ViewBag.Users ?? Array.Empty<AdminUserDto>());
@@ -230,14 +229,14 @@
                                     {
                                         @if (u.IsBanned)
                                         {
-                                            <form method="post" action="/Admin/Users/@u.Id/Unban" style="display:inline">
+                                            <form method="post" asp-area="Admin" asp-controller="Admin" asp-action="Unban" asp-route-id="@u.Id" style="display:inline">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn-approve"><i class="bi bi-unlock me-1"></i>Unban</button>
                                             </form>
                                         }
                                         else
                                         {
-                                            <form method="post" action="/Admin/Users/@u.Id/Ban" style="display:inline" onsubmit="return confirm('Ban this user?')">
+                                            <form method="post" asp-area="Admin" asp-controller="Admin" asp-action="Ban" asp-route-id="@u.Id" style="display:inline" onsubmit="return confirm('Ban this user?')">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn-deny"><i class="bi bi-slash-circle me-1"></i>Ban</button>
                                             </form>
@@ -309,14 +308,14 @@
                                 <td class="text-end">
                                     @if (a.IsSuspended)
                                     {
-                                        <form method="post" action="/Admin/Listings/@a.Id/Activate" style="display:inline">
+                                        <form method="post" asp-area="Admin" asp-controller="Admin" asp-action="Activate" asp-route-id="@a.Id" style="display:inline">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn-approve"><i class="bi bi-play-circle me-1"></i>Activate</button>
                                         </form>
                                     }
                                     else
                                     {
-                                        <form method="post" action="/Admin/Listings/@a.Id/Suspend" style="display:inline" onsubmit="return confirm('Suspend this listing?')">
+                                        <form method="post" asp-area="Admin" asp-controller="Admin" asp-action="Suspend" asp-route-id="@a.Id" style="display:inline" onsubmit="return confirm('Suspend this listing?')">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn-deny"><i class="bi bi-pause-circle me-1"></i>Suspend</button>
                                         </form>
@@ -363,12 +362,12 @@
                                     @if (r.Status == ReportStatus.Pending)
                                     {
                                         <div class="d-flex gap-1 justify-content-end">
-                                            <form method="post" action="/Admin/Reports/@r.Id/Resolve" style="display:inline">
+                                            <form method="post" asp-area="Admin" asp-controller="Admin" asp-action="Resolve" asp-route-id="@r.Id" style="display:inline">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="dismiss" value="false" />
                                                 <button type="submit" class="btn-deny"><i class="bi bi-check-lg me-1"></i>Resolve</button>
                                             </form>
-                                            <form method="post" action="/Admin/Reports/@r.Id/Resolve" style="display:inline">
+                                            <form method="post" asp-area="Admin" asp-controller="Admin" asp-action="Resolve" asp-route-id="@r.Id" style="display:inline">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="dismiss" value="true" />
                                                 <button type="submit" class="btn-approve"><i class="bi bi-x-lg me-1"></i>Dismiss</button>
@@ -425,12 +424,12 @@
                     <div class="testi-actions">
                         @if (!t.IsApproved)
                         {
-                            <form method="post" action="/Admin/Testimonials/@t.Id/Approve" style="display:inline">
+                            <form method="post" asp-area="Admin" asp-controller="Admin" asp-action="ApproveTestimonial" asp-route-id="@t.Id" style="display:inline">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn-approve"><i class="bi bi-check-lg me-1"></i>Approve</button>
                             </form>
                         }
-                        <form method="post" action="/Admin/Testimonials/@t.Id/Delete" style="display:inline" onsubmit="return confirm('Delete this testimonial?')">
+                        <form method="post" asp-area="Admin" asp-controller="Admin" asp-action="DeleteTestimonial" asp-route-id="@t.Id" style="display:inline" onsubmit="return confirm('Delete this testimonial?')">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn-deny"><i class="bi bi-trash me-1"></i>Delete</button>
                         </form>

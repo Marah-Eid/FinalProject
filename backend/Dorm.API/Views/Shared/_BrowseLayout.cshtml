@@ -159,7 +159,7 @@
                             <a href="/Profile"><i class="bi bi-person-gear"></i> Edit Profile</a>
                             <a href="/WriteReview"><i class="bi bi-pencil-square"></i> Write a Review</a>
                             <div class="pm-divider"></div>
-                            <form method="post" asp-action="Logout" asp-controller="Account" style="margin:0">
+                            <form method="post" asp-area="Identity" asp-controller="Account" asp-action="Logout" style="margin:0">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="pm-logout"><i class="bi bi-box-arrow-left"></i> Log out</button>
                             </form>
@@ -168,7 +168,7 @@
                 }
                 else
                 {
-                    <a href="/Account/Login" class="btn-nav-login">Log in</a>
+                    <a href="/Identity/Account/Login" class="btn-nav-login">Log in</a>
                 }
             </div>
         </div>
@@ -191,7 +191,7 @@
                     <a href="/About" class="me-3">About & Contact</a>
                     @if (!isAuth)
                     {
-                        <a href="/Account/Login">Log in</a>
+                        <a href="/Identity/Account/Login">Log in</a>
                     }
                 </div>
             </div>

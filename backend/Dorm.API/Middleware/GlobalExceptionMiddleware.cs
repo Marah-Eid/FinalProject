@@ -38,7 +38,7 @@ public sealed class GlobalExceptionMiddleware(RequestDelegate next, ILogger<Glob
             else
             {
                 if (apiEx.StatusCode == 401 || apiEx.StatusCode == 403)
-                    ctx.Response.Redirect("/Account/Login");
+                    ctx.Response.Redirect("/Identity/Account/Login");
                 else if (apiEx.StatusCode == 404)
                     ctx.Response.StatusCode = 404;
                 else

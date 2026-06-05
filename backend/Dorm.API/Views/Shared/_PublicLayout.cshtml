@@ -56,7 +56,7 @@
                                 <li><a href="/Dashboard">Dashboard</a></li>
                             }
                             <li>
-                                <form method="post" asp-action="Logout" asp-controller="Account" style="display:inline;margin:0">
+                                <form method="post" asp-area="Identity" asp-controller="Account" asp-action="Logout" style="display:inline;margin:0">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" style="background:rgba(239,68,68,.15);color:#ef4444 !important;border-radius:6px;padding:6px 14px !important;border:none;cursor:pointer;font-size:inherit;font-family:inherit">Log out</button>
                                 </form>
@@ -64,8 +64,8 @@
                         }
                         else
                         {
-                            <li><a href="/Account/Login">Log in</a></li>
-                            <li><a href="/Account/Register">Sign up</a></li>
+                            <li><a href="/Identity/Account/Login">Log in</a></li>
+                            <li><a href="/Identity/Account/Register">Sign up</a></li>
                         }
                     </ul>
 

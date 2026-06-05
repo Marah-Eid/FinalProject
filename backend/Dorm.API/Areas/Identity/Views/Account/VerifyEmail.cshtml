@@ -1,5 +1,4 @@
 @{
-    Layout = "_AuthLayout";
     ViewData["Title"] = "Verify Email";
     var success = ViewData["Success"] as string;
     var error = ViewData["Error"] as string;
@@ -16,7 +15,7 @@
     {
         <i class="bi bi-x-circle-fill" style="font-size:3rem;color:#ef4444"></i>
         <h1 class="auth-title mt-3">@error</h1>
-        <a href="/Account/Login" class="btn btn-outline-secondary mt-3">Back to login</a>
+        <a href="/Identity/Account/Login" class="btn btn-outline-secondary mt-3">Back to login</a>
     }
     else
     {

@@ -43,9 +43,9 @@ try
         .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
         {
-            options.LoginPath = "/Account/Login";
-            options.LogoutPath = "/Account/Logout";
-            options.AccessDeniedPath = "/Account/Login";
+            options.LoginPath = "/Identity/Account/Login";
+            options.LogoutPath = "/Identity/Account/Logout";
+            options.AccessDeniedPath = "/Identity/Account/Login";
             options.Cookie.Name = "Dorm.Auth";
             options.Cookie.HttpOnly = true;
             options.Cookie.SameSite = SameSiteMode.Lax;
@@ -68,7 +68,7 @@ try
 
     var app = builder.Build();
 
-    // Bootstrap DB on startup: create the target Postgres database if missing,
+    // Bootstrap DB on startup: create the database if missing,
     // then apply any pending EF migrations. Idempotent.
     using (var scope = app.Services.CreateScope())
     {

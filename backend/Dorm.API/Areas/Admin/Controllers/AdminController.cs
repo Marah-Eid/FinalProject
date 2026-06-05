@@ -1,4 +1,4 @@
-﻿using Dorm.Application.Abstractions;
+using Dorm.Application.Abstractions;
 using Dorm.Application.DTOs.Admin;
 using Dorm.Application.DTOs.Testimonials;
 using Dorm.Application.Services.Admin;
@@ -8,15 +8,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Dorm.API.Controllers;
+namespace Dorm.API.Areas.Admin.Controllers;
 
+[Area("Admin")]
+[Route("Admin")]
 [Authorize(Policy = AuthPolicies.Admin)]
-public class AdminPageController(
+public class AdminController(
     IAdminService admin,
     IAppDbContext db,
     ICurrentUser currentUser) : Controller
 {
-    [Route("Admin")]
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         ViewData["Title"] = "Admin Panel";
@@ -38,10 +39,10 @@ public class AdminPageController(
         ViewBag.Listings = listings;
         ViewBag.Reports = reports;
         ViewBag.Testimonials = testimonials;
-        return View("~/Views/Admin/Index.cshtml");
+        return View();
     }
 
-    [HttpPost("Admin/Users/{id}/Ban")]
+    [HttpPost("Ban/{id}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Ban(Guid id, CancellationToken ct)
     {
@@ -50,7 +51,7 @@ public class AdminPageController(
         return Redirect("/Admin#users");
     }
 
-    [HttpPost("Admin/Users/{id}/Unban")]
+    [HttpPost("Unban/{id}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Unban(Guid id, CancellationToken ct)
     {
@@ -59,7 +60,7 @@ public class AdminPageController(
         return Redirect("/Admin#users");
     }
 
-    [HttpPost("Admin/Listings/{id}/Suspend")]
+    [HttpPost("Suspend/{id}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Suspend(Guid id, CancellationToken ct)
     {
@@ -68,7 +69,7 @@ public class AdminPageController(
         return Redirect("/Admin#listings");
     }
 
-    [HttpPost("Admin/Listings/{id}/Activate")]
+    [HttpPost("Activate/{id}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Activate(Guid id, CancellationToken ct)
     {
@@ -77,7 +78,7 @@ public class AdminPageController(
         return Redirect("/Admin#listings");
     }
 
-    [HttpPost("Admin/Reports/{id}/Resolve")]
+    [HttpPost("Resolve/{id}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Resolve(Guid id, bool dismiss, CancellationToken ct)
     {
@@ -87,7 +88,7 @@ public class AdminPageController(
         return Redirect("/Admin#reports");
     }
 
-    [HttpPost("Admin/Testimonials/{id}/Approve")]
+    [HttpPost("ApproveTestimonial/{id}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ApproveTestimonial(Guid id, CancellationToken ct)
     {
@@ -101,7 +102,7 @@ public class AdminPageController(
         return Redirect("/Admin#testimonials");
     }
 
-    [HttpPost("Admin/Testimonials/{id}/Delete")]
+    [HttpPost("DeleteTestimonial/{id}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteTestimonial(Guid id, CancellationToken ct)
     {

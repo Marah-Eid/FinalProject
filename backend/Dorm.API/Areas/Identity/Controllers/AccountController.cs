@@ -1,16 +1,16 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Dorm.Application.DTOs.Auth;
 using Dorm.Application.Services.Auth;
 using Dorm.Domain.Enums;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Dorm.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Dorm.API.Controllers;
+namespace Dorm.API.Areas.Identity.Controllers;
 
+[Area("Identity")]
 public class AccountController(
     UserManager<User> userManager,
     IAuthService authService) : Controller
@@ -130,7 +130,7 @@ public class AccountController(
         return View();
     }
 
-    [HttpPost("Account/ForgotPassword")]
+    [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ForgotPasswordPost(string email)
     {
