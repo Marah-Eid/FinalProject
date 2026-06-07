@@ -106,7 +106,14 @@
                             else { <option value="@((int)u)">@u</option> }
                         }
                     </select></div>
-                <div class="col-sm-6"><label class="form-label">Walking Minutes</label><input type="number" class="form-control" id="nl-distance" min="1" value="@(apt.DistanceMinutes > 0 ? apt.DistanceMinutes : "")" /></div>
+                <div class="col-sm-6"><label class="form-label">Distance from Campus</label>
+                    <select class="form-select" id="nl-distance">
+                        @foreach (var dr in Enum.GetValues<Dorm.Domain.Enums.DistanceRange>())
+                        {
+                            var lbl = dr switch { Dorm.Domain.Enums.DistanceRange.NearCampus => "Near Campus (< 10 min)", Dorm.Domain.Enums.DistanceRange.MediumDistance => "Medium Distance (10-25 min)", _ => "Far (25+ min)" };
+                            <option value="@((int)dr)" selected="@(apt.DistanceRange == dr)">@lbl</option>
+                        }
+                    </select></div>
             </div>
             <div id="nl-map" style="height:200px;background:#f1f5f9" class="mb-4"></div>
             <input type="hidden" id="nl-lat" value="@apt.Latitude" /><input type="hidden" id="nl-lng" value="@apt.Longitude" />
@@ -198,6 +205,44 @@
         </form>
     </div>
 </div>
+
+@{
+    var tenants = ViewBag.ActiveTenants as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var tenantList = tenants.ToList();
+}
+@if (tenantList.Count > 0)
+{
+    <div class="nl-card mt-4">
+        <h6 class="nl-section">Current Tenants (@tenantList.Count)</h6>
+        @foreach (var t in tenantList)
+        {
+            var init = string.Join("", ((string)t.FullName).Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(n => n[0].ToString())).ToUpper();
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:.65rem 0;border-bottom:1px solid #f8fafc">
+                <div style="display:flex;align-items:center;gap:.75rem">
+                    <div style="width:36px;height:36px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#64748b">@init</div>
+                    <div>
+                        <span style="font-weight:600;font-size:.88rem;color:#1e293b">@t.FullName</span>
+                        <div style="font-size:.75rem;color:#94a3b8">
+                            @if (t.University != null) { <text>@t.University · </text> }
+                            Since @((DateTime)t.StartDate).ToString("MMM d, yyyy")
+                        </div>
+                    </div>
+                </div>
+                <form method="post" action="/OwnerListings/@apartmentId/EndTenancy/@t.Id" style="margin:0" onsubmit="return confirm('End this tenancy? The spot will be freed up.')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" style="background:rgba(239,68,68,.08);color:#ef4444;border:1px solid #fecaca;border-radius:6px;padding:.3rem .7rem;font-size:.78rem;font-weight:600;cursor:pointer"><i class="bi bi-box-arrow-right me-1"></i>End Tenancy</button>
+                </form>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="nl-card mt-4">
+        <h6 class="nl-section">Current Tenants</h6>
+        <div style="text-align:center;padding:1.5rem;color:#94a3b8;font-size:.88rem"><i class="bi bi-people" style="font-size:1.5rem;color:#cbd5e1;display:block;margin-bottom:.5rem"></i>No active tenants</div>
+    </div>
+}
 
 @section Scripts {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -309,8 +354,7 @@ document.getElementById('nl-form').addEventListener('submit', async function (e)
 
     var uni = document.getElementById('nl-university').value;
     body.nearestUniversity = uni ? parseInt(uni) : 0;
-    var dist = document.getElementById('nl-distance').value;
-    body.distanceMinutes = dist ? parseInt(dist) : 0;
+    body.distanceRange = parseInt(document.getElementById('nl-distance').value);
     var lat = document.getElementById('nl-lat').value;
     var lng = document.getElementById('nl-lng').value;
     body.latitude = (lat && lng) ? parseFloat(lat) : 0;

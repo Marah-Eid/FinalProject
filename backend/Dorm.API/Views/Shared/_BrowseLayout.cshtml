@@ -96,6 +96,51 @@
         .profile-menu .pm-logout:hover { background: #fef2f2; color: #ef4444 !important; }
         .profile-menu .pm-logout i { color: #ef4444; }
 
+        /* Hamburger */
+        .nav-hamburger {
+            display: none; flex-direction: column; justify-content: center; gap: 5px;
+            width: 36px; height: 36px; border: none; background: transparent;
+            cursor: pointer; padding: 4px; border-radius: 8px; transition: background .15s;
+        }
+        .nav-hamburger:hover { background: rgba(255,255,255,.08); }
+        .nav-hamburger span {
+            display: block; height: 2px; border-radius: 2px;
+            background: #94a3b8; transition: all .25s;
+        }
+        .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+        .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* Mobile drawer */
+        .mobile-nav {
+            display: none; position: fixed; top: 49px; left: 0; right: 0;
+            background: #0f172a; border-bottom: 1px solid rgba(255,255,255,.08);
+            z-index: 999; padding: .5rem 0 1rem; flex-direction: column;
+        }
+        .mobile-nav.show { display: flex; }
+        .mobile-nav a {
+            color: #94a3b8; text-decoration: none; font-size: .9rem; font-weight: 500;
+            padding: .65rem 1.25rem; transition: color .15s, background .15s;
+        }
+        .mobile-nav a:hover, .mobile-nav a.active { color: #f8fafc; background: rgba(255,255,255,.05); }
+        .mobile-nav .mn-divider { height: 1px; background: rgba(255,255,255,.07); margin: .4rem 1rem; }
+        .mobile-nav .mn-user {
+            padding: .65rem 1.25rem .3rem; font-size: .75rem;
+            color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+        }
+        .mobile-nav .mn-logout {
+            color: #ef4444; background: transparent; border: none; width: 100%;
+            text-align: left; font-size: .9rem; font-weight: 500;
+            padding: .65rem 1.25rem; cursor: pointer; transition: background .15s;
+            display: flex; align-items: center; gap: .5rem;
+        }
+        .mobile-nav .mn-logout:hover { background: rgba(239,68,68,.08); }
+
+        @@media (max-width: 767px) {
+            .nav-links { display: none !important; }
+            .nav-hamburger { display: flex; }
+        }
+
         /* Footer */
         .site-footer {
             background: #0f172a; padding: 3rem 0 1.5rem; color: #94a3b8;
@@ -118,10 +163,13 @@
     <nav class="top-nav">
         <div class="container">
             <a href="/" class="brand">Dorm</a>
+            <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
             <div class="nav-links">
                 <a href="/">Home</a>
                 <a href="/Browse">Browse</a>
-                <a href="/About">About & Contact</a>
+                <a href="/About">Contact</a>
 
                 @if (isAuth)
                 {
@@ -140,24 +188,17 @@
 
                             @if (role == "Student")
                             {
-                                <a href="/Saved"><i class="bi bi-heart"></i> Saved Apartments</a>
-                                <a href="/Quiz"><i class="bi bi-clipboard-check"></i> Lifestyle Quiz</a>
                                 <a href="/StudentApps"><i class="bi bi-file-text"></i> My Applications</a>
-                                <a href="/Chat"><i class="bi bi-chat-dots"></i> Messages</a>
-                                <a href="/Payment"><i class="bi bi-credit-card"></i> Payments</a>
+                                <a href="/Quiz"><i class="bi bi-clipboard-check"></i> Lifestyle Quiz</a>
                             }
                             else if (role == "Owner")
                             {
-                                <a href="/Dashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
                                 <a href="/OwnerListings"><i class="bi bi-building"></i> My Listings</a>
                                 <a href="/OwnerApps"><i class="bi bi-people"></i> Applications</a>
-                                <a href="/Chat"><i class="bi bi-chat-dots"></i> Messages</a>
-                                <a href="/Payment"><i class="bi bi-credit-card"></i> Payments</a>
                             }
 
                             <div class="pm-divider"></div>
                             <a href="/Profile"><i class="bi bi-person-gear"></i> Edit Profile</a>
-                            <a href="/WriteReview"><i class="bi bi-pencil-square"></i> Write a Review</a>
                             <div class="pm-divider"></div>
                             <form method="post" asp-area="Identity" asp-controller="Account" asp-action="Logout" style="margin:0">
                                 @Html.AntiForgeryToken()
@@ -174,6 +215,40 @@
         </div>
     </nav>
 
+    <!-- Mobile nav drawer -->
+    <div class="mobile-nav" id="mobile-nav">
+        <a href="/">Home</a>
+        <a href="/Browse">Browse</a>
+        <a href="/About">Contact</a>
+        @if (isAuth)
+        {
+            <a href="/Chat"><i class="bi bi-chat-dots me-1"></i>Messages</a>
+            <div class="mn-divider"></div>
+            <div class="mn-user">@fullName</div>
+            @if (role == "Student")
+            {
+                <a href="/StudentApps"><i class="bi bi-file-text me-1"></i>My Applications</a>
+                <a href="/Quiz"><i class="bi bi-clipboard-check me-1"></i>Lifestyle Quiz</a>
+            }
+            else if (role == "Owner")
+            {
+                <a href="/OwnerListings"><i class="bi bi-building me-1"></i>My Listings</a>
+                <a href="/OwnerApps"><i class="bi bi-people me-1"></i>Applications</a>
+            }
+            <a href="/Profile"><i class="bi bi-person-gear me-1"></i>Edit Profile</a>
+            <div class="mn-divider"></div>
+            <form method="post" asp-area="Identity" asp-controller="Account" asp-action="Logout" style="margin:0">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="mn-logout"><i class="bi bi-box-arrow-left"></i> Log out</button>
+            </form>
+        }
+        else
+        {
+            <div class="mn-divider"></div>
+            <a href="/Identity/Account/Login">Log in</a>
+        }
+    </div>
+
     <div style="padding-top:56px">
         @RenderBody()
     </div>
@@ -188,7 +263,7 @@
                 <div class="col-lg-6 text-lg-end">
                     <a href="/" class="me-3">Home</a>
                     <a href="/Browse" class="me-3">Browse</a>
-                    <a href="/About" class="me-3">About & Contact</a>
+                    <a href="/About" class="me-3">Contact</a>
                     @if (!isAuth)
                     {
                         <a href="/Identity/Account/Login">Log in</a>
@@ -209,6 +284,27 @@
     document.querySelectorAll('.top-nav .nav-links > a').forEach(function (link) {
         var href = (link.getAttribute('href') || '').toLowerCase()
         if (href && currentPath === href) link.classList.add('active')
+    })
+
+    function toggleMobileNav() {
+        var nav = document.getElementById('mobile-nav')
+        var btn = document.getElementById('nav-hamburger')
+        nav.classList.toggle('show')
+        btn.classList.toggle('open')
+    }
+
+    // Close mobile nav when a link is tapped
+    document.querySelectorAll('.mobile-nav a').forEach(function(a) {
+        a.addEventListener('click', function() {
+            document.getElementById('mobile-nav').classList.remove('show')
+            document.getElementById('nav-hamburger').classList.remove('open')
+        })
+    })
+
+    // Highlight active link in mobile nav too
+    document.querySelectorAll('.mobile-nav > a').forEach(function(link) {
+        var href = (link.getAttribute('href') || '').toLowerCase()
+        if (href && window.location.pathname.toLowerCase() === href) link.classList.add('active')
     })
 
     function toggleProfileMenu() {

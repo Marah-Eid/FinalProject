@@ -1,4 +1,5 @@
 ﻿using Dorm.Application.Abstractions;
+using Dorm.Application.Common.Exceptions;
 using Dorm.Application.DTOs.Apartments;
 using Dorm.Application.DTOs.Payments;
 using Dorm.Application.Services.Apartments;
@@ -6,6 +7,7 @@ using Dorm.Application.Services.Payments;
 using Dorm.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dorm.API.Controllers;
 
@@ -13,6 +15,7 @@ namespace Dorm.API.Controllers;
 public class OwnerListingsController(
     IApartmentService apartments,
     IPaymentsAppService payments,
+    IAppDbContext db,
     ICurrentUser currentUser) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -36,9 +39,21 @@ public class OwnerListingsController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([FromBody] CreateApartmentRequest req, CancellationToken ct)
     {
-        var ownerId = currentUser.UserId!.Value;
-        var created = await apartments.CreateAsync(ownerId, req, ct);
-        return Json(new { id = created.Id });
+        try
+        {
+            var ownerId = currentUser.UserId!.Value;
+            var created = await apartments.CreateAsync(ownerId, req, ct);
+            return Json(new { id = created.Id });
+        }
+        catch (FluentValidation.ValidationException vex)
+        {
+            var msgs = string.Join(" ", vex.Errors.Select(e => e.ErrorMessage));
+            return BadRequest(new { error = new { code = "validation_failed", message = msgs } });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = new { code = "error", message = ex.Message } });
+        }
     }
 
     [Route("OwnerListings/Edit/{id}")]
@@ -48,6 +63,13 @@ public class OwnerListingsController(
         ViewData["ApartmentId"] = id;
         var apt = await apartments.GetByIdAsync(id, ct);
         ViewBag.Apartment = apt;
+
+        var tenants = await db.Tenancies.AsNoTracking()
+            .Where(t => t.ApartmentId == id && t.Status == TenancyStatus.Active)
+            .Select(t => new { t.Id, t.Student.FullName, t.Student.University, t.StartDate })
+            .ToListAsync(ct);
+        ViewBag.ActiveTenants = tenants;
+
         return View();
     }
 
@@ -100,6 +122,25 @@ public class OwnerListingsController(
             return Json(new { paid = false, redirectUrl = result.CheckoutUrl });
 
         return Json(new { paid = true });
+    }
+
+    [HttpPost("OwnerListings/{apartmentId}/EndTenancy/{tenancyId}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EndTenancy(Guid apartmentId, Guid tenancyId, CancellationToken ct)
+    {
+        var ownerId = currentUser.UserId!.Value;
+        var apartment = await db.Apartments.FirstOrDefaultAsync(a => a.Id == apartmentId && a.OwnerId == ownerId, ct)
+            ?? throw new NotFoundException("Apartment not found.");
+        var tenancy = await db.Tenancies.FirstOrDefaultAsync(t => t.Id == tenancyId && t.ApartmentId == apartmentId && t.Status == TenancyStatus.Active, ct)
+            ?? throw new NotFoundException("Active tenancy not found.");
+
+        tenancy.Status = TenancyStatus.Ended;
+        tenancy.EndDate = DateTime.UtcNow;
+        apartment.AvailableSpots += 1;
+        await db.SaveChangesAsync(ct);
+
+        TempData["Success"] = "Tenancy ended. Spot freed up.";
+        return Redirect($"/OwnerListings/Edit/{apartmentId}");
     }
 
     [HttpGet("OwnerListings/RequiresListingFee")]

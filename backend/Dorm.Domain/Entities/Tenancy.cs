@@ -16,5 +16,7 @@ public class Tenancy
 
     public DateTime StartDate { get; set; } = DateTime.UtcNow;
     public DateTime? EndDate { get; set; }
+    public DateTime? PlannedMoveInDate { get; set; }
+    public DateTime? MovedInAt { get; set; }
     public TenancyStatus Status { get; set; } = TenancyStatus.Active;
 }

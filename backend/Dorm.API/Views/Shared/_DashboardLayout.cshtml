@@ -135,7 +135,10 @@
             }
 
             <div class="nav-item"><a href="/Chat"><i class="bi bi-chat-dots"></i> Messages</a></div>
-            <div class="nav-item"><a href="/Payment"><i class="bi bi-credit-card"></i> Payments</a></div>
+            @if (role != "Admin")
+            {
+                <div class="nav-item"><a href="/Payment"><i class="bi bi-credit-card"></i> Payments</a></div>
+            }
 
             @if (role == "Admin")
             {

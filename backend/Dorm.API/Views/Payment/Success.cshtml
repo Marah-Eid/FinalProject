@@ -1,5 +1,5 @@
 @{
-    Layout = "_BrowseLayout";
+    Layout = User.FindFirstValue(ClaimTypes.Role) == "Student" ? "_BrowseLayout" : "_DashboardLayout";
     ViewData["Title"] = "Payment Successful";
     var payment = ViewBag.Payment as Dorm.Application.DTOs.Payments.PaymentDto;
 }
@@ -21,7 +21,7 @@
 <form style="display:none">@Html.AntiForgeryToken()</form>
 <div class="container">
     <div class="success-card">
-        @if (payment != null)
+        @if (payment != null && payment.Status == Dorm.Domain.Enums.PaymentStatus.Completed)
         {
             <div class="success-icon" style="background:rgba(16,185,129,.1);color:#10b981"><i class="bi bi-check-lg"></i></div>
             <h4 class="fw-bold" style="color:#1e293b">Payment Successful!</h4>
@@ -32,8 +32,26 @@
                 </div>
             </div>
             <div id="success-links" class="d-flex justify-content-center gap-2 mt-3">
-                <a href="/Payment" class="btn btn-outline-secondary">View Payments</a>
-                <a href="/" class="btn" style="background:#0f172a;color:#fff">Home</a>
+                @if (payment.Type == Dorm.Domain.Enums.PaymentType.MatchCommission)
+                {
+                    <a href="/StudentApps" class="btn" style="background:#F97316;color:#fff"><i class="bi bi-clipboard-check me-1"></i> View Checklist</a>
+                    <a href="/Payment" class="btn btn-outline-secondary">Payments</a>
+                }
+                else
+                {
+                    <a href="/Payment" class="btn btn-outline-secondary">View Payments</a>
+                    <a href="/" class="btn" style="background:#0f172a;color:#fff">Home</a>
+                }
+            </div>
+        }
+        else if (payment != null && payment.Status == Dorm.Domain.Enums.PaymentStatus.Pending)
+        {
+            <div class="success-icon" style="background:rgba(234,179,8,.1);color:#eab308"><i class="bi bi-clock"></i></div>
+            <h4 class="fw-bold" style="color:#1e293b">Payment Processing</h4>
+            <p style="color:#64748b;font-size:.9rem">Your payment of <strong>@payment.Amount JOD</strong> is being processed. Please wait a moment and refresh.</p>
+            <div class="d-flex justify-content-center gap-2 mt-3">
+                <a href="@(Context.Request.Path + "?" + Context.Request.QueryString)" class="btn" style="background:#F97316;color:#fff"><i class="bi bi-arrow-clockwise me-1"></i> Refresh</a>
+                <a href="/Payment" class="btn btn-outline-secondary">Payments</a>
             </div>
         }
         else

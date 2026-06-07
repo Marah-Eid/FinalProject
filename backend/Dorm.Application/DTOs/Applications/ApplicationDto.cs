@@ -16,4 +16,5 @@ public sealed record ApplicationDto(
     int CompatibilityScore,
     ApplicationStatus Status,
     DateTime CreatedAt,
-    DateTime? RespondedAt);
+    DateTime? RespondedAt,
+    MoveInChecklistDto? Checklist = null);

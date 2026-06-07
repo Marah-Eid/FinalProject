@@ -102,36 +102,44 @@
                 <div class="contact-card">
                     <h4 style="font-weight:700;font-size:1.1rem;color:#1e293b;margin-bottom:1.25rem">Send a Message</h4>
 
-                    <div class="alert alert-success d-none" id="contact-success" style="border-radius:8px;font-size:.88rem">
-                        <i class="bi bi-check-circle-fill me-1"></i> Your message has been sent. We'll get back to you soon!
-                    </div>
+                    @if (TempData["Success"] is string)
+                    {
+                        <div class="alert alert-success" style="border-radius:8px;font-size:.88rem">
+                            <i class="bi bi-check-circle-fill me-1"></i> Your message has been sent to our team. We'll get back to you soon!
+                        </div>
+                    }
+                    @if (TempData["Error"] is string err)
+                    {
+                        <div class="alert alert-danger" style="border-radius:8px;font-size:.88rem">@err</div>
+                    }
 
-                    <form class="contact-form" id="contact-form" novalidate>
+                    <form class="contact-form" method="post" asp-action="Send" asp-controller="Contact">
+                        @Html.AntiForgeryToken()
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Your Name</label>
-                                <input type="text" class="form-control" id="cf-name" placeholder="Full name" required value="@userName" />
+                                <input type="text" class="form-control" name="name" placeholder="Full name" required value="@userName" />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Email</label>
-                                <input type="email" class="form-control" id="cf-email" placeholder="you@example.com" required value="@userEmail" />
+                                <input type="email" class="form-control" name="email" placeholder="you@example.com" required value="@userEmail" />
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Subject</label>
-                            <select class="form-select" id="cf-subject">
-                                <option value="general">General Inquiry</option>
-                                <option value="support">Technical Support</option>
-                                <option value="feedback">Feedback</option>
-                                <option value="report">Report an Issue</option>
-                                <option value="partnership">Partnership</option>
+                            <select class="form-select" name="subject">
+                                <option value="General Inquiry">General Inquiry</option>
+                                <option value="Technical Support">Technical Support</option>
+                                <option value="Feedback">Feedback</option>
+                                <option value="Report an Issue">Report an Issue</option>
+                                <option value="Partnership">Partnership</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Message</label>
-                            <textarea class="form-control" id="cf-message" rows="5" placeholder="How can we help?" required style="resize:none"></textarea>
+                            <textarea class="form-control" name="message" rows="5" placeholder="How can we help?" required style="resize:none"></textarea>
                         </div>
-                        <button type="submit" class="btn-send-msg" id="cf-btn">
+                        <button type="submit" class="btn-send-msg">
                             <i class="bi bi-send"></i> Send Message
                         </button>
                     </form>
@@ -141,20 +149,3 @@
     </div>
 </div>
 
-@section Scripts {
-<script>
-document.getElementById('contact-form').addEventListener('submit', function (e) {
-    e.preventDefault()
-    var btn = document.getElementById('cf-btn')
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending...'
-    setTimeout(function () {
-        document.getElementById('contact-form').reset()
-        document.getElementById('contact-success').classList.remove('d-none')
-        btn.disabled = false
-        btn.innerHTML = '<i class="bi bi-send"></i> Send Message'
-        setTimeout(function () { document.getElementById('contact-success').classList.add('d-none') }, 5000)
-    }, 1000)
-})
-</script>
-}

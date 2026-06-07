@@ -34,10 +34,17 @@ public class AdminController(
                 t.Stars, t.Text, t.IsApproved, t.CreatedAt))
             .ToListAsync(ct);
 
+        var contactMessages = await db.Notifications.AsNoTracking()
+            .Where(n => n.Type == NotificationType.ContactMessage)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(50)
+            .ToListAsync(ct);
+
         ViewBag.Dashboard = dashboard;
         ViewBag.Users = users;
         ViewBag.Listings = listings;
         ViewBag.Reports = reports;
+        ViewBag.ContactMessages = contactMessages;
         ViewBag.Testimonials = testimonials;
         return View();
     }

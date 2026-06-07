@@ -8,4 +8,5 @@ public enum NotificationType
     NewMessage = 3,
     NewRating = 4,
     ListingSuspended = 5,
+    ContactMessage = 6,
 }

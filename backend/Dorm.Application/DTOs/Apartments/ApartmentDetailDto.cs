@@ -29,7 +29,7 @@ public sealed record ApartmentDetailDto(
     GenderType GenderType,
     bool IsFurnished,
     University NearestUniversity,
-    int DistanceMinutes,
+    DistanceRange DistanceRange,
     SmokingRule SmokingRule,
     GuestsRule GuestsRule,
 

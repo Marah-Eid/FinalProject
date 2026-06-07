@@ -34,11 +34,9 @@ public class HomeController(
                 .FirstOrDefaultAsync(u => u.Id == currentUser.UserId!.Value, ct);
             if (user?.University is { } uni)
             {
-                var uniCity = UniversityCity(uni);
                 var nearby = await apartments.GetListAsync(new ApartmentListQuery
                 {
                     University = uni,
-                    City = uniCity,
                     Page = 1,
                     PageSize = 6,
                 }, ct);

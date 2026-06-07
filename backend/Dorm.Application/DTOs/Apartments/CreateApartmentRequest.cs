@@ -16,7 +16,7 @@ public sealed record CreateApartmentRequest(
     GenderType GenderType,
     bool IsFurnished,
     University NearestUniversity,
-    int DistanceMinutes,
+    DistanceRange DistanceRange,
     SmokingRule SmokingRule,
     GuestsRule GuestsRule,
     IReadOnlyList<AmenityType> Amenities);

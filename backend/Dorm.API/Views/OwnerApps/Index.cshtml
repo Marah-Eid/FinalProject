@@ -32,6 +32,9 @@
         padding: .3rem .7rem; font-size: .78rem; font-weight: 600;
     }
     .btn-reject:hover { background: #fef2f2; border-color: #ef4444; }
+    .compat-pill { display: inline-flex; align-items: center; gap: .2rem; padding: .15rem .45rem; border-radius: 5px; font-size: .68rem; font-weight: 600; margin: .1rem .05rem; }
+    .compat-pill-match { background: rgba(16,185,129,.08); color: #10b981; }
+    .compat-pill-diff { background: rgba(239,68,68,.08); color: #ef4444; }
     .empty-oa { text-align: center; padding: 3.5rem 1rem; }
     .empty-oa i { font-size: 2.5rem; color: #cbd5e1; }
     .empty-oa h5 { font-weight: 700; color: #1e293b; margin-top: .75rem; }
@@ -90,6 +93,19 @@
                             @if (app.CompatibilityScore > 0)
                             {
                                 <div class="match-ring @matchCls">@(app.CompatibilityScore)%</div>
+                                @if (app.MatchedOn?.Count > 0 || app.DifferedOn?.Count > 0)
+                                {
+                                    var qn = new Dictionary<Dorm.Domain.Enums.QuizQuestionKey, string> {
+                                        {Dorm.Domain.Enums.QuizQuestionKey.SleepSchedule,"Sleep"},{Dorm.Domain.Enums.QuizQuestionKey.Cleanliness,"Clean"},
+                                        {Dorm.Domain.Enums.QuizQuestionKey.Smoking,"Smoke"},{Dorm.Domain.Enums.QuizQuestionKey.StudyHabits,"Study"},
+                                        {Dorm.Domain.Enums.QuizQuestionKey.SocialStyle,"Social"},{Dorm.Domain.Enums.QuizQuestionKey.Guests,"Guests"},
+                                        {Dorm.Domain.Enums.QuizQuestionKey.Cooking,"Cook"},{Dorm.Domain.Enums.QuizQuestionKey.PetTolerance,"Pets"},
+                                    };
+                                    <div style="margin-top:.25rem">
+                                        @if (app.MatchedOn != null) { foreach (var q in app.MatchedOn) { <span class="compat-pill compat-pill-match"><i class="bi bi-check"></i>@(qn.GetValueOrDefault(q, q.ToString()))</span> } }
+                                        @if (app.DifferedOn != null) { foreach (var q in app.DifferedOn) { <span class="compat-pill compat-pill-diff"><i class="bi bi-x"></i>@(qn.GetValueOrDefault(q, q.ToString()))</span> } }
+                                    </div>
+                                }
                             }
                             else
                             {

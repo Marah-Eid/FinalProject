@@ -109,7 +109,7 @@ public sealed class ApplicationService(
     // ── Mine ────────────────────────────────────────────────────────────────
     public async Task<IReadOnlyList<ApplicationDto>> GetMineAsync(Guid studentId, CancellationToken ct)
     {
-        return await db.Applications.AsNoTracking()
+        var apps = await db.Applications.AsNoTracking()
             .Where(a => a.StudentId == studentId)
             .OrderByDescending(a => a.CreatedAt)
             .Select(a => new ApplicationDto(
@@ -122,33 +122,127 @@ public sealed class ApplicationService(
                 a.CompatibilityScore,
                 a.Status,
                 a.CreatedAt,
-                a.RespondedAt))
+                a.RespondedAt,
+                null))
             .ToListAsync(ct);
+
+        var acceptedAptIds = apps
+            .Where(a => a.Status == ApplicationStatus.Accepted)
+            .Select(a => a.ApartmentId).Distinct().ToList();
+
+        if (acceptedAptIds.Count == 0) return apps;
+
+        var tenancies = await db.Tenancies.AsNoTracking()
+            .Where(t => t.StudentId == studentId && acceptedAptIds.Contains(t.ApartmentId))
+            .ToDictionaryAsync(t => t.ApartmentId, ct);
+
+        var commissions = await db.Payments.AsNoTracking()
+            .Where(p => p.UserId == studentId && p.Type == PaymentType.MatchCommission && p.Status == PaymentStatus.Completed)
+            .Select(p => p.RelatedEntityId)
+            .ToListAsync(ct);
+
+        var contactedOwnerApts = await db.Conversations.AsNoTracking()
+            .Where(c => acceptedAptIds.Contains(c.ApartmentId) &&
+                        (c.Participant1Id == studentId || c.Participant2Id == studentId))
+            .Where(c => c.Messages.Any(m => m.SenderId == studentId))
+            .Select(c => c.ApartmentId)
+            .ToListAsync(ct);
+
+        var ratedApts = await db.Ratings.AsNoTracking()
+            .Where(r => r.RaterId == studentId && acceptedAptIds.Contains(r.ApartmentId))
+            .Select(r => r.ApartmentId)
+            .ToListAsync(ct);
+
+        return apps.Select(a =>
+        {
+            if (a.Status != ApplicationStatus.Accepted) return a;
+
+            tenancies.TryGetValue(a.ApartmentId, out var tenancy);
+            var commPaid = commissions.Contains(a.ApartmentId);
+            var contacted = contactedOwnerApts.Contains(a.ApartmentId);
+            var rated = ratedApts.Contains(a.ApartmentId);
+            var movedIn = tenancy?.MovedInAt != null;
+            var plannedDate = tenancy?.PlannedMoveInDate;
+
+            var completed = 1 + (contacted ? 1 : 0) + (commPaid ? 1 : 0)
+                          + (plannedDate != null ? 1 : 0) + (movedIn ? 1 : 0) + (rated ? 1 : 0);
+
+            var checklist = new MoveInChecklistDto(
+                ApplicationAccepted: true,
+                CommissionPaid: commPaid,
+                OwnerContacted: contacted,
+                OwnerContactShared: commPaid,
+                PlannedMoveInDate: plannedDate,
+                MovedIn: movedIn,
+                ExperienceRated: rated,
+                CompletedSteps: completed,
+                TotalSteps: 6);
+
+            return a with { Checklist = checklist };
+        }).ToList();
     }
 
     // ── Received (owner) ────────────────────────────────────────────────────
     public async Task<IReadOnlyList<ApplicationReceivedDto>> GetReceivedAsync(Guid ownerId, CancellationToken ct)
     {
-        return await db.Applications.AsNoTracking()
+        var rawApps = await db.Applications.AsNoTracking()
             .Where(a => a.Apartment.OwnerId == ownerId)
             .OrderByDescending(a => a.CreatedAt)
-            .Select(a => new ApplicationReceivedDto(
-                a.Id,
-                a.ApartmentId,
-                a.Apartment.Title,
-                a.StudentId,
-                a.Student.FullName,
-                a.Student.ProfilePhotoUrl,
-                a.Student.University,
+            .Select(a => new
+            {
+                a.Id, a.ApartmentId, ApartmentTitle = a.Apartment.Title,
+                a.StudentId, StudentFullName = a.Student.FullName,
+                a.Student.ProfilePhotoUrl, a.Student.University,
                 a.Student.IsUniversityVerified,
-                a.Student.StudentProfile == null ? (int?)null : a.Student.StudentProfile.Year,
-                a.Student.StudentProfile == null ? null : a.Student.StudentProfile.Major,
-                a.CompatibilityScore,
-                a.Message,
-                a.Status,
-                a.CreatedAt,
-                a.RespondedAt))
+                Year = a.Student.StudentProfile == null ? (int?)null : a.Student.StudentProfile.Year,
+                Major = a.Student.StudentProfile == null ? null : a.Student.StudentProfile.Major,
+                a.CompatibilityScore, a.Message, a.Status, a.CreatedAt, a.RespondedAt,
+            })
             .ToListAsync(ct);
+
+        var studentIds = rawApps.Select(a => a.StudentId).Distinct().ToList();
+        var apartmentIds = rawApps.Select(a => a.ApartmentId).Distinct().ToList();
+
+        var studentAnswers = await db.QuizAnswers.AsNoTracking()
+            .Where(qa => studentIds.Contains(qa.StudentProfile.UserId))
+            .Select(qa => new { UserId = qa.StudentProfile.UserId, qa.QuestionKey, qa.AnswerValue })
+            .ToListAsync(ct);
+        var studentAnswersByUser = studentAnswers
+            .GroupBy(a => a.UserId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyDictionary<QuizQuestionKey, string>)g.ToDictionary(a => a.QuestionKey, a => a.AnswerValue));
+
+        var tenantAnswers = await db.Tenancies.AsNoTracking()
+            .Where(t => apartmentIds.Contains(t.ApartmentId) && t.Status == TenancyStatus.Active && t.Student.StudentProfile != null)
+            .SelectMany(t => t.Student.StudentProfile!.QuizAnswers.Select(qa => new { t.ApartmentId, t.StudentId, qa.QuestionKey, qa.AnswerValue }))
+            .ToListAsync(ct);
+        var tenantsByApartment = tenantAnswers
+            .GroupBy(t => t.ApartmentId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<IReadOnlyDictionary<QuizQuestionKey, string>>)g
+                .GroupBy(t => t.StudentId)
+                .Select(sg => (IReadOnlyDictionary<QuizQuestionKey, string>)sg.ToDictionary(a => a.QuestionKey, a => a.AnswerValue))
+                .ToList());
+
+        return rawApps.Select(a =>
+        {
+            IReadOnlyList<QuizQuestionKey>? matched = null;
+            IReadOnlyList<QuizQuestionKey>? differed = null;
+
+            if (studentAnswersByUser.TryGetValue(a.StudentId, out var sAnswers))
+            {
+                tenantsByApartment.TryGetValue(a.ApartmentId, out var tAnswers);
+                var breakdown = compatibility.Compute(sAnswers, tAnswers ?? Array.Empty<IReadOnlyDictionary<QuizQuestionKey, string>>());
+                matched = breakdown.MatchedOn;
+                differed = breakdown.DifferedOn;
+            }
+
+            return new ApplicationReceivedDto(
+                a.Id, a.ApartmentId, a.ApartmentTitle,
+                a.StudentId, a.StudentFullName, a.ProfilePhotoUrl,
+                a.University, a.IsUniversityVerified,
+                a.Year, a.Major, a.CompatibilityScore,
+                matched, differed,
+                a.Message, a.Status, a.CreatedAt, a.RespondedAt);
+        }).ToList();
     }
 
     // ── Accept ──────────────────────────────────────────────────────────────

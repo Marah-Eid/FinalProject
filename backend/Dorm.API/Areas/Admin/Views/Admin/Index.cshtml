@@ -2,6 +2,7 @@
 @using Dorm.Application.DTOs.Admin
 @using Dorm.Application.DTOs.Reports
 @using Dorm.Application.DTOs.Testimonials
+@using Dorm.Domain.Entities
 @{
     ViewData["Title"] = "Admin Panel";
     var dashboard = (AdminDashboardDto)ViewBag.Dashboard;
@@ -9,6 +10,7 @@
     var listings = (IReadOnlyList<AdminApartmentDto>)(ViewBag.Listings ?? Array.Empty<AdminApartmentDto>());
     var reports = (IReadOnlyList<ReportDto>)(ViewBag.Reports ?? Array.Empty<ReportDto>());
     var testimonials = (IReadOnlyList<TestimonialDto>)(ViewBag.Testimonials ?? Array.Empty<TestimonialDto>());
+    var contactMessages = (IReadOnlyList<Notification>)(ViewBag.ContactMessages ?? Array.Empty<Notification>());
     var pendingReviews = testimonials.Count(t => !t.IsApproved);
 }
 
@@ -113,6 +115,13 @@
         <button class="admin-tab" onclick="showTab('listings',this)">Listings</button>
         <button class="admin-tab" onclick="showTab('reports',this)">Reports</button>
         <button class="admin-tab" onclick="showTab('testimonials',this)">Testimonials</button>
+        <button class="admin-tab" onclick="showTab('messages',this)">
+            Messages
+            @if (contactMessages.Count > 0)
+            {
+                <span style="background:#F97316;color:#fff;border-radius:999px;font-size:.7rem;font-weight:700;padding:1px 7px;margin-left:4px">@contactMessages.Count</span>
+            }
+        </button>
     </div>
 
     <!-- Dashboard Tab -->
@@ -433,6 +442,55 @@
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn-deny"><i class="bi bi-trash me-1"></i>Delete</button>
                         </form>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Messages tab -->
+    <div class="admin-section" id="tab-messages">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 style="font-weight:700;font-size:.95rem;color:#1e293b;margin:0">Contact Messages</h6>
+            <span style="font-size:.8rem;color:#94a3b8">@contactMessages.Count message@(contactMessages.Count != 1 ? "s" : "")</span>
+        </div>
+        @if (contactMessages.Count == 0)
+        {
+            <div class="empty-admin"><i class="bi bi-envelope"></i><p>No messages yet.</p></div>
+        }
+        else
+        {
+            @foreach (var msg in contactMessages)
+            {
+                @* Title format: "Contact: {subject} — {name}"  Content: "From: {name} ({email})\n\n{body}" *@
+                var titlePart = msg.Title.StartsWith("Contact: ") ? msg.Title["Contact: ".Length..] : msg.Title;
+                var dashIdx = titlePart.LastIndexOf(" — ");
+                var subject = dashIdx > 0 ? titlePart[..dashIdx] : titlePart;
+                var senderName = dashIdx > 0 ? titlePart[(dashIdx + 3)..] : "";
+                var initials2 = string.Join("", senderName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(n => n[0])).ToUpper();
+                if (string.IsNullOrEmpty(initials2)) initials2 = "?";
+
+                var lines = msg.Content.Split('\n');
+                var fromLine = lines.FirstOrDefault(l => l.StartsWith("From: ")) ?? "";
+                var bodyLines = msg.Content.Split(new[] { "\n\n" }, 2, StringSplitOptions.None);
+                var body = bodyLines.Length > 1 ? bodyLines[1] : msg.Content;
+
+                <div class="testi-card">
+                    <div class="testi-avatar" style="background:#3b82f6">@initials2</div>
+                    <div class="testi-body">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="name">@(string.IsNullOrEmpty(senderName) ? "Unknown" : senderName)</span>
+                            <span class="badge-role badge-student">@subject</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(fromLine))
+                        {
+                            <div style="font-size:.74rem;color:#94a3b8;margin:.2rem 0 .4rem">@fromLine</div>
+                        }
+                        <div class="text" style="white-space:pre-wrap">@body</div>
+                    </div>
+                    <div style="font-size:.74rem;color:#94a3b8;white-space:nowrap;flex-shrink:0;align-self:flex-start;padding-top:.15rem">
+                        @msg.CreatedAt.ToString("MMM d, yyyy")<br/>
+                        <span style="font-size:.7rem">@msg.CreatedAt.ToString("h:mm tt")</span>
                     </div>
                 </div>
             }

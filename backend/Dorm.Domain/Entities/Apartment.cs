@@ -26,8 +26,7 @@ public class Apartment
     public GenderType GenderType { get; set; }
     public bool IsFurnished { get; set; }
     public University NearestUniversity { get; set; }
-    /// <summary>Walking minutes to the nearest university (owner-declared).</summary>
-    public int DistanceMinutes { get; set; }
+    public DistanceRange DistanceRange { get; set; }
     public SmokingRule SmokingRule { get; set; }
     public GuestsRule GuestsRule { get; set; }
 

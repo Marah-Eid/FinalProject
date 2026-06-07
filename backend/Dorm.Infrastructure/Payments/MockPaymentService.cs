@@ -28,6 +28,7 @@ public sealed class MockPaymentService(
             UserId = userId,
             Type = type,
             Amount = amount,
+            RelatedEntityId = relatedEntityId,
             Status = PaymentStatus.Pending,
             CreatedAt = DateTime.UtcNow,
         };

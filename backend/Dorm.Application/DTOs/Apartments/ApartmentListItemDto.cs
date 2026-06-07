@@ -15,7 +15,7 @@ public sealed record ApartmentListItemDto(
     GenderType GenderType,
     bool IsFurnished,
     University NearestUniversity,
-    int DistanceMinutes,
+    DistanceRange DistanceRange,
     string? MainPhotoUrl,
     double? OwnerAverageRating,
     int OwnerRatingsCount,

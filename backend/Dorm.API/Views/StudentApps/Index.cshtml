@@ -101,6 +101,65 @@
     }
     .btn-browse:hover { background: #ea6c10; color: #fff; }
 
+    .checklist {
+        background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+        padding: 1.25rem; margin-bottom: .75rem; margin-top: -.25rem;
+        border-top: 3px solid #F97316;
+    }
+    .checklist-header {
+        display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;
+    }
+    .checklist-header h6 { font-weight: 800; font-size: .9rem; color: #1e293b; margin: 0; }
+    .checklist-progress {
+        display: flex; align-items: center; gap: .5rem;
+    }
+    .checklist-progress-bar {
+        width: 100px; height: 6px; background: #f1f5f9; border-radius: 10px; overflow: hidden;
+    }
+    .checklist-progress-fill {
+        height: 100%; background: linear-gradient(90deg, #F97316, #10b981); border-radius: 10px;
+        transition: width .4s;
+    }
+    .checklist-progress-text { font-size: .72rem; font-weight: 700; color: #64748b; }
+
+    .cl-step {
+        display: flex; align-items: flex-start; gap: .75rem; padding: .6rem 0;
+        position: relative;
+    }
+    .cl-step:not(:last-child)::after {
+        content: ''; position: absolute; left: 13px; top: 34px;
+        width: 2px; height: calc(100% - 14px); background: #f1f5f9;
+    }
+    .cl-step.done:not(:last-child)::after { background: #10b981; }
+    .cl-step-dot {
+        width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .7rem; z-index: 1;
+    }
+    .cl-step.done .cl-step-dot { background: #10b981; color: #fff; }
+    .cl-step.current .cl-step-dot { background: #F97316; color: #fff; animation: pulse 2s infinite; }
+    .cl-step.upcoming .cl-step-dot { background: #f1f5f9; color: #cbd5e1; }
+    @@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(249,115,22,.3); } 50% { box-shadow: 0 0 0 6px rgba(249,115,22,0); } }
+    .cl-step-body { flex: 1; min-width: 0; padding-top: .2rem; }
+    .cl-step-title { font-weight: 600; font-size: .85rem; color: #1e293b; }
+    .cl-step.upcoming .cl-step-title { color: #94a3b8; }
+    .cl-step-desc { font-size: .78rem; color: #94a3b8; margin-top: .1rem; }
+    .cl-step-action { margin-top: .4rem; }
+    .btn-cl-action {
+        background: #F97316; color: #fff; border: none; border-radius: 8px;
+        padding: .35rem .85rem; font-size: .78rem; font-weight: 600;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .25rem;
+        cursor: pointer; transition: all .15s;
+    }
+    .btn-cl-action:hover { background: #ea6c10; color: #fff; }
+    .btn-cl-secondary {
+        background: #f1f5f9; color: #475569; border: none; border-radius: 8px;
+        padding: .35rem .85rem; font-size: .78rem; font-weight: 600;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .25rem;
+        cursor: pointer; transition: all .15s;
+    }
+    .btn-cl-secondary:hover { background: #e2e8f0; }
+
     @@media (max-width: 575px) {
         .sa-card { flex-direction: column; align-items: flex-start; gap: .75rem; }
         .sa-card-right { width: 100%; justify-content: space-between; }
@@ -176,6 +235,122 @@
                     }
                 </div>
             </div>
+
+            @if (app.Status == Dorm.Domain.Enums.ApplicationStatus.Accepted && app.Checklist != null)
+            {
+                var cl = app.Checklist;
+                var pct = (int)Math.Round((double)cl.CompletedSteps / cl.TotalSteps * 100);
+                <div class="checklist">
+                    <div class="checklist-header">
+                        <h6><i class="bi bi-clipboard-check me-2" style="color:#F97316"></i>Move-In Checklist</h6>
+                        <div class="checklist-progress">
+                            <div class="checklist-progress-bar"><div class="checklist-progress-fill" style="width:@(pct)%"></div></div>
+                            <span class="checklist-progress-text">@cl.CompletedSteps / @cl.TotalSteps</span>
+                        </div>
+                    </div>
+
+                    @{ var stepNum = 0; }
+
+                    @{ var s1 = cl.ApplicationAccepted; stepNum++; var s1State = s1 ? "done" : "current"; }
+                    <div class="cl-step @s1State">
+                        <div class="cl-step-dot"><i class="bi @(s1 ? "bi-check" : "bi-1-circle")"></i></div>
+                        <div class="cl-step-body">
+                            <div class="cl-step-title">Application Accepted</div>
+                            <div class="cl-step-desc">Your application has been approved by the owner.</div>
+                        </div>
+                    </div>
+
+                    @{ var s2 = cl.OwnerContacted; stepNum++; var s2State = s2 ? "done" : "current"; }
+                    <div class="cl-step @s2State">
+                        <div class="cl-step-dot"><i class="bi @(s2 ? "bi-check" : "bi-chat-dots")"></i></div>
+                        <div class="cl-step-body">
+                            <div class="cl-step-title">Message the Owner</div>
+                            <div class="cl-step-desc">@(s2 ? "You've been in touch with the owner." : "Send a message to coordinate your move-in details.")</div>
+                            @if (!s2)
+                            {
+                                <div class="cl-step-action">
+                                    <a href="/Chat" class="btn-cl-action"><i class="bi bi-chat-dots"></i> Send Message</a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+
+                    @{ var s4 = cl.CommissionPaid; stepNum++; var s4State = s4 ? "done" : "current"; }
+                    <div class="cl-step @s4State">
+                        <div class="cl-step-dot"><i class="bi @(s4 ? "bi-check" : "bi-credit-card")"></i></div>
+                        <div class="cl-step-body">
+                            <div class="cl-step-title">Pay Platform Fee (15 JOD)</div>
+                            <div class="cl-step-desc">@(s4 ? "Platform fee paid. Thank you!" : "Pay the Dorm platform fee to confirm your spot.")</div>
+                            @if (!s4)
+                            {
+                                <div class="cl-step-action">
+                                    <form method="post" asp-action="Checkout" asp-controller="Payment" style="margin:0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="type" value="@((int)Dorm.Domain.Enums.PaymentType.MatchCommission)" />
+                                        <input type="hidden" name="relatedEntityId" value="@app.ApartmentId" />
+                                        <button type="submit" class="btn-cl-action"><i class="bi bi-credit-card"></i> Pay 15 JOD</button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    @{ var s5 = cl.PlannedMoveInDate != null; stepNum++; var s5State = s5 ? "done" : !s4 ? "upcoming" : "current"; }
+                    <div class="cl-step @s5State">
+                        <div class="cl-step-dot"><i class="bi @(s5 ? "bi-check" : "bi-calendar")"></i></div>
+                        <div class="cl-step-body">
+                            <div class="cl-step-title">Set Move-In Date</div>
+                            <div class="cl-step-desc">@(s5 ? $"Planned: {cl.PlannedMoveInDate!.Value:MMM d, yyyy}" : "Pick a date to move into your new apartment.")</div>
+                            @if (!s5 && s4)
+                            {
+                                <div class="cl-step-action">
+                                    <form method="post" asp-action="SetMoveInDate" asp-controller="StudentApps" style="display:flex;gap:.4rem;align-items:center">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="apartmentId" value="@app.ApartmentId" />
+                                        <input type="date" name="moveInDate" required class="form-control form-control-sm" style="width:auto;border-radius:8px;font-size:.82rem" />
+                                        <button type="submit" class="btn-cl-action"><i class="bi bi-check"></i> Set</button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    @{ var s6 = cl.MovedIn; stepNum++; var s6State = s6 ? "done" : !s5 ? "upcoming" : "current"; }
+                    <div class="cl-step @s6State">
+                        <div class="cl-step-dot"><i class="bi @(s6 ? "bi-check" : "bi-house-door")"></i></div>
+                        <div class="cl-step-body">
+                            <div class="cl-step-title">Moved In</div>
+                            <div class="cl-step-desc">@(s6 ? "Welcome to your new home!" : "Confirm once you've moved in.")</div>
+                            @if (!s6 && s5)
+                            {
+                                <div class="cl-step-action">
+                                    <form method="post" asp-action="ConfirmMoveIn" asp-controller="StudentApps" style="margin:0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="apartmentId" value="@app.ApartmentId" />
+                                        <button type="submit" class="btn-cl-action"><i class="bi bi-house-check"></i> I've Moved In</button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    @{ var s7 = cl.ExperienceRated; stepNum++; var s7State = s7 ? "done" : !s6 ? "upcoming" : "current"; }
+                    <div class="cl-step @s7State">
+                        <div class="cl-step-dot"><i class="bi @(s7 ? "bi-check" : "bi-star")"></i></div>
+                        <div class="cl-step-body">
+                            <div class="cl-step-title">Rate Your Experience</div>
+                            <div class="cl-step-desc">@(s7 ? "Thanks for your feedback!" : "Help future students by rating the owner.")</div>
+                            @if (!s7 && s6)
+                            {
+                                <div class="cl-step-action">
+                                    <a href="/WriteReview" class="btn-cl-action"><i class="bi bi-pencil-square"></i> Write Review</a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
         }
     }
     else

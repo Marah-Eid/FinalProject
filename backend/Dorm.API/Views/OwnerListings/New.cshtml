@@ -89,7 +89,12 @@
                             <option value="@((int)u)">@u</option>
                         }
                     </select></div>
-                <div class="col-sm-6"><label class="form-label">Walking Minutes</label><input type="number" class="form-control" id="nl-distance" min="1" /></div>
+                <div class="col-sm-6"><label class="form-label">Distance from Campus</label>
+                    <select class="form-select" id="nl-distance">
+                        <option value="0">Near Campus (&lt; 10 min)</option>
+                        <option value="1">Medium Distance (10-25 min)</option>
+                        <option value="2">Far (25+ min)</option>
+                    </select></div>
             </div>
             <div id="nl-map" style="height:200px;background:#f1f5f9" class="mb-4"></div>
             <input type="hidden" id="nl-lat" /><input type="hidden" id="nl-lng" />
@@ -232,8 +237,7 @@ document.getElementById('nl-form').addEventListener('submit', async function (e)
 
     var uni = document.getElementById('nl-university').value;
     if (uni) body.nearestUniversity = parseInt(uni);
-    var dist = document.getElementById('nl-distance').value;
-    if (dist) body.distanceMinutes = parseInt(dist);
+    body.distanceRange = parseInt(document.getElementById('nl-distance').value);
     var lat = document.getElementById('nl-lat').value;
     var lng = document.getElementById('nl-lng').value;
     if (lat && lng) { body.latitude = parseFloat(lat); body.longitude = parseFloat(lng); }

@@ -20,7 +20,7 @@ public sealed record UpdateApartmentRequest(
     GenderType GenderType,
     bool IsFurnished,
     University NearestUniversity,
-    int DistanceMinutes,
+    DistanceRange DistanceRange,
     SmokingRule SmokingRule,
     GuestsRule GuestsRule,
     IReadOnlyList<AmenityType> Amenities,

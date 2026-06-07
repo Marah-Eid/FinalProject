@@ -110,6 +110,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(a => a.NearestUniversity).HasConversion<string>().HasMaxLength(20).IsRequired();
             e.Property(a => a.SmokingRule).HasConversion<string>().HasMaxLength(20).IsRequired();
             e.Property(a => a.GuestsRule).HasConversion<string>().HasMaxLength(20).IsRequired();
+            e.Property(a => a.DistanceRange).HasConversion<string>().HasMaxLength(20).IsRequired();
 
             // Browse-query indexes — the visibility filters land here.
             e.HasIndex(a => new { a.IsActive, a.IsSuspended });

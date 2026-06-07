@@ -4,97 +4,198 @@
     ViewData["Title"] = "Payments";
     var payments = (IReadOnlyList<Dorm.Application.DTOs.Payments.PaymentDto>)(ViewBag.Payments ?? Array.Empty<Dorm.Application.DTOs.Payments.PaymentDto>());
     var completed = payments.Where(p => p.Status == PaymentStatus.Completed).ToList();
+    var pending = payments.Where(p => p.Status == PaymentStatus.Pending).ToList();
     var total = completed.Sum(p => p.Amount);
 }
 
 @section Styles {
 <style>
-    .pay-header h3 { font-size: 1.4rem; font-weight: 800; color: #1e293b; }
-    .pay-header p { color: #64748b; font-size: .9rem; }
+    .pay-page { max-width: 880px; margin: 0 auto; padding: 2rem 1rem 4rem; }
 
-    .pay-summary {
-        background: #0f172a; border-radius: 14px; padding: 1.25rem 1.5rem;
-        display: flex; align-items: center; gap: 1rem; color: #f8fafc; margin-bottom: 1.25rem;
+    .pay-header { margin-bottom: 1.5rem; }
+    .pay-header h2 { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: .25rem; }
+    .pay-header p { color: #64748b; font-size: .9rem; margin: 0; }
+
+    .pay-summary-row { display: flex; gap: .75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .pay-summary-card {
+        flex: 1; min-width: 180px; border-radius: 14px; padding: 1.25rem;
+        display: flex; align-items: center; gap: .85rem;
+    }
+    .pay-summary-main {
+        background: linear-gradient(135deg, #0f172a, #1e293b); color: #f8fafc;
+    }
+    .pay-summary-stat {
+        background: #fff; border: 1px solid #e2e8f0;
     }
     .pay-summary-icon {
-        width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,.1);
-        display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+        width: 44px; height: 44px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.15rem; flex-shrink: 0;
     }
-    .pay-summary .label { font-size: .82rem; opacity: .6; }
-    .pay-summary .amount { font-size: 1.5rem; font-weight: 800; }
+    .pay-summary-main .pay-summary-icon { background: rgba(249,115,22,.15); color: #F97316; }
+    .pay-summary-label { font-size: .72rem; font-weight: 500; opacity: .6; }
+    .pay-summary-value { font-size: 1.25rem; font-weight: 800; }
+    .pay-summary-stat .pay-summary-label { color: #94a3b8; }
+    .pay-summary-stat .pay-summary-value { color: #1e293b; }
 
-    .pay-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
-    .pay-type-icon {
-        width: 36px; height: 36px; border-radius: 8px;
-        display: flex; align-items: center; justify-content: center; font-size: .9rem;
+    .pay-list { display: flex; flex-direction: column; gap: .6rem; }
+
+    .pay-item {
+        background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+        padding: 1rem 1.25rem;
+        display: flex; align-items: center; gap: 1rem;
+        transition: box-shadow .2s, transform .15s;
+    }
+    .pay-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,.04); transform: translateY(-1px); }
+
+    .pay-item-icon {
+        width: 44px; height: 44px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.05rem; flex-shrink: 0;
+    }
+
+    .pay-item-body { flex: 1; min-width: 0; }
+    .pay-item-type { font-weight: 700; font-size: .88rem; color: #1e293b; }
+    .pay-item-meta { font-size: .75rem; color: #94a3b8; margin-top: .1rem; display: flex; align-items: center; gap: .5rem; }
+    .pay-item-ref { font-family: 'Courier New', monospace; font-size: .7rem; color: #cbd5e1; background: #f8fafc; padding: .1rem .35rem; border-radius: 4px; }
+
+    .pay-item-right { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
+    .pay-item-amount { font-weight: 800; font-size: 1rem; color: #1e293b; }
+    .pay-item-amount span { font-size: .75rem; font-weight: 500; color: #94a3b8; }
+
+    .pay-status {
+        font-size: .7rem; font-weight: 600; padding: .25rem .6rem; border-radius: 6px;
+        display: inline-flex; align-items: center; gap: .2rem; white-space: nowrap;
+    }
+    .pay-status-completed { background: rgba(16,185,129,.08); color: #10b981; }
+    .pay-status-pending { background: rgba(234,179,8,.08); color: #eab308; }
+    .pay-status-failed { background: rgba(239,68,68,.08); color: #ef4444; }
+
+    .pay-empty {
+        text-align: center; padding: 4rem 1.5rem;
+        background: #fff; border-radius: 16px; border: 1px solid #e2e8f0;
+    }
+    .pay-empty-icon {
+        width: 64px; height: 64px; border-radius: 50%; background: #f1f5f9;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; color: #cbd5e1; margin-bottom: 1rem;
+    }
+    .pay-empty h5 { font-weight: 800; color: #1e293b; margin-bottom: .25rem; }
+    .pay-empty p { color: #94a3b8; font-size: .88rem; max-width: 340px; margin: 0 auto; }
+
+    .pay-section-label {
+        font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+        color: #94a3b8; margin-bottom: .6rem; margin-top: .5rem;
+        display: flex; align-items: center; gap: .4rem;
+    }
+
+    @@media (max-width: 575px) {
+        .pay-item { flex-direction: column; align-items: flex-start; gap: .6rem; }
+        .pay-item-right { width: 100%; justify-content: space-between; }
     }
 </style>
 }
 
-<div class="pay-header mb-4">
-    <h3>Payments</h3>
-    <p>Match commissions, listing fees and verified badge. Powered by Stripe.</p>
-</div>
-
-@if (TempData["Success"] is string success)
-{
-    <div class="alert alert-success" style="border-radius:8px">@success</div>
-}
-
-@if (total > 0)
-{
-    <div class="pay-summary">
-        <div class="pay-summary-icon"><i class="bi bi-wallet2"></i></div>
-        <div><div class="label">Total Paid</div><div class="amount">@total JOD</div></div>
+<div class="pay-page">
+    <div class="pay-header">
+        <h2>Payments</h2>
+        <p>Your payment history and transactions.</p>
     </div>
-}
 
-<div class="pay-card">
-    @if (payments.Count == 0)
+    @if (TempData["Success"] is string success)
     {
-        <div class="text-center py-5">
-            <i class="bi bi-credit-card" style="font-size:2.5rem;color:#cbd5e1"></i>
-            <h5 class="fw-bold mt-3" style="color:#1e293b">No payments yet</h5>
-            <p style="color:#94a3b8;font-size:.88rem">Your payment history will appear here.</p>
+        <div class="alert alert-success" style="border-radius:10px">@success</div>
+    }
+
+    @if (payments.Count > 0)
+    {
+        <div class="pay-summary-row">
+            <div class="pay-summary-card pay-summary-main">
+                <div class="pay-summary-icon"><i class="bi bi-wallet2"></i></div>
+                <div>
+                    <div class="pay-summary-label">Total Paid</div>
+                    <div class="pay-summary-value">@total JOD</div>
+                </div>
+            </div>
+            <div class="pay-summary-card pay-summary-stat">
+                <div class="pay-summary-icon" style="background:rgba(16,185,129,.08);color:#10b981"><i class="bi bi-check-circle"></i></div>
+                <div>
+                    <div class="pay-summary-label">Completed</div>
+                    <div class="pay-summary-value">@completed.Count</div>
+                </div>
+            </div>
+            @if (pending.Count > 0)
+            {
+                <div class="pay-summary-card pay-summary-stat">
+                    <div class="pay-summary-icon" style="background:rgba(234,179,8,.08);color:#eab308"><i class="bi bi-clock"></i></div>
+                    <div>
+                        <div class="pay-summary-label">Pending</div>
+                        <div class="pay-summary-value">@pending.Count</div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="pay-list">
+            @if (pending.Count > 0)
+            {
+                <div class="pay-section-label"><i class="bi bi-clock"></i> Pending</div>
+                @foreach (var p in pending)
+                {
+                    var typeLabel = p.Type switch { PaymentType.MatchCommission => "Match Commission", PaymentType.ListingFee => "Listing Fee", PaymentType.VerifiedBadge => "Verified Badge", _ => "Payment" };
+                    var typeIcon = p.Type switch { PaymentType.MatchCommission => "bi-people-fill", PaymentType.ListingFee => "bi-building", PaymentType.VerifiedBadge => "bi-patch-check-fill", _ => "bi-credit-card" };
+                    var typeBg = p.Type switch { PaymentType.MatchCommission => "rgba(59,130,246,.1)", PaymentType.ListingFee => "rgba(139,92,246,.1)", PaymentType.VerifiedBadge => "rgba(6,182,212,.1)", _ => "#f1f5f9" };
+                    var typeColor = p.Type switch { PaymentType.MatchCommission => "#3b82f6", PaymentType.ListingFee => "#8b5cf6", PaymentType.VerifiedBadge => "#06b6d4", _ => "#64748b" };
+                    <div class="pay-item">
+                        <div class="pay-item-icon" style="background:@typeBg;color:@typeColor"><i class="bi @typeIcon"></i></div>
+                        <div class="pay-item-body">
+                            <div class="pay-item-type">@typeLabel</div>
+                            <div class="pay-item-meta">
+                                <span>@p.CreatedAt.ToString("MMM d, yyyy")</span>
+                                @if (!string.IsNullOrEmpty(p.TransactionRef)) { <span class="pay-item-ref">@(p.TransactionRef.Length > 20 ? p.TransactionRef.Substring(0, 20) + "…" : p.TransactionRef)</span> }
+                            </div>
+                        </div>
+                        <div class="pay-item-right">
+                            <span class="pay-status pay-status-pending"><i class="bi bi-clock"></i> Pending</span>
+                            <div class="pay-item-amount">@p.Amount <span>JOD</span></div>
+                        </div>
+                    </div>
+                }
+            }
+
+            @if (completed.Count > 0)
+            {
+                <div class="pay-section-label"><i class="bi bi-check-circle"></i> Completed</div>
+                @foreach (var p in completed)
+                {
+                    var typeLabel = p.Type switch { PaymentType.MatchCommission => "Match Commission", PaymentType.ListingFee => "Listing Fee", PaymentType.VerifiedBadge => "Verified Badge", _ => "Payment" };
+                    var typeIcon = p.Type switch { PaymentType.MatchCommission => "bi-people-fill", PaymentType.ListingFee => "bi-building", PaymentType.VerifiedBadge => "bi-patch-check-fill", _ => "bi-credit-card" };
+                    var typeBg = p.Type switch { PaymentType.MatchCommission => "rgba(59,130,246,.1)", PaymentType.ListingFee => "rgba(139,92,246,.1)", PaymentType.VerifiedBadge => "rgba(6,182,212,.1)", _ => "#f1f5f9" };
+                    var typeColor = p.Type switch { PaymentType.MatchCommission => "#3b82f6", PaymentType.ListingFee => "#8b5cf6", PaymentType.VerifiedBadge => "#06b6d4", _ => "#64748b" };
+                    <div class="pay-item">
+                        <div class="pay-item-icon" style="background:@typeBg;color:@typeColor"><i class="bi @typeIcon"></i></div>
+                        <div class="pay-item-body">
+                            <div class="pay-item-type">@typeLabel</div>
+                            <div class="pay-item-meta">
+                                <span>@p.CreatedAt.ToString("MMM d, yyyy")</span>
+                                @if (!string.IsNullOrEmpty(p.TransactionRef)) { <span class="pay-item-ref">@(p.TransactionRef.Length > 20 ? p.TransactionRef.Substring(0, 20) + "…" : p.TransactionRef)</span> }
+                            </div>
+                        </div>
+                        <div class="pay-item-right">
+                            <span class="pay-status pay-status-completed"><i class="bi bi-check-circle"></i> Paid</span>
+                            <div class="pay-item-amount">@p.Amount <span>JOD</span></div>
+                        </div>
+                    </div>
+                }
+            }
         </div>
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8">
-                        <th>Type</th><th>Date</th><th>Reference</th><th class="text-center">Status</th><th class="text-end">Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var p in payments)
-                {
-                    var typeLabel = p.Type switch { PaymentType.MatchCommission => "Match Commission", PaymentType.ListingFee => "Listing Fee", PaymentType.VerifiedBadge => "Verified Badge", _ => "Payment" };
-                    var typeIcon = p.Type switch { PaymentType.MatchCommission => "bi-people-fill", PaymentType.ListingFee => "bi-building", PaymentType.VerifiedBadge => "bi-patch-check-fill", _ => "bi-credit-card" };
-                    var typeColor = p.Type switch { PaymentType.MatchCommission => "#3b82f6", PaymentType.ListingFee => "#8B5CF6", PaymentType.VerifiedBadge => "#06B6D4", _ => "#64748b" };
-                    var typeBg = p.Type switch { PaymentType.MatchCommission => "rgba(59,130,246,.1)", PaymentType.ListingFee => "rgba(139,92,246,.1)", PaymentType.VerifiedBadge => "rgba(6,182,212,.1)", _ => "#f1f5f9" };
-                    var statusLabel = p.Status switch { PaymentStatus.Pending => "Pending", PaymentStatus.Completed => "Completed", PaymentStatus.Failed => "Failed", _ => "Pending" };
-                    var statusColor = p.Status switch { PaymentStatus.Pending => "warning", PaymentStatus.Completed => "success", PaymentStatus.Failed => "danger", _ => "secondary" };
-                    var statusIcon = p.Status switch { PaymentStatus.Pending => "bi-clock", PaymentStatus.Completed => "bi-check-circle", PaymentStatus.Failed => "bi-x-circle", _ => "bi-clock" };
-
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="pay-type-icon" style="background:@typeBg;color:@typeColor"><i class="bi @typeIcon"></i></div>
-                                <span class="fw-semibold" style="font-size:.88rem">@typeLabel</span>
-                            </div>
-                        </td>
-                        <td style="color:#94a3b8;font-size:.82rem">@p.CreatedAt.ToString("MMM d, yyyy")</td>
-                        <td style="color:#94a3b8;font-size:.82rem;font-family:monospace">@(p.TransactionRef ?? "—")</td>
-                        <td class="text-center">
-                            <span class="badge bg-@statusColor bg-opacity-10 text-@statusColor" style="font-size:.72rem"><i class="bi @statusIcon me-1"></i>@statusLabel</span>
-                        </td>
-                        <td class="text-end"><span class="fw-bold" style="font-size:.92rem;color:#1e293b">@p.Amount JOD</span></td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+        <div class="pay-empty">
+            <div class="pay-empty-icon"><i class="bi bi-credit-card"></i></div>
+            <h5>No payments yet</h5>
+            <p>When you pay a match commission, listing fee, or verified badge, your transactions will appear here.</p>
         </div>
     }
 </div>

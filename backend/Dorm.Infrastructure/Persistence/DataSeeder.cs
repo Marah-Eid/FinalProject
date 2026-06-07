@@ -87,6 +87,39 @@ public static class DataSeeder
             }
         }
 
+        // ── Apartment photos (3 themed per apartment) ─────────────────────
+        // Photos grouped by theme so each apartment's gallery looks coherent:
+        // Group 0: modern living rooms (1-3), Group 1: bedrooms (4-6),
+        // Group 2: kitchens (7-9), Group 3: furnished (10-12),
+        // Group 4: exteriors (13-15), Group 5: cozy (16-18), Group 6: minimal (19-20+1)
+        var photoGroups = new[]
+        {
+            new[] { 1, 2, 3 },   // modern living rooms
+            new[] { 4, 5, 6 },   // bedrooms
+            new[] { 7, 8, 9 },   // kitchens
+            new[] { 10, 11, 12 },// furnished apartments
+            new[] { 13, 14, 15 },// apartment exteriors
+            new[] { 16, 17, 18 },// cozy interiors
+            new[] { 19, 20, 1 }, // minimal rooms + living
+            new[] { 2, 5, 8 },   // mix: living + bed + kitchen
+            new[] { 3, 6, 9 },   // mix: living + bed + kitchen
+            new[] { 10, 14, 17 },// mix: furnished + ext + cozy
+        };
+        for (var a = 0; a < apartments.Count; a++)
+        {
+            var group = photoGroups[a % photoGroups.Length];
+            for (var p = 0; p < group.Length; p++)
+            {
+                db.ApartmentPhotos.Add(new ApartmentPhoto
+                {
+                    Id = Guid.NewGuid(),
+                    ApartmentId = apartments[a].Id,
+                    PhotoUrl = $"/uploads/apartments/seed-{group[p]:D2}.jpg",
+                    DisplayOrder = p,
+                });
+            }
+        }
+
         // Persist users+apartments first so FKs are valid when we add tenancies/applications/messages.
         await db.SaveChangesAsync(ct);
 
@@ -202,15 +235,54 @@ public static class DataSeeder
             CreatedAt = DateTime.UtcNow.AddDays(-1),
         });
 
+        // ── Testimonials (pre-approved) ──────────────────────────────────
+        var testimonialData = new (int StudentIdx, int Stars, string Text)[]
+        {
+            (0, 5, "Dorm made finding a roommate so easy. The compatibility quiz matched me with someone who has the same study habits and sleep schedule — we get along great!"),
+            (1, 5, "I was worried about finding a place near JU as a female student. Dorm's gender filter meant I only saw female-only apartments, and the match score helped me pick the best one."),
+            (2, 4, "Really useful platform. Found a furnished apartment near GJU within a week. The only thing I'd love is a mobile app for easier browsing on the go."),
+            (5, 5, "The quiz feature is genius. I matched 92% with my current roommate and we've become good friends. Highly recommend Dorm to any student in Jordan."),
+            (7, 4, "As a Yarmouk student in Irbid, options were limited before Dorm. Now I can see exactly what's available near campus with real prices and walking distances."),
+        };
+        var ownerTestimonials = new (int OwnerIdx, int Stars, string Text)[]
+        {
+            (0, 5, "Great platform for listing apartments. I filled all my spots within two weeks. The application system with compatibility scores helps me pick tenants who'll get along."),
+        };
+        foreach (var t in testimonialData)
+        {
+            db.Testimonials.Add(new Testimonial
+            {
+                Id = Guid.NewGuid(),
+                UserId = students[t.StudentIdx].Id,
+                Stars = t.Stars,
+                Text = t.Text,
+                IsApproved = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-rng.Next(5, 60)),
+            });
+        }
+        foreach (var t in ownerTestimonials)
+        {
+            db.Testimonials.Add(new Testimonial
+            {
+                Id = Guid.NewGuid(),
+                UserId = owners[t.OwnerIdx].Id,
+                Stars = t.Stars,
+                Text = t.Text,
+                IsApproved = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-rng.Next(5, 60)),
+            });
+        }
+
         await db.SaveChangesAsync(ct);
 
         logger.LogInformation(
             "[SEED] Done. Inserted {Owners} owners, {Students} students, {Apts} apartments, " +
-            "{Ten} tenancies, {Apps} applications, {Conv} conversations, 2 ratings.",
+            "{Ten} tenancies, {Apps} applications, {Conv} conversations, 2 ratings, {Testi} testimonials.",
             owners.Count, students.Count, apartments.Count,
             db.Tenancies.Local.Count,
             db.Applications.Local.Count,
-            db.Conversations.Local.Count);
+            db.Conversations.Local.Count,
+            testimonialData.Length + ownerTestimonials.Length);
     }
 
     // ─── builders ───────────────────────────────────────────────────────────
@@ -325,8 +397,8 @@ public static class DataSeeder
             ("Khalda",    31.9926, 35.8431, University.JU),
             ("Marj Al-Hamam", 31.9189, 35.8362, University.JU),
             ("Abdoun",    31.9489, 35.8800, University.PSUT),
-            ("Tabarbour", 32.0354, 35.9608, University.HU),
             ("Wadi Saqra",31.9576, 35.8826, University.JU),
+            ("Abu Nseir", 32.0412, 35.8755, University.AAU),
         };
         var irbid = new[]
         {
@@ -338,31 +410,36 @@ public static class DataSeeder
         };
         var zarqa = new[]
         {
-            ("Hay Al-Jabal", 32.0760, 36.0934, University.ZU),
-            ("New Zarqa",    32.0552, 36.1080, University.ZU),
-            ("Wadi Al-Hajar",32.0823, 36.0653, University.ZU),
+            ("Hay Al-Jabal",  32.0760, 36.0934, University.ZU),
+            ("New Zarqa",     32.0552, 36.1080, University.ZU),
+            ("Wadi Al-Hajar", 32.0823, 36.0653, University.ZU),
+            ("Hashmi Shamali",32.1130, 36.0880, University.HU),
+            ("Russeifa",      32.0290, 36.0480, University.HU),
         };
 
         var titlesEn = new[]
         {
-            "Sunny shared apartment near {U}",
-            "Modern 3-spot close to {U}",
-            "Quiet studio next to {U}",
-            "Spacious flat — minutes from {U}",
-            "Cozy student housing by {U}",
-            "Renovated apartment serving {U}",
-            "Affordable shared rooms near {U}",
-            "Bright top-floor close to {U}",
-            "Furnished 4-spot for {U} students",
-            "Comfortable 2-spot beside {U}",
+            "Sunny 2-bedroom apartment near {U}",
+            "Modern furnished flat — 10 min walk to {U}",
+            "Quiet ground-floor apartment near {U}",
+            "Spacious top-floor flat with balcony by {U}",
+            "Cozy student room in shared apartment near {U}",
+            "Recently renovated apartment near {U}",
+            "Affordable shared rooms with fast WiFi by {U}",
+            "Bright corner apartment with city views near {U}",
+            "Fully furnished student flat near {U} campus",
+            "Comfortable shared apartment beside {U}",
         };
         var descs = new[]
         {
-            "Comfortable, well-lit apartment with everything you need for a productive semester. Close to public transit and groceries.",
-            "Recently renovated with new furniture. Great natural light and a small balcony overlooking the neighborhood.",
-            "Quiet street, friendly neighbors, and a short walk to the campus gate. Perfect for studious roommates.",
-            "Open kitchen, plenty of storage, and a shared lounge. Tenants split utilities evenly.",
-            "Family-owned building, secure entrance, and on-site parking. Wi-Fi is fast and reliable.",
+            "Spacious, well-lit apartment with modern furniture and everything you need for a productive semester. Walking distance to campus, close to supermarkets and public transit. Shared kitchen with full appliances and a cozy living room.",
+            "Recently renovated with brand-new furniture, fresh paint, and modern fixtures. Great natural light through large windows and a small balcony overlooking the neighborhood. Fast WiFi included in the rent.",
+            "Located on a quiet residential street with friendly neighbors. Just a 5-minute walk to the campus gate, with a bakery and minimarket on the corner. Ideal for students who prefer a calm study environment.",
+            "Open-plan kitchen with granite countertops, plenty of closet storage, and a shared lounge with a TV. Utilities are split evenly among tenants — typically 15–25 JOD each per month. Building has a secure entrance and intercom.",
+            "Family-owned building with a welcoming atmosphere. Secure entrance with camera system, dedicated on-site parking, and a rooftop terrace for studying or relaxing. High-speed fiber internet included.",
+            "Third-floor apartment with tiled floors and central heating. Two shared bathrooms, a large kitchen, and a washing machine. The building is right next to the main bus line to campus.",
+            "Freshly painted with new mattresses and desks in every room. The apartment gets excellent morning light and stays cool in summer thanks to thick stone walls. Grocery stores and restaurants within walking distance.",
+            "Corner unit with windows on two sides for cross-ventilation and panoramic neighborhood views. Furnished with quality beds, wardrobes, and study desks. The landlord is responsive and handles maintenance quickly.",
         };
 
         var list = new List<Apartment>();
@@ -400,7 +477,7 @@ public static class DataSeeder
                     GenderType = gender,
                     IsFurnished = rng.NextDouble() > 0.3,
                     NearestUniversity = where.uni,
-                    DistanceMinutes = 3 + rng.Next(25),
+                    DistanceRange = (DistanceRange)rng.Next(3),
                     SmokingRule = (SmokingRule)rng.Next(3),
                     GuestsRule = (GuestsRule)rng.Next(3),
                     IsActive = true,
@@ -410,13 +487,13 @@ public static class DataSeeder
             }
         }
 
-        // Target counts per the brief: 15 Amman + 10 Irbid + 5 Zarqa = 30 total.
+        // Target counts: 15 Amman + 10 Irbid + 7 Zarqa = 32 total.
         foreach (var n in amman) Add("Amman", n, 1);                 // 10 Amman base
         foreach (var n in amman.Take(5)) Add("Amman", n, 1);          // +5 = 15 Amman
         foreach (var n in irbid) Add("Irbid", n, 2);                  // 5 × 2 = 10 Irbid
-        foreach (var n in zarqa) Add("Zarqa", n, 1);                  // 3 Zarqa
-        Add("Zarqa", zarqa[0], 1);
-        Add("Zarqa", zarqa[1], 1);                                    // +2 = 5 Zarqa
+        foreach (var n in zarqa) Add("Zarqa", n, 1);                  // 5 Zarqa base
+        Add("Zarqa", zarqa[3], 1);                                    // +1 HU
+        Add("Zarqa", zarqa[4], 1);                                    // +1 HU = 7 Zarqa
 
         return list;
     }

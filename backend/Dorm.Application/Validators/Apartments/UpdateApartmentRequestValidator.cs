@@ -21,7 +21,7 @@ public sealed class UpdateApartmentRequestValidator : AbstractValidator<UpdateAp
             .WithMessage("AvailableSpots cannot exceed TotalSpots.");
         RuleFor(r => r.GenderType).IsInEnum();
         RuleFor(r => r.NearestUniversity).IsInEnum();
-        RuleFor(r => r.DistanceMinutes).InclusiveBetween(0, 240);
+        RuleFor(r => r.DistanceRange).IsInEnum();
         RuleFor(r => r.SmokingRule).IsInEnum();
         RuleFor(r => r.GuestsRule).IsInEnum();
         RuleFor(r => r.Amenities).NotNull()

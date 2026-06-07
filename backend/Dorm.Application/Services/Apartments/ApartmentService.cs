@@ -56,7 +56,7 @@ public sealed class ApartmentService(
             query = query.Where(a => a.AvailableSpots >= spots);
         }
         if (q.Furnished is { } furn) query = query.Where(a => a.IsFurnished == furn);
-        if (q.MaxDistance is { } maxDist) query = query.Where(a => a.DistanceMinutes <= maxDist);
+        if (q.MaxDistance is { } maxDist) query = query.Where(a => (int)a.DistanceRange <= maxDist);
         if (q.Amenities is { Count: > 0 } amenities)
         {
             // Must have EVERY requested amenity.
@@ -90,7 +90,7 @@ public sealed class ApartmentService(
                 a.GenderType,
                 a.IsFurnished,
                 a.NearestUniversity,
-                a.DistanceMinutes,
+                a.DistanceRange,
                 a.Photos.OrderBy(p => p.DisplayOrder).Select(p => p.PhotoUrl).FirstOrDefault(),
                 db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Average(r => (double?)r.Stars),
                 db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Count(),
@@ -124,7 +124,7 @@ public sealed class ApartmentService(
                 a.GenderType,
                 a.IsFurnished,
                 a.NearestUniversity,
-                a.DistanceMinutes,
+                a.DistanceRange,
                 a.Photos.OrderBy(p => p.DisplayOrder).Select(p => p.PhotoUrl).FirstOrDefault(),
                 db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Average(r => (double?)r.Stars),
                 db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Count(),
@@ -253,7 +253,7 @@ public sealed class ApartmentService(
             apartment.GenderType,
             apartment.IsFurnished,
             apartment.NearestUniversity,
-            apartment.DistanceMinutes,
+            apartment.DistanceRange,
             apartment.SmokingRule,
             apartment.GuestsRule,
             amenities,
@@ -347,7 +347,7 @@ public sealed class ApartmentService(
             GenderType = req.GenderType,
             IsFurnished = req.IsFurnished,
             NearestUniversity = req.NearestUniversity,
-            DistanceMinutes = req.DistanceMinutes,
+            DistanceRange = req.DistanceRange,
             SmokingRule = req.SmokingRule,
             GuestsRule = req.GuestsRule,
             IsActive = true,
@@ -397,7 +397,7 @@ public sealed class ApartmentService(
         apartment.GenderType = req.GenderType;
         apartment.IsFurnished = req.IsFurnished;
         apartment.NearestUniversity = req.NearestUniversity;
-        apartment.DistanceMinutes = req.DistanceMinutes;
+        apartment.DistanceRange = req.DistanceRange;
         apartment.SmokingRule = req.SmokingRule;
         apartment.GuestsRule = req.GuestsRule;
         if (req.IsActive.HasValue) apartment.IsActive = req.IsActive.Value;

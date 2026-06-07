@@ -19,6 +19,8 @@ public sealed record ApplicationReceivedDto(
     int? StudentYear,
     string? StudentMajor,
     int CompatibilityScore,
+    IReadOnlyList<QuizQuestionKey>? MatchedOn,
+    IReadOnlyList<QuizQuestionKey>? DifferedOn,
     string Message,
     ApplicationStatus Status,
     DateTime CreatedAt,

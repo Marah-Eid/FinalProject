@@ -196,10 +196,10 @@
                         <div class="info-item"><div class="ii-icon"><i class="bi bi-wind"></i></div><div>Smoking: <strong>@smokingLabel</strong></div></div>
                         <div class="info-item"><div class="ii-icon"><i class="bi bi-people"></i></div><div>Guests: <strong>@guestsLabel</strong></div></div>
                         <div class="info-item"><div class="ii-icon"><i class="bi bi-mortarboard"></i></div><div>Near: <strong>@apt.NearestUniversity</strong></div></div>
-                        @if (apt.DistanceMinutes > 0)
-                        {
-                            <div class="info-item"><div class="ii-icon"><i class="bi bi-signpost-2"></i></div><div><strong>@apt.DistanceMinutes min</strong> walk</div></div>
+                        @{
+                            var distLabel = apt.DistanceRange switch { Dorm.Domain.Enums.DistanceRange.NearCampus => "Near Campus", Dorm.Domain.Enums.DistanceRange.MediumDistance => "Medium Distance", _ => "Far from Campus" };
                         }
+                        <div class="info-item"><div class="ii-icon"><i class="bi bi-signpost-2"></i></div><div><strong>@distLabel</strong></div></div>
                     </div>
                 </div>
 

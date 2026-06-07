@@ -1,224 +1,154 @@
 @{
     Layout = "_BrowseLayout";
-    ViewData["Title"] = "About & Contact";
+    ViewData["Title"] = "Contact";
+    var isAuth = User.Identity?.IsAuthenticated == true;
+    var userName = isAuth ? User.FindFirstValue("FullName") ?? "" : "";
+    var userEmail2 = isAuth ? User.FindFirstValue(ClaimTypes.Email) ?? "" : "";
 }
 
 @section Styles {
 <style>
-    /* Hero banner */
-    .about-hero {
-        background: #0f172a; padding: 4.5rem 0 3.5rem; text-align: center;
-        position: relative; overflow: hidden;
+    .contact-hero {
+        background: #0f172a; padding: 4rem 0 3rem; color: #fff; text-align: center;
     }
-    .about-hero::before {
-        content: '';
-        position: absolute; top: -120px; right: -80px;
-        width: 350px; height: 350px; border-radius: 50%;
-        background: radial-gradient(circle, rgba(249,115,22,.08) 0%, transparent 70%);
-        pointer-events: none;
-    }
-    .about-hero::after {
-        content: '';
-        position: absolute; bottom: -100px; left: -60px;
-        width: 280px; height: 280px; border-radius: 50%;
-        background: radial-gradient(circle, rgba(59,130,246,.06) 0%, transparent 70%);
-        pointer-events: none;
-    }
-    .about-hero h1 {
-        font-size: 2rem; font-weight: 800; color: #f8fafc;
-        margin-bottom: .5rem; position: relative;
-    }
-    .about-hero p {
-        color: #64748b; font-size: 1rem; max-width: 440px;
-        margin: 0 auto; position: relative;
-    }
+    .contact-hero h1 { font-size: 2rem; font-weight: 800; color: #f8fafc; margin-bottom: .4rem; }
+    .contact-hero p { color: #64748b; font-size: 1rem; margin: 0; }
 
-    /* Content area */
-    .about-content { padding: 3rem 0 4rem; }
+    .contact-body { padding: 3rem 0 5rem; }
 
-    /* Feature-style cards */
-    .about-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 3rem; }
-    .about-card {
-        background: #fff; border-radius: 14px; padding: 1.6rem;
-        border: 1px solid #e2e8f0;
-        transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s;
-    }
-    .about-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(0,0,0,.07);
-        border-color: transparent;
-    }
-    .about-card-icon {
-        width: 44px; height: 44px; border-radius: 11px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.15rem; margin-bottom: .9rem;
-    }
-    .about-card h4 { font-size: .95rem; font-weight: 700; color: #1e293b; margin-bottom: .35rem; }
-    .about-card p { font-size: .84rem; color: #64748b; line-height: 1.65; margin: 0; }
-
-    /* Steps row */
-    .steps-banner {
-        background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9;
-        padding: 2rem 1.5rem; margin-bottom: 3rem; text-align: center;
-    }
-    .steps-banner h3 {
-        font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 1.5rem;
-    }
-    .steps-grid { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
-    .step-item { flex: 1; min-width: 140px; max-width: 180px; }
-    .step-num {
-        width: 36px; height: 36px; border-radius: 50%;
-        background: #F97316; color: #fff; font-weight: 700; font-size: .85rem;
-        display: inline-flex; align-items: center; justify-content: center;
-        margin-bottom: .5rem;
-    }
-    .step-item h5 { font-size: .82rem; font-weight: 700; color: #1e293b; margin-bottom: .15rem; }
-    .step-item p { font-size: .76rem; color: #94a3b8; line-height: 1.5; margin: 0; }
-
-    /* Contact section */
-    .contact-section h3 {
-        font-size: 1.1rem; font-weight: 800; color: #1e293b;
-        margin-bottom: .35rem; text-align: center;
-    }
-    .contact-section .contact-sub {
-        color: #94a3b8; font-size: .88rem; text-align: center; margin-bottom: 1.5rem;
-    }
-    .contact-grid {
-        display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;
-        max-width: 560px; margin: 0 auto;
-    }
-    .contact-card {
+    .info-card {
         background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
-        padding: 1.2rem; display: flex; align-items: center; gap: .8rem;
+        padding: 1.2rem 1.4rem; display: flex; align-items: center; gap: .9rem;
         transition: transform .2s, box-shadow .2s;
     }
-    .contact-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.06); }
-    .contact-icon {
-        width: 40px; height: 40px; border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1rem; flex-shrink: 0;
+    .info-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.07); }
+    .info-icon {
+        width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 1rem;
     }
-    .contact-card .c-label { font-size: .72rem; color: #94a3b8; margin-bottom: .1rem; }
-    .contact-card .c-value { font-size: .85rem; font-weight: 600; color: #1e293b; }
-    .contact-card a {
-        color: #F97316; text-decoration: none; font-weight: 600; font-size: .85rem;
-    }
-    .contact-card a:hover { text-decoration: underline; }
+    .info-label { font-size: .72rem; color: #94a3b8; margin-bottom: .1rem; }
+    .info-value { font-size: .88rem; font-weight: 600; color: #1e293b; }
+    .info-card a { color: #F97316; text-decoration: none; font-weight: 600; font-size: .88rem; }
+    .info-card a:hover { text-decoration: underline; }
 
-    @@media (max-width: 767px) {
-        .about-cards { grid-template-columns: 1fr; }
-        .contact-grid { grid-template-columns: 1fr; }
-        .about-hero h1 { font-size: 1.5rem; }
+    .form-card {
+        background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+        padding: 2rem;
     }
+    .form-card h4 { font-size: 1.05rem; font-weight: 800; color: #1e293b; margin-bottom: 1.25rem; }
+    .form-card label { font-size: .82rem; font-weight: 600; color: #475569; margin-bottom: .3rem; }
+    .form-card .form-control, .form-card .form-select {
+        padding: .65rem .9rem; border-radius: 8px; font-size: .88rem;
+    }
+    .btn-send {
+        background: #F97316; color: #fff; border: none; border-radius: 8px;
+        padding: .65rem 1.5rem; font-weight: 600; font-size: .88rem;
+        display: inline-flex; align-items: center; gap: .4rem; transition: background .2s;
+    }
+    .btn-send:hover { background: #ea6c0a; }
 </style>
 }
 
-<!-- Hero -->
-<div class="about-hero">
+<div class="contact-hero">
     <div class="container">
-        <h1>About Dorm</h1>
-        <p>Helping Jordanian university students find compatible housing near campus.</p>
+        <h1>Contact Us</h1>
+        <p>Have a question, feedback, or need help? We'd love to hear from you.</p>
     </div>
 </div>
 
-<div class="about-content">
+<div class="contact-body">
     <div class="container">
+        <div class="row g-4">
 
-        <!-- What we offer — 3 cards -->
-        <div class="about-cards">
-            <div class="about-card">
-                <div class="about-card-icon" style="background:rgba(249,115,22,.1);color:#F97316">
-                    <i class="bi bi-people-fill"></i>
-                </div>
-                <h4>Roommate Matching</h4>
-                <p>An 8-question lifestyle quiz generates a compatibility score with every apartment's current tenants.</p>
-            </div>
-            <div class="about-card">
-                <div class="about-card-icon" style="background:rgba(16,185,129,.1);color:#10b981">
-                    <i class="bi bi-geo-alt-fill"></i>
-                </div>
-                <h4>Near Your Campus</h4>
-                <p>Filter by university, city, price, and distance. We cover 20 universities across 8 cities in Jordan.</p>
-            </div>
-            <div class="about-card">
-                <div class="about-card-icon" style="background:rgba(59,130,246,.1);color:#3b82f6">
-                    <i class="bi bi-shield-check"></i>
-                </div>
-                <h4>Verified & Transparent</h4>
-                <p>University-email badges, real reviews, and private addresses released only after acceptance.</p>
-            </div>
-        </div>
-
-        <!-- How it works — mini steps -->
-        <div class="steps-banner">
-            <h3>How It Works</h3>
-            <div class="steps-grid">
-                <div class="step-item">
-                    <div class="step-num">1</div>
-                    <h5>Sign Up</h5>
-                    <p>Create a free account as a student or owner.</p>
-                </div>
-                <div class="step-item">
-                    <div class="step-num">2</div>
-                    <h5>Take the Quiz</h5>
-                    <p>Answer 8 lifestyle questions about your habits.</p>
-                </div>
-                <div class="step-item">
-                    <div class="step-num">3</div>
-                    <h5>Browse & Match</h5>
-                    <p>See your compatibility with each apartment's tenants.</p>
-                </div>
-                <div class="step-item">
-                    <div class="step-num">4</div>
-                    <h5>Apply & Move In</h5>
-                    <p>Apply, chat with the owner, and get accepted.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Contact -->
-        <div class="contact-section">
-            <h3>Get in Touch</h3>
-            <p class="contact-sub">Have a question or need help? Reach out to us.</p>
-            <div class="contact-grid">
-                <div class="contact-card">
-                    <div class="contact-icon" style="background:rgba(249,115,22,.1);color:#F97316">
+            <!-- Info column -->
+            <div class="col-lg-4 d-flex flex-column gap-3">
+                <div class="info-card">
+                    <div class="info-icon" style="background:rgba(249,115,22,.1);color:#F97316">
                         <i class="bi bi-envelope-fill"></i>
                     </div>
                     <div>
-                        <div class="c-label">Email</div>
+                        <div class="info-label">Email</div>
                         <a href="mailto:support@dorm.jo">support@dorm.jo</a>
                     </div>
                 </div>
-                <div class="contact-card">
-                    <div class="contact-icon" style="background:rgba(59,130,246,.1);color:#3b82f6">
+                <div class="info-card">
+                    <div class="info-icon" style="background:rgba(59,130,246,.1);color:#3b82f6">
                         <i class="bi bi-telephone-fill"></i>
                     </div>
                     <div>
-                        <div class="c-label">Phone</div>
-                        <div class="c-value">+962 6 000 0000</div>
+                        <div class="info-label">Phone</div>
+                        <div class="info-value">+962 6 000 0000</div>
                     </div>
                 </div>
-                <div class="contact-card">
-                    <div class="contact-icon" style="background:rgba(16,185,129,.1);color:#10b981">
+                <div class="info-card">
+                    <div class="info-icon" style="background:rgba(16,185,129,.1);color:#10b981">
                         <i class="bi bi-geo-alt-fill"></i>
                     </div>
                     <div>
-                        <div class="c-label">Location</div>
-                        <div class="c-value">Amman, Jordan</div>
+                        <div class="info-label">Location</div>
+                        <div class="info-value">Amman, Jordan</div>
                     </div>
                 </div>
-                <div class="contact-card">
-                    <div class="contact-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6">
+                <div class="info-card">
+                    <div class="info-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6">
                         <i class="bi bi-clock-fill"></i>
                     </div>
                     <div>
-                        <div class="c-label">Hours</div>
-                        <div class="c-value">Sun — Thu, 9 — 5 PM</div>
+                        <div class="info-label">Working Hours</div>
+                        <div class="info-value">Sun – Thu, 9 AM – 5 PM</div>
                     </div>
                 </div>
             </div>
-        </div>
 
+            <!-- Form column -->
+            <div class="col-lg-8">
+                <div class="form-card">
+                    <h4>Send a Message</h4>
+
+                    @if (TempData["Success"] is string)
+                    {
+                        <div class="alert alert-success" style="border-radius:8px;font-size:.88rem">
+                            <i class="bi bi-check-circle-fill me-1"></i> Your message was sent. We'll get back to you soon!
+                        </div>
+                    }
+                    @if (TempData["Error"] is string err)
+                    {
+                        <div class="alert alert-danger" style="border-radius:8px;font-size:.88rem">@err</div>
+                    }
+
+                    <form method="post" asp-action="Send" asp-controller="Contact">
+                        @Html.AntiForgeryToken()
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Your Name</label>
+                                <input type="text" class="form-control" name="name" placeholder="Full name" required value="@userName" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" placeholder="you@example.com" required value="@userEmail2" />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Subject</label>
+                            <select class="form-select" name="subject">
+                                <option value="General Inquiry">General Inquiry</option>
+                                <option value="Technical Support">Technical Support</option>
+                                <option value="Feedback">Feedback</option>
+                                <option value="Report an Issue">Report an Issue</option>
+                                <option value="Partnership">Partnership</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-control" name="message" rows="5" placeholder="How can we help?" required style="resize:none"></textarea>
+                        </div>
+                        <button type="submit" class="btn-send">
+                            <i class="bi bi-send"></i> Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
     </div>
 </div>
