@@ -4,8 +4,10 @@ using Dorm.Application.DTOs.Apartments;
 using Dorm.Application.DTOs.Payments;
 using Dorm.Application.Services.Apartments;
 using Dorm.Application.Services.Payments;
+using Dorm.Domain.Entities;
 using Dorm.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,14 +18,18 @@ public class OwnerListingsController(
     IApartmentService apartments,
     IPaymentsAppService payments,
     IAppDbContext db,
-    ICurrentUser currentUser) : Controller
+    ICurrentUser currentUser,
+    UserManager<User> userManager) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         ViewData["Title"] = "My Listings";
         var ownerId = currentUser.UserId!.Value;
+        var owner = await userManager.FindByIdAsync(ownerId.ToString());
         var listings = await apartments.GetMineAsync(ownerId, ct);
         ViewBag.Listings = listings;
+        ViewBag.IdMissing = string.IsNullOrEmpty(owner?.IdDocumentUrl);
+        ViewBag.IdPending = !string.IsNullOrEmpty(owner?.IdDocumentUrl) && !(owner?.IsIdVerified ?? false);
         return View();
     }
 
@@ -31,6 +37,12 @@ public class OwnerListingsController(
     {
         ViewData["Title"] = "New Listing";
         var ownerId = currentUser.UserId!.Value;
+        var owner = await userManager.FindByIdAsync(ownerId.ToString());
+        if (owner is null || string.IsNullOrEmpty(owner.IdDocumentUrl))
+        {
+            TempData["Error"] = "You must upload an identity document on your Profile page before posting a listing.";
+            return RedirectToAction("Index", "Profile");
+        }
         ViewBag.RequiresListingFee = await apartments.RequiresListingFeeAsync(ownerId, ct);
         return View();
     }
@@ -42,6 +54,9 @@ public class OwnerListingsController(
         try
         {
             var ownerId = currentUser.UserId!.Value;
+            var owner = await userManager.FindByIdAsync(ownerId.ToString());
+            if (owner is null || string.IsNullOrEmpty(owner.IdDocumentUrl))
+                return BadRequest(new { error = new { code = "id_required", message = "Please upload an identity document on your profile before posting a listing." } });
             var created = await apartments.CreateAsync(ownerId, req, ct);
             return Json(new { id = created.Id });
         }
@@ -61,15 +76,25 @@ public class OwnerListingsController(
     {
         ViewData["Title"] = "Edit Listing";
         ViewData["ApartmentId"] = id;
-        var apt = await apartments.GetByIdAsync(id, ct);
-        ViewBag.Apartment = apt;
+        try
+        {
+            var apt = await apartments.GetByIdAsync(id, ct);
+            // Only the owner can edit — if they somehow reach another owner's listing, reject
+            if (apt.Owner?.Id.ToString() != currentUser.UserId?.ToString())
+                return Forbid();
 
-        var tenants = await db.Tenancies.AsNoTracking()
-            .Where(t => t.ApartmentId == id && t.Status == TenancyStatus.Active)
-            .Select(t => new { t.Id, t.Student.FullName, t.Student.University, t.StartDate })
-            .ToListAsync(ct);
-        ViewBag.ActiveTenants = tenants;
+            ViewBag.Apartment = apt;
 
+            var tenants = await db.Tenancies.AsNoTracking()
+                .Where(t => t.ApartmentId == id && t.Status == TenancyStatus.Active)
+                .Select(t => new { t.Id, t.Student.FullName, t.Student.University, t.StartDate })
+                .ToListAsync(ct);
+            ViewBag.ActiveTenants = tenants;
+        }
+        catch (Application.Common.Exceptions.NotFoundException)
+        {
+            return NotFound();
+        }
         return View();
     }
 
@@ -87,8 +112,15 @@ public class OwnerListingsController(
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         var ownerId = currentUser.UserId!.Value;
-        await apartments.DeleteAsync(id, ownerId, ct);
-        TempData["Success"] = "Listing deleted.";
+        try
+        {
+            await apartments.DeleteAsync(id, ownerId, ct);
+            TempData["Success"] = "Listing deleted successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
         return RedirectToAction("Index");
     }
 

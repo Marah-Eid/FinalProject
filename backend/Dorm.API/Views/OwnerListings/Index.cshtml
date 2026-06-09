@@ -4,6 +4,8 @@
     Layout = "_DashboardLayout";
     ViewData["Title"] = "My Listings";
     var listings = (IReadOnlyList<ApartmentListItemDto>)(ViewBag.Listings ?? Array.Empty<ApartmentListItemDto>());
+    var idMissing = (bool)(ViewBag.IdMissing ?? false);
+    var idPending = (bool)(ViewBag.IdPending ?? false);
 }
 
 @section Styles {
@@ -49,6 +51,28 @@
 </style>
 }
 
+@if (idMissing)
+{
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <div style="font-size:1.4rem">🪪</div>
+        <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:.9rem;color:#9a3412">Identity document required</div>
+            <div style="font-size:.82rem;color:#c2410c;margin-top:.1rem">You must upload a national ID or property ownership document before you can post a listing. This helps students trust that you're a real owner.</div>
+        </div>
+        <a href="/Profile" style="background:#F97316;color:#fff;text-decoration:none;border-radius:8px;padding:.45rem 1rem;font-size:.82rem;font-weight:600;white-space:nowrap;flex-shrink:0">Upload ID →</a>
+    </div>
+}
+else if (idPending)
+{
+    <div style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <div style="font-size:1.4rem">⏳</div>
+        <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:.9rem;color:#92400e">ID under review</div>
+            <div style="font-size:.82rem;color:#b45309;margin-top:.1rem">Your document has been submitted and is awaiting admin review. You can post listings in the meantime — your verified badge will appear once approved.</div>
+        </div>
+    </div>
+}
+
 <div class="ol-header">
     <div>
         <h3>My Listings</h3>
@@ -60,6 +84,10 @@
 @if (TempData["Success"] is string success)
 {
     <div class="alert alert-success" style="border-radius:8px">@success</div>
+}
+@if (TempData["Error"] is string err)
+{
+    <div class="alert alert-danger" style="border-radius:8px">@err</div>
 }
 
 <div class="ol-card">
@@ -106,9 +134,16 @@
                         <td class="text-center"><span class="fw-bold" style="font-size:.92rem;color:#1e293b">@apt.FullRent JOD</span></td>
                         <td class="text-center"><span class="spots-badge @(spotsOpen ? "spots-open" : "spots-full")">@apt.AvailableSpots / @apt.TotalSpots</span></td>
                         <td class="text-center"><span class="gender-badge">@genderLabel</span></td>
-                        <td class="text-end">
-                            <a href="/OwnerListings/Edit/@apt.Id" class="btn-edit me-1"><i class="bi bi-pencil"></i>Edit</a>
+                        <td class="text-end d-flex align-items-center justify-content-end gap-1 flex-wrap">
+                            <a href="/OwnerListings/Edit/@apt.Id" class="btn-edit"><i class="bi bi-pencil"></i>Edit</a>
                             <a href="/Apartment/Detail/@apt.Id" class="btn-view"><i class="bi bi-eye"></i>View</a>
+                            <form method="post" asp-action="Delete" asp-controller="OwnerListings" asp-route-id="@apt.Id"
+                                  style="margin:0" onsubmit="return confirm('Delete «@apt.Title»? This cannot be undone.')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-view" style="color:#ef4444;border-color:#fecaca;background:#fff">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 }

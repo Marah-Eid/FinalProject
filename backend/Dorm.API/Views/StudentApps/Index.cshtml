@@ -340,11 +340,24 @@
                         <div class="cl-step-dot"><i class="bi @(s7 ? "bi-check" : "bi-star")"></i></div>
                         <div class="cl-step-body">
                             <div class="cl-step-title">Rate Your Experience</div>
-                            <div class="cl-step-desc">@(s7 ? "Thanks for your feedback!" : "Help future students by rating the owner.")</div>
+                            <div class="cl-step-desc">@(s7 ? "Thanks for your review!" : "Share your experience to help future students.")</div>
                             @if (!s7 && s6)
                             {
-                                <div class="cl-step-action">
-                                    <a href="/WriteReview" class="btn-cl-action"><i class="bi bi-pencil-square"></i> Write Review</a>
+                                <div class="cl-step-action" style="margin-top:.6rem">
+                                    <form method="post" asp-action="SubmitReview" asp-controller="Apartment" asp-route-id="@app.ApartmentId" id="rev-form-@app.ApartmentId">
+                                        @Html.AntiForgeryToken()
+                                        <div style="display:flex;gap:.25rem;font-size:1.4rem;cursor:pointer;margin-bottom:.5rem" id="stars-@app.ApartmentId">
+                                            @for (var s = 1; s <= 5; s++)
+                                            {
+                                                <i class="bi bi-star" data-star="@s" style="color:#e2e8f0;transition:color .15s"></i>
+                                            }
+                                        </div>
+                                        <input type="hidden" name="stars" id="starval-@app.ApartmentId" value="0" />
+                                        <div id="starerr-@app.ApartmentId" style="color:#ef4444;font-size:.75rem;margin-bottom:.35rem;display:none">Please select a rating.</div>
+                                        <textarea name="comment" rows="2" placeholder="Optional comment..." maxlength="500"
+                                            style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:.5rem .7rem;font-size:.82rem;resize:none;margin-bottom:.4rem;font-family:inherit"></textarea>
+                                        <button type="submit" class="btn-cl-action"><i class="bi bi-send"></i> Submit Review</button>
+                                    </form>
                                 </div>
                             }
                         </div>
@@ -363,3 +376,39 @@
         </div>
     }
 </div>
+
+@section Scripts {
+<script>
+document.querySelectorAll('[id^="stars-"]').forEach(function(row) {
+    var aptId = row.id.replace('stars-', '');
+    var stars = 0;
+    row.querySelectorAll('i').forEach(function(star) {
+        star.addEventListener('mouseenter', function() {
+            var v = parseInt(this.getAttribute('data-star'));
+            row.querySelectorAll('i').forEach(function(s) {
+                s.style.color = parseInt(s.getAttribute('data-star')) <= v ? '#F97316' : '#e2e8f0';
+            });
+        });
+        star.addEventListener('mouseleave', function() {
+            row.querySelectorAll('i').forEach(function(s) {
+                s.style.color = parseInt(s.getAttribute('data-star')) <= stars ? '#F97316' : '#e2e8f0';
+            });
+        });
+        star.addEventListener('click', function() {
+            stars = parseInt(this.getAttribute('data-star'));
+            document.getElementById('starval-' + aptId).value = stars;
+            document.getElementById('starerr-' + aptId).style.display = 'none';
+        });
+    });
+    var form = document.getElementById('rev-form-' + aptId);
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (stars === 0) {
+                e.preventDefault();
+                document.getElementById('starerr-' + aptId).style.display = 'block';
+            }
+        });
+    }
+});
+</script>
+}

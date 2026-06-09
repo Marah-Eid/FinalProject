@@ -11,9 +11,14 @@ namespace Dorm.API.Controllers;
 [Authorize]
 public class WriteReviewController(IAppDbContext db, ICurrentUser currentUser) : Controller
 {
-    public IActionResult Index()
+    public async Task<IActionResult> Index(CancellationToken ct)
     {
         ViewData["Title"] = "Write a Review";
+        var userId = currentUser.UserId!.Value;
+        var existing = await db.Testimonials.AsNoTracking()
+            .FirstOrDefaultAsync(t => t.UserId == userId, ct);
+        ViewBag.AlreadySubmitted = existing is not null;
+        ViewBag.IsApproved = existing?.IsApproved ?? false;
         return View();
     }
 

@@ -8,15 +8,13 @@ namespace Dorm.Application.Common;
 /// </summary>
 public static class PaymentAmounts
 {
-    public const decimal MatchCommission    = 15m;
-    public const decimal ListingFee         = 10m;
-    public const decimal VerifiedBadgeMonth = 2m;
+    public const decimal MatchCommission = 15m;
+    public const decimal ListingFee      = 10m;
 
     public static decimal For(PaymentType type) => type switch
     {
         PaymentType.MatchCommission => MatchCommission,
         PaymentType.ListingFee      => ListingFee,
-        PaymentType.VerifiedBadge   => VerifiedBadgeMonth,
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported payment type."),
     };
 }

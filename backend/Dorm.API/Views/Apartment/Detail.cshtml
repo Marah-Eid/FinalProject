@@ -13,6 +13,10 @@
     var photos = apt.Photos ?? new List<ApartmentPhotoDto>();
     var mainPhoto = photos.Count > 0 ? photos[0].PhotoUrl : "/property/images/img_1.jpg";
 
+    var reviews = ViewBag.Reviews as IEnumerable<dynamic> ?? Array.Empty<dynamic>();
+    var avgRating = ViewBag.AvgRating as double?;
+    var isTenant = (bool)(ViewBag.IsTenant ?? false);
+    var alreadyReviewed = (bool)(ViewBag.AlreadyReviewed ?? false);
     var genderLabel = apt.GenderType switch { GenderType.MaleOnly => "Male Only", GenderType.FemaleOnly => "Female Only", _ => "Mixed" };
     var smokingLabel = apt.SmokingRule switch { SmokingRule.Yes => "Yes", SmokingRule.No => "No", SmokingRule.Outside => "Outside Only", _ => "No" };
     var guestsLabel = apt.GuestsRule switch { GuestsRule.Yes => "Yes", GuestsRule.No => "No", GuestsRule.Limited => "Limited", _ => "No" };
@@ -144,6 +148,69 @@
     .btn-save-detail.saved { background: rgba(239,68,68,.08); color: #ef4444; border-color: #ef4444; }
 
     #apt-map { border-radius: 12px; }
+
+    /* Reviews */
+    .review-item {
+        padding: .9rem 0; border-bottom: 1px solid #f1f5f9;
+    }
+    .review-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .review-header { display: flex; align-items: center; gap: .65rem; margin-bottom: .35rem; }
+    .review-avatar {
+        width: 34px; height: 34px; border-radius: 50%; background: #f1f5f9;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: .72rem; color: #64748b; flex-shrink: 0;
+    }
+    .review-name { font-weight: 700; font-size: .85rem; color: #1e293b; }
+    .review-date { font-size: .72rem; color: #94a3b8; margin-left: auto; }
+    .review-stars i { font-size: .78rem; color: #F97316; }
+    .review-stars i.empty { color: #e2e8f0; }
+    .review-comment { font-size: .85rem; color: #475569; line-height: 1.6; margin-top: .2rem; }
+
+    .review-form label { font-size: .82rem; font-weight: 600; color: #475569; margin-bottom: .3rem; }
+    .review-form .star-row { display: flex; gap: .25rem; font-size: 1.4rem; cursor: pointer; margin-bottom: .75rem; }
+    .review-form .star-row i { color: #e2e8f0; transition: color .15s; }
+    .review-form .star-row i.active { color: #F97316; }
+    .avg-rating { display: flex; align-items: center; gap: .5rem; margin-bottom: .75rem; }
+    .avg-stars { font-size: 1.3rem; font-weight: 800; color: #1e293b; }
+    .avg-count { font-size: .8rem; color: #94a3b8; }
+
+    /* #2 Lightbox */
+    .lightbox-overlay {
+        display: none; position: fixed; inset: 0; z-index: 9998;
+        background: rgba(0,0,0,.92); align-items: center; justify-content: center;
+        animation: lbIn .2s ease;
+    }
+    .lightbox-overlay.open { display: flex; }
+    @@keyframes lbIn { from { opacity:0; } to { opacity:1; } }
+    .lightbox-img {
+        max-width: 90vw; max-height: 85vh; border-radius: 10px;
+        object-fit: contain; box-shadow: 0 24px 80px rgba(0,0,0,.5);
+        animation: lbScale .25s cubic-bezier(.22,1,.36,1);
+    }
+    @@keyframes lbScale { from { transform: scale(.92); } to { transform: scale(1); } }
+    .lb-close {
+        position: fixed; top: 1.25rem; right: 1.5rem;
+        width: 40px; height: 40px; border-radius: 50%;
+        background: rgba(255,255,255,.1); border: none; color: #fff;
+        font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: background .15s;
+    }
+    .lb-close:hover { background: rgba(255,255,255,.2); }
+    .lb-arrow {
+        position: fixed; top: 50%; transform: translateY(-50%);
+        width: 44px; height: 44px; border-radius: 50%;
+        background: rgba(255,255,255,.1); border: none; color: #fff;
+        font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: background .15s;
+    }
+    .lb-arrow:hover { background: rgba(255,255,255,.2); }
+    .lb-prev { left: 1.25rem; }
+    .lb-next { right: 1.25rem; }
+    .lb-counter {
+        position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%);
+        color: rgba(255,255,255,.6); font-size: .82rem; font-weight: 500;
+    }
+    .gallery-main { cursor: zoom-in; }
 </style>
 }
 
@@ -247,6 +314,73 @@
                     <p style="color:#94a3b8;font-size:.8rem;margin-bottom:.75rem">Approximate location shown for privacy.</p>
                     <div id="apt-map" style="height:240px"></div>
                 </div>
+
+                <!-- Reviews -->
+                <div class="detail-card">
+                    <h5>Tenant Reviews</h5>
+
+                    @{ var reviewList = reviews.ToList(); }
+                    @if (avgRating.HasValue)
+                    {
+                        <div class="avg-rating">
+                            <div class="avg-stars">@avgRating.Value.ToString("0.0")</div>
+                            <div>
+                                @for (var s = 1; s <= 5; s++)
+                                {
+                                    <i class="bi @(s <= Math.Round(avgRating.Value) ? "bi-star-fill" : "bi-star")" style="color:#F97316;font-size:.85rem"></i>
+                                }
+                            </div>
+                            <div class="avg-count">@reviewList.Count review@(reviewList.Count != 1 ? "s" : "")</div>
+                        </div>
+                    }
+
+                    @if (reviewList.Count == 0)
+                    {
+                        <p style="color:#94a3b8;font-size:.88rem">No reviews yet — be the first to review after moving in!</p>
+                    }
+                    else
+                    {
+                        @foreach (var r in reviewList)
+                        {
+                            string rName = (string)r.RaterName;
+                            rName = string.IsNullOrEmpty(rName) ? "Anonymous" : rName;
+                        var rInitials = string.Concat(rName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(n => n[0]));
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <div class="review-avatar">@rInitials.ToUpper()</div>
+                                    <div>
+                                        <div class="review-name">@rName</div>
+                                        <div class="review-stars">
+                                            @for (var s = 1; s <= 5; s++)
+                                            {
+                                                <i class="bi @(s <= (int)r.Stars ? "bi-star-fill" : "bi-star empty")"></i>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="review-date">@((DateTime)r.CreatedAt).ToString("MMM d, yyyy")</div>
+                                </div>
+                                @if (!string.IsNullOrEmpty((string?)r.Comment))
+                                {
+                                    <div class="review-comment">@r.Comment</div>
+                                }
+                            </div>
+                        }
+                    }
+
+                    @if (isTenant)
+                    {
+                        <div style="border-top:1px solid #f1f5f9;margin-top:.75rem;padding-top:.75rem">
+                            @if (alreadyReviewed)
+                            {
+                                <span style="font-size:.82rem;color:#10b981"><i class="bi bi-check-circle-fill me-1"></i> You've reviewed this apartment.</span>
+                            }
+                            else
+                            {
+                                <span style="font-size:.82rem;color:#64748b"><i class="bi bi-info-circle me-1"></i> You can leave a review from your <a href="/StudentApps" style="color:#F97316;font-weight:600">My Applications</a> page.</span>
+                            }
+                        </div>
+                    }
+                </div>
             </div>
 
             <div class="col-lg-4">
@@ -328,6 +462,34 @@
                         }
                     }
 
+                    <!-- Owner info -->
+                    @if (apt.Owner != null)
+                    {
+                        var ownerInitials = string.Concat(apt.Owner.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(n => n[0])).ToUpper();
+                        <div style="border-top:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9;padding:.85rem 0;margin:.85rem 0;display:flex;align-items:center;gap:.75rem">
+                            <div style="width:40px;height:40px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#64748b;flex-shrink:0">@ownerInitials</div>
+                            <div style="flex:1;min-width:0">
+                                <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+                                    <span style="font-weight:700;font-size:.88rem;color:#1e293b">@apt.Owner.FullName</span>
+                                    @if (apt.Owner.IsIdVerified)
+                                    {
+                                        <span style="display:inline-flex;align-items:center;gap:.2rem;background:rgba(249,115,22,.1);color:#F97316;border-radius:5px;padding:.15rem .45rem;font-size:.7rem;font-weight:700">
+                                            <i class="bi bi-shield-fill-check"></i> Verified Owner
+                                        </span>
+                                    }
+                                </div>
+                                @if (apt.Owner.AverageRating.HasValue)
+                                {
+                                    <div style="display:flex;align-items:center;gap:.25rem;margin-top:.15rem">
+                                        <i class="bi bi-star-fill" style="color:#F97316;font-size:.72rem"></i>
+                                        <span style="font-size:.78rem;color:#64748b;font-weight:500">@apt.Owner.AverageRating.Value.ToString("0.0") (@apt.Owner.RatingsCount review@(apt.Owner.RatingsCount != 1 ? "s" : ""))</span>
+                                    </div>
+                                }
+                                <div style="font-size:.72rem;color:#94a3b8;margin-top:.1rem">Member since @apt.Owner.MemberSince.Year</div>
+                            </div>
+                        </div>
+                    }
+
                     @if (!isAuth)
                     {
                         <a href="/Identity/Account/Login" class="btn-apply d-block text-center text-decoration-none"><i class="bi bi-box-arrow-in-right me-1"></i> Log in to Apply</a>
@@ -350,14 +512,58 @@
     </div>
 </div>
 
+<!-- #2 Lightbox -->
+<div class="lightbox-overlay" id="lightbox" onclick="lbClose(event)">
+    <button class="lb-close" onclick="closeLightbox()"><i class="bi bi-x-lg"></i></button>
+    <button class="lb-arrow lb-prev" onclick="lbNav(-1);event.stopPropagation()"><i class="bi bi-chevron-left"></i></button>
+    <img src="" alt="" class="lightbox-img" id="lb-img" onclick="event.stopPropagation()" />
+    <button class="lb-arrow lb-next" onclick="lbNav(1);event.stopPropagation()"><i class="bi bi-chevron-right"></i></button>
+    <div class="lb-counter" id="lb-counter"></div>
+</div>
+
 @section Scripts {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// Photo gallery + lightbox
+var allPhotos = [@Html.Raw(string.Join(",", photos.Select(p => $"'{p.PhotoUrl}'")))];
+if (allPhotos.length === 0) allPhotos = ['@mainPhoto'];
+var lbIndex = 0;
+
 function switchPhoto(thumb, url) {
-    document.getElementById('gallery-main').src = url
-    document.querySelectorAll('.gallery-thumb').forEach(function(t) { t.classList.remove('active') })
-    thumb.classList.add('active')
+    document.getElementById('gallery-main').src = url;
+    document.querySelectorAll('.gallery-thumb').forEach(function(t) { t.classList.remove('active'); });
+    thumb.classList.add('active');
+    lbIndex = allPhotos.indexOf(url);
 }
+
+function openLightbox(url) {
+    lbIndex = allPhotos.indexOf(url);
+    if (lbIndex < 0) lbIndex = 0;
+    lbShow();
+    document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+function lbClose(e) { if (e.target === document.getElementById('lightbox')) closeLightbox(); }
+function lbShow() {
+    document.getElementById('lb-img').src = allPhotos[lbIndex];
+    document.getElementById('lb-counter').textContent = (lbIndex + 1) + ' / ' + allPhotos.length;
+    document.querySelector('.lb-prev').style.display = allPhotos.length > 1 ? '' : 'none';
+    document.querySelector('.lb-next').style.display = allPhotos.length > 1 ? '' : 'none';
+}
+function lbNav(dir) {
+    lbIndex = (lbIndex + dir + allPhotos.length) % allPhotos.length;
+    lbShow();
+}
+document.addEventListener('keydown', function(e) {
+    if (!document.getElementById('lightbox').classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lbNav(-1);
+    if (e.key === 'ArrowRight') lbNav(1);
+});
+// Wire main image click
+document.getElementById('gallery-main').addEventListener('click', function() {
+    openLightbox(this.src);
+});
 
 var lat = @(apt.Latitude != 0 ? apt.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture) : "0")
 var lng = @(apt.Longitude != 0 ? apt.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture) : "0")

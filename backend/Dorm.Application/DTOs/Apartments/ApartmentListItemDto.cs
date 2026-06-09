@@ -19,6 +19,7 @@ public sealed record ApartmentListItemDto(
     string? MainPhotoUrl,
     double? OwnerAverageRating,
     int OwnerRatingsCount,
+    bool IsOwnerVerified,
     /// <summary>Populated for logged-in students whose quiz is complete (Phase 5).</summary>
     int? CompatibilityScore,
     DateTime CreatedAt);

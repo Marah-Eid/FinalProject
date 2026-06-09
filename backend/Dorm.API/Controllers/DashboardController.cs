@@ -6,6 +6,7 @@ using Dorm.Application.Services.Messages;
 using Dorm.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dorm.API.Controllers;
 
@@ -14,7 +15,8 @@ public class DashboardController(
     IApplicationService applications,
     IApartmentService apartments,
     IMessageService messages,
-    ICurrentUser currentUser) : Controller
+    ICurrentUser currentUser,
+    IAppDbContext db) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -38,6 +40,25 @@ public class DashboardController(
         ViewBag.PendingApps = received.Count(a => a.Status == ApplicationStatus.Pending);
         ViewBag.AcceptedApps = received.Count(a => a.Status == ApplicationStatus.Accepted);
 
+        var notifications = await db.Notifications.AsNoTracking()
+            .Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(20)
+            .ToListAsync(ct);
+        ViewBag.Notifications = notifications;
+        ViewBag.UnreadNotifications = notifications.Count(n => !n.IsRead);
+
         return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkNotificationsRead(CancellationToken ct)
+    {
+        var userId = currentUser.UserId!.Value;
+        await db.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), ct);
+        return Ok();
     }
 }

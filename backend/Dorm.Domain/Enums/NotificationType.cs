@@ -9,4 +9,6 @@ public enum NotificationType
     NewRating = 4,
     ListingSuspended = 5,
     ContactMessage = 6,
+    IdVerified = 7,
+    IdRejected = 8,
 }

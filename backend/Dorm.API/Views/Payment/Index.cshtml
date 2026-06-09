@@ -142,10 +142,10 @@
                 <div class="pay-section-label"><i class="bi bi-clock"></i> Pending</div>
                 @foreach (var p in pending)
                 {
-                    var typeLabel = p.Type switch { PaymentType.MatchCommission => "Match Commission", PaymentType.ListingFee => "Listing Fee", PaymentType.VerifiedBadge => "Verified Badge", _ => "Payment" };
-                    var typeIcon = p.Type switch { PaymentType.MatchCommission => "bi-people-fill", PaymentType.ListingFee => "bi-building", PaymentType.VerifiedBadge => "bi-patch-check-fill", _ => "bi-credit-card" };
-                    var typeBg = p.Type switch { PaymentType.MatchCommission => "rgba(59,130,246,.1)", PaymentType.ListingFee => "rgba(139,92,246,.1)", PaymentType.VerifiedBadge => "rgba(6,182,212,.1)", _ => "#f1f5f9" };
-                    var typeColor = p.Type switch { PaymentType.MatchCommission => "#3b82f6", PaymentType.ListingFee => "#8b5cf6", PaymentType.VerifiedBadge => "#06b6d4", _ => "#64748b" };
+                    var typeLabel = p.Type switch { PaymentType.MatchCommission => "Match Commission", PaymentType.ListingFee => "Listing Fee", _ => "Payment" };
+                    var typeIcon = p.Type switch { PaymentType.MatchCommission => "bi-people-fill", PaymentType.ListingFee => "bi-building", _ => "bi-credit-card" };
+                    var typeBg = p.Type switch { PaymentType.MatchCommission => "rgba(59,130,246,.1)", PaymentType.ListingFee => "rgba(139,92,246,.1)", _ => "#f1f5f9" };
+                    var typeColor = p.Type switch { PaymentType.MatchCommission => "#3b82f6", PaymentType.ListingFee => "#8b5cf6", _ => "#64748b" };
                     <div class="pay-item">
                         <div class="pay-item-icon" style="background:@typeBg;color:@typeColor"><i class="bi @typeIcon"></i></div>
                         <div class="pay-item-body">
@@ -168,10 +168,10 @@
                 <div class="pay-section-label"><i class="bi bi-check-circle"></i> Completed</div>
                 @foreach (var p in completed)
                 {
-                    var typeLabel = p.Type switch { PaymentType.MatchCommission => "Match Commission", PaymentType.ListingFee => "Listing Fee", PaymentType.VerifiedBadge => "Verified Badge", _ => "Payment" };
-                    var typeIcon = p.Type switch { PaymentType.MatchCommission => "bi-people-fill", PaymentType.ListingFee => "bi-building", PaymentType.VerifiedBadge => "bi-patch-check-fill", _ => "bi-credit-card" };
-                    var typeBg = p.Type switch { PaymentType.MatchCommission => "rgba(59,130,246,.1)", PaymentType.ListingFee => "rgba(139,92,246,.1)", PaymentType.VerifiedBadge => "rgba(6,182,212,.1)", _ => "#f1f5f9" };
-                    var typeColor = p.Type switch { PaymentType.MatchCommission => "#3b82f6", PaymentType.ListingFee => "#8b5cf6", PaymentType.VerifiedBadge => "#06b6d4", _ => "#64748b" };
+                    var typeLabel = p.Type switch { PaymentType.MatchCommission => "Match Commission", PaymentType.ListingFee => "Listing Fee", _ => "Payment" };
+                    var typeIcon = p.Type switch { PaymentType.MatchCommission => "bi-people-fill", PaymentType.ListingFee => "bi-building", _ => "bi-credit-card" };
+                    var typeBg = p.Type switch { PaymentType.MatchCommission => "rgba(59,130,246,.1)", PaymentType.ListingFee => "rgba(139,92,246,.1)", _ => "#f1f5f9" };
+                    var typeColor = p.Type switch { PaymentType.MatchCommission => "#3b82f6", PaymentType.ListingFee => "#8b5cf6", _ => "#64748b" };
                     <div class="pay-item">
                         <div class="pay-item-icon" style="background:@typeBg;color:@typeColor"><i class="bi @typeIcon"></i></div>
                         <div class="pay-item-body">
@@ -195,7 +195,7 @@
         <div class="pay-empty">
             <div class="pay-empty-icon"><i class="bi bi-credit-card"></i></div>
             <h5>No payments yet</h5>
-            <p>When you pay a match commission, listing fee, or verified badge, your transactions will appear here.</p>
+            <p>When you pay a match commission or listing fee, your transactions will appear here.</p>
         </div>
     }
 </div>

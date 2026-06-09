@@ -74,12 +74,16 @@
 </style>
 }
 
+@using Dorm.Domain.Entities
+@using Dorm.Domain.Enums
 @{
     var listings = (IReadOnlyList<Dorm.Application.DTOs.Apartments.ApartmentListItemDto>)(ViewBag.OwnerListings ?? Array.Empty<Dorm.Application.DTOs.Apartments.ApartmentListItemDto>());
     var received = (IReadOnlyList<Dorm.Application.DTOs.Applications.ApplicationReceivedDto>)(ViewBag.ReceivedApps ?? Array.Empty<Dorm.Application.DTOs.Applications.ApplicationReceivedDto>());
     var pendingApps = (int)(ViewBag.PendingApps ?? 0);
     var acceptedApps = (int)(ViewBag.AcceptedApps ?? 0);
     var pending = received.Where(a => a.Status == Dorm.Domain.Enums.ApplicationStatus.Pending).ToList();
+    var notifications = (IReadOnlyList<Notification>)(ViewBag.Notifications ?? Array.Empty<Notification>());
+    var unreadNotifs = (int)(ViewBag.UnreadNotifications ?? 0);
 }
 
 <div class="welcome-card mb-4">
@@ -161,7 +165,7 @@
                 </div>
             }
         </div>
-        <div class="col-lg-4">
+        <div class="col-lg-4 d-flex flex-column gap-3">
             <div class="section-card">
                 <div class="section-card-header"><h6>Quick Links</h6></div>
                 <a href="/OwnerListings/New" class="shortcut-item"><div class="shortcut-icon" style="background:rgba(249,115,22,.1);color:#F97316"><i class="bi bi-plus-circle"></i></div><span>New listing</span><i class="bi bi-chevron-right"></i></a>
@@ -169,6 +173,53 @@
                 <a href="/OwnerApps" class="shortcut-item"><div class="shortcut-icon" style="background:rgba(234,179,8,.1);color:#eab308"><i class="bi bi-people"></i></div><span>Applications</span><i class="bi bi-chevron-right"></i></a>
                 <a href="/Chat" class="shortcut-item"><div class="shortcut-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6"><i class="bi bi-chat-dots"></i></div><span>Messages</span><i class="bi bi-chevron-right"></i></a>
                 <a href="/Payment" class="shortcut-item"><div class="shortcut-icon" style="background:rgba(6,182,212,.1);color:#06B6D4"><i class="bi bi-credit-card"></i></div><span>Payments</span><i class="bi bi-chevron-right"></i></a>
+            </div>
+
+            <!-- Notifications -->
+            <div class="section-card">
+                <div class="section-card-header">
+                    <h6>
+                        Notifications
+                        @if (unreadNotifs > 0)
+                        {
+                            <span style="background:#ef4444;color:#fff;border-radius:999px;font-size:.65rem;font-weight:700;padding:1px 6px;margin-left:4px;vertical-align:middle">@unreadNotifs</span>
+                        }
+                    </h6>
+                    @if (unreadNotifs > 0)
+                    {
+                        <form method="post" asp-action="MarkNotificationsRead" asp-controller="Dashboard" style="margin:0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" style="background:none;border:none;color:#F97316;font-size:.75rem;font-weight:600;cursor:pointer;padding:0">Mark all read</button>
+                        </form>
+                    }
+                </div>
+                @if (notifications.Count == 0)
+                {
+                    <div class="empty-section"><i class="bi bi-bell"></i><p>No notifications yet</p></div>
+                }
+                else
+                {
+                    @foreach (var n in notifications.Take(8))
+                    {
+                        var (icon, color) = n.Type switch {
+                            NotificationType.IdVerified  => ("bi-shield-fill-check", "#10b981"),
+                            NotificationType.IdRejected  => ("bi-shield-x", "#ef4444"),
+                            NotificationType.NewApplicationReceived => ("bi-person-plus-fill", "#3b82f6"),
+                            NotificationType.ApplicationAccepted   => ("bi-check-circle-fill", "#10b981"),
+                            NotificationType.ApplicationRejected   => ("bi-x-circle-fill", "#ef4444"),
+                            NotificationType.ListingSuspended       => ("bi-exclamation-triangle-fill", "#eab308"),
+                            _ => ("bi-bell-fill", "#94a3b8")
+                        };
+                        <div style="padding:.75rem 1.25rem;border-bottom:1px solid #f8fafc;display:flex;gap:.75rem;align-items:flex-start;@(!n.IsRead ? "background:#fefce8;" : "")">
+                            <i class="bi @icon" style="color:@color;font-size:1rem;flex-shrink:0;margin-top:.1rem"></i>
+                            <div style="flex:1;min-width:0">
+                                <div style="font-weight:700;font-size:.82rem;color:#1e293b">@n.Title</div>
+                                <div style="font-size:.76rem;color:#64748b;line-height:1.5;margin-top:.1rem">@n.Content</div>
+                                <div style="font-size:.7rem;color:#94a3b8;margin-top:.2rem">@n.CreatedAt.ToString("MMM d, h:mm tt")</div>
+                            </div>
+                        </div>
+                    }
+                }
             </div>
         </div>
     </div>

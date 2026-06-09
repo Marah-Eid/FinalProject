@@ -26,6 +26,15 @@ public class User : IdentityUser<Guid>
     public string? UniversityVerificationTokenHash { get; set; }
     public DateTime? UniversityVerificationTokenExpiresAt { get; set; }
 
+    // Phone verification (mock OTP — in production send via SMS gateway)
+    public bool IsPhoneVerified { get; set; }
+    public string? PhoneOtp { get; set; }
+    public DateTime? PhoneOtpExpiry { get; set; }
+
+    // Owner ID / document verification
+    public string? IdDocumentUrl { get; set; }
+    public bool IsIdVerified { get; set; }
+
     // Navigation
     public StudentProfile? StudentProfile { get; set; }
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();

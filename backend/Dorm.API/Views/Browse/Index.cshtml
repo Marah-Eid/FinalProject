@@ -79,22 +79,32 @@
     }
     .apt-price { font-size: 1.05rem; font-weight: 800; color: #1e293b; }
     .apt-price span { font-size: .72rem; font-weight: 400; color: #94a3b8; }
+    .apt-match-wrap { text-align: center; line-height: 1; }
     .apt-match {
-        width: 42px; height: 42px; border-radius: 50%;
+        width: 50px; height: 50px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        font-size: .68rem; font-weight: 800;
+        font-size: .78rem; font-weight: 800;
     }
-    .match-high { border: 2.5px solid #10b981; color: #10b981; background: rgba(16,185,129,.06); }
-    .match-mid  { border: 2.5px solid #eab308; color: #eab308; background: rgba(234,179,8,.06); }
-    .match-low  { border: 2.5px solid #94a3b8; color: #94a3b8; background: rgba(148,163,184,.06); }
+    .match-high { border: 3px solid #10b981; color: #10b981; background: rgba(16,185,129,.08); box-shadow: 0 0 0 4px rgba(16,185,129,.06); }
+    .match-mid  { border: 3px solid #eab308; color: #eab308; background: rgba(234,179,8,.08); box-shadow: 0 0 0 4px rgba(234,179,8,.06); }
+    .match-low  { border: 3px solid #94a3b8; color: #94a3b8; background: rgba(148,163,184,.08); }
+    .match-label { font-size: .6rem; color: #94a3b8; font-weight: 600; margin-top: .2rem; text-transform: uppercase; letter-spacing: .04em; }
 
     .pagination .page-link { border-radius: 8px; font-size: .85rem; font-weight: 500; border: 1px solid #e2e8f0; color: #475569; margin: 0 2px; }
     .pagination .page-item.active .page-link { background: #0f172a; border-color: #0f172a; color: #fff; }
 
-    .empty-state { text-align: center; padding: 4rem 1rem; }
-    .empty-state i { font-size: 3rem; color: #cbd5e1; }
-    .empty-state h5 { font-weight: 700; color: #1e293b; margin-top: 1rem; }
-    .empty-state p { color: #94a3b8; }
+    .empty-state {
+        text-align: center; padding: 4rem 1rem;
+        background: #fff; border-radius: 16px; border: 1px solid #e2e8f0;
+    }
+    .empty-state-icon {
+        width: 72px; height: 72px; border-radius: 20px;
+        background: #f1f5f9; display: inline-flex;
+        align-items: center; justify-content: center;
+        font-size: 2rem; color: #cbd5e1; margin-bottom: 1.25rem;
+    }
+    .empty-state h5 { font-weight: 800; color: #1e293b; margin-bottom: .4rem; }
+    .empty-state p { color: #94a3b8; font-size: .9rem; margin-bottom: 1.25rem; }
 
     .apt-card-img-wrap { position: relative; }
     .btn-heart {
@@ -190,9 +200,12 @@
                     {
                         <div class="col-12">
                             <div class="empty-state">
-                                <i class="bi bi-building"></i>
+                                <div class="empty-state-icon"><i class="bi bi-building"></i></div>
                                 <h5>No apartments found</h5>
-                                <p>Try adjusting your filters to see more results.</p>
+                                <p>Try adjusting your filters or clearing them to see more results.</p>
+                                <a href="/Browse" class="btn-dorm">
+                                    <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                                </a>
                             </div>
                         </div>
                     }
@@ -210,6 +223,12 @@
                                     <div class="apt-card">
                                         <div class="apt-card-img-wrap">
                                             <img src="@photo" alt="@apt.Title" class="apt-card-img" />
+                                            @if (apt.IsOwnerVerified)
+                                            {
+                                                <span style="position:absolute;bottom:.5rem;left:.5rem;background:rgba(249,115,22,.92);color:#fff;border-radius:5px;padding:.2rem .5rem;font-size:.65rem;font-weight:700;display:inline-flex;align-items:center;gap:.25rem;backdrop-filter:blur(4px)">
+                                                    <i class="bi bi-shield-fill-check"></i> Verified
+                                                </span>
+                                            }
                                             @if (isAuth && role == "Student")
                                             {
                                                 <form method="post" asp-action="ToggleSave" asp-controller="Apartment" asp-route-id="@apt.Id" style="position:absolute;top:.6rem;right:.6rem;z-index:2" onclick="event.stopPropagation()">
@@ -236,9 +255,9 @@
                                                 @if (apt.CompatibilityScore.HasValue)
                                                 {
                                                     var cls = apt.CompatibilityScore >= 75 ? "match-high" : apt.CompatibilityScore >= 50 ? "match-mid" : "match-low";
-                                                    <div class="text-center" style="line-height:1">
+                                                    <div class="apt-match-wrap">
                                                         <div class="apt-match @cls">@(apt.CompatibilityScore)%</div>
-                                                        <span style="font-size:.6rem;color:#94a3b8;font-weight:500">Match</span>
+                                                        <div class="match-label">Match</div>
                                                     </div>
                                                 }
                                             </div>

@@ -20,4 +20,7 @@ public sealed record UserDto(
     bool IsUniversityVerified,
     string? ProfilePhotoUrl,
     University? University,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    bool IsPhoneVerified = false,
+    string? IdDocumentUrl = null,
+    bool IsIdVerified = false);

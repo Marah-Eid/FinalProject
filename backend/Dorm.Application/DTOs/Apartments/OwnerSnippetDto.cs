@@ -11,4 +11,5 @@ public sealed record OwnerSnippetDto(
     string? ProfilePhotoUrl,
     double? AverageRating,
     int RatingsCount,
-    DateTime MemberSince);
+    DateTime MemberSince,
+    bool IsIdVerified = false);

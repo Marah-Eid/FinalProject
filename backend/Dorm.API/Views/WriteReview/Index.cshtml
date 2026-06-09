@@ -1,6 +1,8 @@
 @{
     Layout = "_BrowseLayout";
     ViewData["Title"] = "Write a Review";
+    var alreadySubmitted = (bool)(ViewBag.AlreadySubmitted ?? false);
+    var isApproved = (bool)(ViewBag.IsApproved ?? false);
 }
 
 @section Styles {
@@ -49,13 +51,17 @@
     <h1>Write a Review</h1>
     <p class="sub">Share your experience with Dorm. Your review will appear on the homepage after approval.</p>
 
-    @if (TempData["Success"] is string success)
+    @if (TempData["Success"] is string success || alreadySubmitted)
     {
         <div class="review-card">
             <div class="review-success">
                 <i class="bi bi-check-circle-fill"></i>
-                <h3>Thank you!</h3>
-                <p>@success</p>
+                <h3>@(TempData["Success"] is string ? "Thank you!" : "Review submitted")</h3>
+                <p>
+                    @if (TempData["Success"] is string s) { @s }
+                    else if (isApproved) { <text>Your review is live on the homepage.</text> }
+                    else { <text>Your review is awaiting admin approval before it appears on the homepage.</text> }
+                </p>
                 <a href="/" style="display:inline-block;margin-top:1rem;color:#F97316;font-weight:600;text-decoration:none;font-size:.88rem">
                     <i class="bi bi-arrow-left"></i> Back to Home
                 </a>
@@ -70,10 +76,10 @@
                 <div class="alert alert-danger" style="border-radius:8px;font-size:.85rem">@error</div>
             }
 
-            <form method="post" asp-action="Submit" asp-controller="WriteReview">
+            <form method="post" asp-action="Submit" asp-controller="WriteReview" id="review-form">
                 @Html.AntiForgeryToken()
 
-                <label style="font-size:.82rem;font-weight:600;color:#475569;display:block;margin-bottom:.35rem">Rating</label>
+                <label style="font-size:.82rem;font-weight:600;color:#475569;display:block;margin-bottom:.35rem">Rating <span class="text-danger">*</span></label>
                 <div class="star-row" id="review-stars">
                     <i class="bi bi-star" data-star="1"></i>
                     <i class="bi bi-star" data-star="2"></i>
@@ -81,9 +87,10 @@
                     <i class="bi bi-star" data-star="4"></i>
                     <i class="bi bi-star" data-star="5"></i>
                 </div>
+                <div id="star-error" style="color:#ef4444;font-size:.78rem;margin-bottom:.5rem;display:none">Please select a star rating.</div>
                 <input type="hidden" name="stars" id="stars-input" value="0" />
 
-                <label style="font-size:.82rem;font-weight:600;color:#475569;display:block;margin-bottom:.35rem">Your review</label>
+                <label style="font-size:.82rem;font-weight:600;color:#475569;display:block;margin-bottom:.35rem">Your review <span class="text-danger">*</span></label>
                 <textarea class="review-textarea" name="text" id="review-text" placeholder="How has Dorm helped you? (10-500 characters)" required minlength="10" maxlength="500"></textarea>
                 <div class="char-count" id="review-chars">0 / 500</div>
 
@@ -97,19 +104,33 @@
 
 @section Scripts {
 <script>
-var reviewStars = 0
+var reviewStars = 0;
 document.querySelectorAll('#review-stars i').forEach(function (star) {
     star.addEventListener('click', function () {
-        reviewStars = parseInt(this.getAttribute('data-star'))
-        document.getElementById('stars-input').value = reviewStars
+        reviewStars = parseInt(this.getAttribute('data-star'));
+        document.getElementById('stars-input').value = reviewStars;
+        document.getElementById('star-error').style.display = 'none';
         document.querySelectorAll('#review-stars i').forEach(function (s) {
-            var v = parseInt(s.getAttribute('data-star'))
-            s.className = v <= reviewStars ? 'bi bi-star-fill active' : 'bi bi-star'
-        })
-    })
-})
-document.getElementById('review-text').addEventListener('input', function () {
-    document.getElementById('review-chars').textContent = this.value.length + ' / 500'
-})
+            var v = parseInt(s.getAttribute('data-star'));
+            s.className = v <= reviewStars ? 'bi bi-star-fill active' : 'bi bi-star';
+        });
+    });
+});
+var textEl = document.getElementById('review-text');
+if (textEl) {
+    textEl.addEventListener('input', function () {
+        document.getElementById('review-chars').textContent = this.value.length + ' / 500';
+    });
+}
+var form = document.getElementById('review-form');
+if (form) {
+    form.addEventListener('submit', function (e) {
+        if (reviewStars === 0) {
+            e.preventDefault();
+            document.getElementById('star-error').style.display = 'block';
+            document.getElementById('review-stars').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+}
 </script>
 }

@@ -12,6 +12,7 @@
     var testimonials = (IReadOnlyList<TestimonialDto>)(ViewBag.Testimonials ?? Array.Empty<TestimonialDto>());
     var contactMessages = (IReadOnlyList<Notification>)(ViewBag.ContactMessages ?? Array.Empty<Notification>());
     var pendingReviews = testimonials.Count(t => !t.IsApproved);
+    var pendingIds = ViewBag.PendingIds as dynamic ?? new List<dynamic>();
 }
 
 @section Styles {
@@ -122,6 +123,14 @@
                 <span style="background:#F97316;color:#fff;border-radius:999px;font-size:.7rem;font-weight:700;padding:1px 7px;margin-left:4px">@contactMessages.Count</span>
             }
         </button>
+        <button class="admin-tab" onclick="showTab('verifications',this)">
+            Verifications
+            @{ var pendingIdCount = 0; foreach (var _ in pendingIds) pendingIdCount++; }
+            @if (pendingIdCount > 0)
+            {
+                <span style="background:#ef4444;color:#fff;border-radius:999px;font-size:.7rem;font-weight:700;padding:1px 7px;margin-left:4px">@pendingIdCount</span>
+            }
+        </button>
     </div>
 
     <!-- Dashboard Tab -->
@@ -175,7 +184,7 @@
             {
                 @foreach (var r in dashboard.RevenueByType)
                 {
-                    var typeName = r.Type switch { PaymentType.MatchCommission => "Match Commission", PaymentType.ListingFee => "Listing Fee", PaymentType.VerifiedBadge => "Verified Badge", _ => "Other" };
+                    var typeName = r.Type switch { PaymentType.MatchCommission => "Match Commission", PaymentType.ListingFee => "Listing Fee", _ => "Other" };
                     <div class="revenue-card" style="background:#1e293b">
                         <div class="rev-label">@typeName</div>
                         <div class="rev-value">@r.Total JOD <span style="font-size:.7rem;font-weight:400;opacity:.5">(@r.Count)</span></div>
@@ -441,6 +450,57 @@
                         <form method="post" asp-area="Admin" asp-controller="Admin" asp-action="DeleteTestimonial" asp-route-id="@t.Id" style="display:inline" onsubmit="return confirm('Delete this testimonial?')">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn-deny"><i class="bi bi-trash me-1"></i>Delete</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Verifications tab -->
+    <div class="admin-section" id="tab-verifications">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 style="font-weight:700;font-size:.95rem;color:#1e293b;margin:0">Owner ID Verifications</h6>
+            <span style="font-size:.8rem;color:#94a3b8">@pendingIdCount pending</span>
+        </div>
+        @if (pendingIdCount == 0)
+        {
+            <div class="empty-admin"><i class="bi bi-shield-check"></i><p>No pending ID verifications.</p></div>
+        }
+        else
+        {
+            @foreach (var owner in pendingIds)
+            {
+                <div class="testi-card" style="align-items:flex-start;gap:1.25rem">
+                    <div class="testi-avatar" style="background:#F97316;flex-shrink:0">
+                        @{ var oi = ((string)owner.FullName).Split(' ').Where(n => n.Length > 0).Select(n => n[0].ToString()).Take(2); }
+                        @string.Concat(oi).ToUpper()
+                    </div>
+                    <div class="testi-body" style="flex:1;min-width:0">
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <span class="name">@owner.FullName</span>
+                            <span class="role">@owner.Email</span>
+                        </div>
+                        @{ string docUrl = (string)owner.IdDocumentUrl; }
+                        @if (docUrl.EndsWith(".pdf"))
+                        {
+                            <a href="@docUrl" target="_blank" style="font-size:.82rem;color:#F97316;text-decoration:none"><i class="bi bi-file-pdf me-1"></i>View PDF Document</a>
+                        }
+                        else
+                        {
+                            <a href="@docUrl" target="_blank">
+                                <img src="@docUrl" alt="ID" style="max-width:180px;max-height:120px;border-radius:8px;border:1px solid #e2e8f0;object-fit:cover;display:block;margin-top:.3rem" />
+                            </a>
+                        }
+                    </div>
+                    <div class="testi-actions" style="align-self:center">
+                        <form method="post" asp-area="Admin" asp-controller="Admin" asp-action="VerifyId" asp-route-id="@owner.Id" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-approve"><i class="bi bi-shield-check me-1"></i>Verify</button>
+                        </form>
+                        <form method="post" asp-area="Admin" asp-controller="Admin" asp-action="RejectId" asp-route-id="@owner.Id" style="display:inline" onsubmit="return confirm('Reject and remove this document?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-deny"><i class="bi bi-x-lg me-1"></i>Reject</button>
                         </form>
                     </div>
                 </div>

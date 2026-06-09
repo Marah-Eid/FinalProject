@@ -5,6 +5,7 @@ using Dorm.Application.Services.Admin;
 using Dorm.Domain.Entities;
 using Dorm.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +17,8 @@ namespace Dorm.API.Areas.Admin.Controllers;
 public class AdminController(
     IAdminService admin,
     IAppDbContext db,
-    ICurrentUser currentUser) : Controller
+    ICurrentUser currentUser,
+    UserManager<User> userManager) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -40,12 +42,18 @@ public class AdminController(
             .Take(50)
             .ToListAsync(ct);
 
+        var pendingIds = await db.Users.AsNoTracking()
+            .Where(u => u.Role == UserRole.Owner && u.IdDocumentUrl != null && !u.IsIdVerified)
+            .Select(u => new { u.Id, u.FullName, u.Email, u.IdDocumentUrl })
+            .ToListAsync(ct);
+
         ViewBag.Dashboard = dashboard;
         ViewBag.Users = users;
         ViewBag.Listings = listings;
         ViewBag.Reports = reports;
         ViewBag.ContactMessages = contactMessages;
         ViewBag.Testimonials = testimonials;
+        ViewBag.PendingIds = pendingIds;
         return View();
     }
 
@@ -93,6 +101,67 @@ public class AdminController(
         await admin.ResolveReportAsync(id, adminId, new ResolveReportRequest(dismiss), ct);
         TempData["Success"] = dismiss ? "Report dismissed." : "Report resolved.";
         return Redirect("/Admin#reports");
+    }
+
+    [HttpPost("VerifyId/{id}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VerifyId(Guid id, CancellationToken ct)
+    {
+        var user = await userManager.FindByIdAsync(id.ToString());
+        if (user is null)
+        {
+            TempData["Success"] = "User not found.";
+            return Redirect("/Admin#verifications");
+        }
+        user.IsIdVerified = true;
+        var result = await userManager.UpdateAsync(user);
+        if (result.Succeeded)
+        {
+            db.Notifications.Add(new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Type = NotificationType.IdVerified,
+                Title = "Identity Verified ✓",
+                Content = "Your identity document has been reviewed and approved by the admin. Your listings now show a Verified badge.",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+            });
+            await db.SaveChangesAsync(ct);
+        }
+        TempData["Success"] = result.Succeeded ? "Owner ID verified." : "Failed to verify: " + string.Join(", ", result.Errors.Select(e => e.Description));
+        return Redirect("/Admin#verifications");
+    }
+
+    [HttpPost("RejectId/{id}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejectId(Guid id, CancellationToken ct)
+    {
+        var user = await userManager.FindByIdAsync(id.ToString());
+        if (user is null)
+        {
+            TempData["Success"] = "User not found.";
+            return Redirect("/Admin#verifications");
+        }
+        user.IdDocumentUrl = null;
+        user.IsIdVerified = false;
+        var result = await userManager.UpdateAsync(user);
+        if (result.Succeeded)
+        {
+            db.Notifications.Add(new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Type = NotificationType.IdRejected,
+                Title = "Identity Document Rejected",
+                Content = "Your identity document could not be verified. Please upload a clearer photo of your national ID or property ownership document on your Profile page.",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+            });
+            await db.SaveChangesAsync(ct);
+        }
+        TempData["Success"] = result.Succeeded ? "ID document rejected and removed." : "Failed to reject: " + string.Join(", ", result.Errors.Select(e => e.Description));
+        return Redirect("/Admin#verifications");
     }
 
     [HttpPost("ApproveTestimonial/{id}")]

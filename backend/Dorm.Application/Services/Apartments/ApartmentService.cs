@@ -94,6 +94,7 @@ public sealed class ApartmentService(
                 a.Photos.OrderBy(p => p.DisplayOrder).Select(p => p.PhotoUrl).FirstOrDefault(),
                 db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Average(r => (double?)r.Stars),
                 db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Count(),
+                a.Owner.IsIdVerified,
                 null,  // CompatibilityScore — populated below for logged-in students with a complete quiz
                 a.CreatedAt))
             .ToListAsync(ct);
@@ -128,6 +129,7 @@ public sealed class ApartmentService(
                 a.Photos.OrderBy(p => p.DisplayOrder).Select(p => p.PhotoUrl).FirstOrDefault(),
                 db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Average(r => (double?)r.Stars),
                 db.Ratings.Where(r => r.RatedUserId == a.OwnerId).Count(),
+                a.Owner.IsIdVerified,
                 null,
                 a.CreatedAt))
             .ToListAsync(ct);
@@ -235,7 +237,8 @@ public sealed class ApartmentService(
             apartment.Owner.ProfilePhotoUrl,
             AverageRating: ownerRatings.Count > 0 ? ownerRatings.Average(r => r.Stars) : null,
             RatingsCount: ownerRatings.Count,
-            apartment.Owner.CreatedAt);
+            apartment.Owner.CreatedAt,
+            IsIdVerified: apartment.Owner.IsIdVerified);
 
         return new ApartmentDetailDto(
             apartment.Id,

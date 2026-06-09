@@ -444,17 +444,24 @@
     .testi-section {
         padding: 5rem 0; background: #f8fafc; overflow: hidden;
     }
-    .testi-track {
-        display: flex; gap: 1.25rem; overflow-x: auto;
-        scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
-        padding: .5rem .25rem 1rem; margin: 0 -.25rem;
-        scrollbar-width: none;
+    .testi-marquee-wrap {
+        overflow: hidden;
+        mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
     }
-    .testi-track::-webkit-scrollbar { display: none; }
+    .testi-track {
+        display: flex; gap: 1.25rem;
+        width: max-content;
+        animation: marqueeScroll 35s linear infinite;
+    }
+    .testi-track:hover { animation-play-state: paused; }
+    @@keyframes marqueeScroll {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-50%); }
+    }
 
     .testi-card {
-        min-width: 300px; max-width: 340px; flex-shrink: 0;
-        scroll-snap-align: start;
+        min-width: 300px; max-width: 320px; flex-shrink: 0;
         background: #fff; border-radius: 16px;
         border: 1px solid #e2e8f0;
         padding: 1.5rem; position: relative;
@@ -748,39 +755,63 @@
         }
         else
         {
-            <div class="testi-track">
-                @foreach (var t in testimonials)
-                {
-                    var initials = string.Join("", t.UserName.Split(' ').Select(n => n.Length > 0 ? n[0].ToString() : "")).ToUpper();
-                    if (initials.Length > 2) initials = initials.Substring(0, 2);
-                    <div class="testi-card">
-                        <i class="bi bi-quote testi-quote-icon"></i>
-                        <div class="testi-user">
-                            <div class="testi-avatar">@initials</div>
-                            <div>
-                                <div class="testi-user-name">@t.UserName</div>
-                                @if (!string.IsNullOrEmpty(t.UserRole))
+            @* Duplicate cards for seamless infinite loop *@
+            var cards = testimonials.ToList();
+            <div class="testi-marquee-wrap">
+                <div class="testi-track">
+                    @* First set *@
+                    @foreach (var t in cards)
+                    {
+                        var initials = string.Join("", t.UserName.Split(' ').Select(n => n.Length > 0 ? n[0].ToString() : "")).ToUpper();
+                        if (initials.Length > 2) initials = initials.Substring(0, 2);
+                        <div class="testi-card">
+                            <i class="bi bi-quote testi-quote-icon"></i>
+                            <div class="testi-user">
+                                <div class="testi-avatar">@initials</div>
+                                <div>
+                                    <div class="testi-user-name">@t.UserName</div>
+                                    @if (!string.IsNullOrEmpty(t.UserRole))
+                                    {
+                                        <div class="testi-user-role"><span style="width:4px;height:4px;border-radius:50%;background:#cbd5e1;display:inline-block"></span> @t.UserRole</div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="testi-stars">
+                                @for (var i = 1; i <= 5; i++)
                                 {
-                                    <div class="testi-user-role"><span style="width:4px;height:4px;border-radius:50%;background:#cbd5e1;display:inline-block"></span> @t.UserRole</div>
+                                    <i class="bi @(i <= t.Stars ? "bi-star-fill" : "bi-star")" style="font-size:.85rem;color:@(i <= t.Stars ? "#F97316" : "#e2e8f0")"></i>
                                 }
                             </div>
+                            <p class="testi-text">"@t.Text"</p>
                         </div>
-                        <div class="testi-stars">
-                            @for (var i = 1; i <= 5; i++)
-                            {
-                                if (i <= t.Stars)
+                    }
+                    @* Duplicate set for seamless loop *@
+                    @foreach (var t in cards)
+                    {
+                        var initials = string.Join("", t.UserName.Split(' ').Select(n => n.Length > 0 ? n[0].ToString() : "")).ToUpper();
+                        if (initials.Length > 2) initials = initials.Substring(0, 2);
+                        <div class="testi-card" aria-hidden="true">
+                            <i class="bi bi-quote testi-quote-icon"></i>
+                            <div class="testi-user">
+                                <div class="testi-avatar">@initials</div>
+                                <div>
+                                    <div class="testi-user-name">@t.UserName</div>
+                                    @if (!string.IsNullOrEmpty(t.UserRole))
+                                    {
+                                        <div class="testi-user-role"><span style="width:4px;height:4px;border-radius:50%;background:#cbd5e1;display:inline-block"></span> @t.UserRole</div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="testi-stars">
+                                @for (var i = 1; i <= 5; i++)
                                 {
-                                    <i class="bi bi-star-fill" style="font-size:.85rem;color:#F97316"></i>
+                                    <i class="bi @(i <= t.Stars ? "bi-star-fill" : "bi-star")" style="font-size:.85rem;color:@(i <= t.Stars ? "#F97316" : "#e2e8f0")"></i>
                                 }
-                                else
-                                {
-                                    <i class="bi bi-star" style="font-size:.85rem;color:#e2e8f0"></i>
-                                }
-                            }
+                            </div>
+                            <p class="testi-text">"@t.Text"</p>
                         </div>
-                        <p class="testi-text">"@t.Text"</p>
-                    </div>
-                }
+                    }
+                </div>
             </div>
         }
     </div>

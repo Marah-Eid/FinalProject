@@ -6,6 +6,7 @@
     var initials = string.Join("", profile.FullName.Split(' ').Select(n => n.Length > 0 ? n[0].ToString() : "")).ToUpper();
     if (initials.Length > 2) initials = initials.Substring(0, 2);
     var roleName = profile.Role switch { Dorm.Domain.Enums.UserRole.Student => "Student", Dorm.Domain.Enums.UserRole.Owner => "Owner", Dorm.Domain.Enums.UserRole.Admin => "Admin", _ => "User" };
+    var isOwner = profile.Role == Dorm.Domain.Enums.UserRole.Owner;
 }
 
 @section Styles {
@@ -31,7 +32,27 @@
     .badge-email { background: rgba(16,185,129,.1); color: #10b981; }
     .badge-uni { background: rgba(59,130,246,.1); color: #3b82f6; }
     .badge-not { background: #f1f5f9; color: #94a3b8; }
+    .badge-phone { background: rgba(139,92,246,.1); color: #8b5cf6; }
+    .badge-id { background: rgba(249,115,22,.1); color: #F97316; }
     .profile-form { padding: 1.5rem; }
+
+    .verify-section {
+        border-top: 1px solid #f1f5f9; padding: 1.5rem;
+    }
+    .verify-section h6 { font-size: .85rem; font-weight: 700; color: #1e293b; margin-bottom: .25rem; }
+    .verify-section p { font-size: .8rem; color: #64748b; margin-bottom: .75rem; }
+    .otp-dev-box {
+        background: #fefce8; border: 1px dashed #eab308; border-radius: 8px;
+        padding: .6rem 1rem; font-size: .82rem; color: #92400e; margin-bottom: .75rem;
+    }
+    .id-preview { max-width: 120px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: .5rem; }
+    .status-pill {
+        display: inline-flex; align-items: center; gap: .3rem;
+        font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: 6px;
+    }
+    .status-verified { background: rgba(16,185,129,.1); color: #10b981; }
+    .status-pending  { background: rgba(234,179,8,.1);  color: #b45309; }
+    .status-none     { background: #f1f5f9; color: #94a3b8; }
     .profile-form label { font-size: .82rem; font-weight: 600; color: #475569; margin-bottom: .3rem; }
     .profile-form .form-control, .profile-form .form-select { padding: .65rem .9rem; border-radius: 8px; font-size: .9rem; }
     .profile-form .form-control:disabled, .profile-form .form-select:disabled { background: #f8fafc; color: #94a3b8; }
@@ -73,9 +94,22 @@
                     {
                         <span class="badge-verified badge-uni"><i class="bi bi-patch-check-fill"></i> Verified Student</span>
                     }
+                    @if (isOwner && profile.IsIdVerified)
+                    {
+                        <span class="badge-verified badge-id"><i class="bi bi-shield-fill-check"></i> ID Verified</span>
+                    }
                 </div>
             </div>
         </div>
+
+        @if (TempData["IdError"] is string idErr)
+        {
+            <div class="alert alert-danger mx-3 mt-3" style="border-radius:8px;font-size:.85rem">@idErr</div>
+        }
+        @if (TempData["PhoneError"] is string phoneErr)
+        {
+            <div class="alert alert-danger mx-3 mt-3" style="border-radius:8px;font-size:.85rem">@phoneErr</div>
+        }
 
         <div class="profile-form">
             <form method="post" asp-action="Update" asp-controller="Profile">
@@ -124,5 +158,48 @@
                 <button type="submit" class="btn-save-profile mt-3"><i class="bi bi-check2"></i> Save Changes</button>
             </form>
         </div>
+
+        @if (isOwner)
+        {
+            <!-- ID Document Upload -->
+            <div class="verify-section">
+                <h6><i class="bi bi-card-image me-1" style="color:#F97316"></i> ID / Document Verification</h6>
+                <p>Upload a national ID or property ownership document. The admin will review and verify it — this adds a trusted badge to your listings.</p>
+
+                @if (profile.IsIdVerified)
+                {
+                    <span class="status-pill status-verified mb-2 d-inline-flex"><i class="bi bi-shield-fill-check"></i> ID Verified by Admin</span>
+                }
+                else if (!string.IsNullOrEmpty(profile.IdDocumentUrl))
+                {
+                    <div class="mb-2">
+                        <span class="status-pill status-pending mb-2 d-inline-flex"><i class="bi bi-clock-fill"></i> Under Review</span>
+                    </div>
+                    @if (profile.IdDocumentUrl.EndsWith(".pdf"))
+                    {
+                        <div style="font-size:.8rem;color:#64748b"><i class="bi bi-file-pdf me-1 text-danger"></i> PDF uploaded — awaiting admin review.</div>
+                    }
+                    else
+                    {
+                        <img src="@profile.IdDocumentUrl" class="id-preview" alt="ID document" />
+                    }
+                }
+                else
+                {
+                    <span class="status-pill status-none d-inline-flex mb-2"><i class="bi bi-shield-x"></i> No document uploaded</span>
+                }
+
+                <form method="post" asp-action="UploadId" asp-controller="Profile" enctype="multipart/form-data" class="mt-2">
+                    @Html.AntiForgeryToken()
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <input type="file" name="idDocument" class="form-control" accept=".jpg,.jpeg,.png,.pdf" style="border-radius:8px;font-size:.82rem;padding:.45rem .8rem;max-width:280px" />
+                        <button type="submit" class="btn-save-profile" style="padding:.5rem 1rem;font-size:.82rem">
+                            <i class="bi bi-upload"></i> @(string.IsNullOrEmpty(profile.IdDocumentUrl) ? "Upload" : "Re-upload")
+                        </button>
+                    </div>
+                    <div style="font-size:.73rem;color:#94a3b8;margin-top:.3rem">JPG, PNG, or PDF · Max 5 MB</div>
+                </form>
+            </div>
+        }
     </div>
 </div>

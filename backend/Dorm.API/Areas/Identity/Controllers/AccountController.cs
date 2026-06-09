@@ -85,6 +85,12 @@ public class AccountController(
             return View();
         }
 
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            ViewData["Error"] = "Phone number is required.";
+            return View();
+        }
+
         try
         {
             var req = new RegisterRequest(

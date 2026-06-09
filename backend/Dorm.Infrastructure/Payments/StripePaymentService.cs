@@ -20,7 +20,6 @@ public sealed class StripePaymentService(
     {
         [PaymentType.MatchCommission] = "Match Commission",
         [PaymentType.ListingFee] = "Listing Fee",
-        [PaymentType.VerifiedBadge] = "Verified Badge",
     };
 
     public async Task<PaymentChargeResult> ChargeAsync(
